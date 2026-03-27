@@ -1,0 +1,124 @@
+{
+  "description": "Holistic QA plan before and after optimization",
+  "naive_plan": {
+    "op": "AGGREGATE",
+    "params": {
+      "goal": "holistic QA answer"
+    },
+    "inputs": [
+      {
+        "op": "UNION",
+        "params": {},
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "What method is proposed?"
+            },
+            "inputs": []
+          },
+          {
+            "op": "I",
+            "params": {
+              "query": "How is the method evaluated?"
+            },
+            "inputs": []
+          },
+          {
+            "op": "I",
+            "params": {
+              "query": "What limitations are discussed?"
+            },
+            "inputs": []
+          }
+        ]
+      }
+    ]
+  },
+  "optimized_plan": {
+    "op": "AGGREGATE",
+    "params": {
+      "goal": "holistic QA answer"
+    },
+    "inputs": [
+      {
+        "op": "RANK",
+        "params": {
+          "criterion": "relevance"
+        },
+        "inputs": [
+          {
+            "op": "DIFF",
+            "params": {},
+            "inputs": [
+              {
+                "op": "UNION",
+                "params": {},
+                "inputs": [
+                  {
+                    "op": "RANK",
+                    "params": {
+                      "criterion": "relevance"
+                    },
+                    "inputs": [
+                      {
+                        "op": "I",
+                        "params": {
+                          "query": "What method is proposed?"
+                        },
+                        "inputs": []
+                      }
+                    ]
+                  },
+                  {
+                    "op": "RANK",
+                    "params": {
+                      "criterion": "relevance"
+                    },
+                    "inputs": [
+                      {
+                        "op": "I",
+                        "params": {
+                          "query": "How is the method evaluated?"
+                        },
+                        "inputs": []
+                      }
+                    ]
+                  },
+                  {
+                    "op": "RANK",
+                    "params": {
+                      "criterion": "relevance"
+                    },
+                    "inputs": [
+                      {
+                        "op": "I",
+                        "params": {
+                          "query": "What limitations are discussed?"
+                        },
+                        "inputs": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "op": "I",
+                "params": {
+                  "query": "__overlap__"
+                },
+                "inputs": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "rules_fired": [
+    "R2_filter_pushdown",
+    "R6_delayed_aggregation",
+    "R7_early_dedup"
+  ],
+  "passes": 2
+}

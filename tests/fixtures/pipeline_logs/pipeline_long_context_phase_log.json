@@ -1,0 +1,193 @@
+{
+  "parse": {
+    "query": "Compare paper A and paper B on methodology, metrics, and formula-accuracy handling for long-context QA.",
+    "root_op": "AGGREGATE",
+    "node": {
+      "op": "AGGREGATE",
+      "params": {
+        "goal": "compare methodology, metrics, and formula-accuracy tradeoffs"
+      },
+      "inputs": [
+        {
+          "op": "UNION",
+          "params": {},
+          "inputs": [
+            {
+              "op": "I",
+              "params": {
+                "query": "Compare paper A and paper B on methodology, metrics, and formula-accuracy handling for long-context QA. methodology details"
+              },
+              "inputs": []
+            },
+            {
+              "op": "I",
+              "params": {
+                "query": "Compare paper A and paper B on methodology, metrics, and formula-accuracy handling for long-context QA. evaluation metrics"
+              },
+              "inputs": []
+            },
+            {
+              "op": "I",
+              "params": {
+                "query": "Compare paper A and paper B on methodology, metrics, and formula-accuracy handling for long-context QA. formula accuracy limitations"
+              },
+              "inputs": []
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "optimize": {
+    "root_op": "AGGREGATE",
+    "rewrite_count": 3,
+    "rewrite_rules": [
+      "R2_filter_pushdown",
+      "R6_delayed_aggregation",
+      "R7_early_dedup"
+    ],
+    "node": {
+      "op": "AGGREGATE",
+      "params": {
+        "goal": "compare methodology, metrics, and formula-accuracy tradeoffs"
+      },
+      "inputs": [
+        {
+          "op": "RANK",
+          "params": {
+            "criterion": "relevance"
+          },
+          "inputs": [
+            {
+              "op": "DIFF",
+              "params": {},
+              "inputs": [
+                {
+                  "op": "UNION",
+                  "params": {},
+                  "inputs": [
+                    {
+                      "op": "RANK",
+                      "params": {
+                        "criterion": "relevance"
+                      },
+                      "inputs": [
+                        {
+                          "op": "I",
+                          "params": {
+                            "query": "Compare paper A and paper B on methodology, metrics, and formula-accuracy handling for long-context QA. methodology details"
+                          },
+                          "inputs": []
+                        }
+                      ]
+                    },
+                    {
+                      "op": "RANK",
+                      "params": {
+                        "criterion": "relevance"
+                      },
+                      "inputs": [
+                        {
+                          "op": "I",
+                          "params": {
+                            "query": "Compare paper A and paper B on methodology, metrics, and formula-accuracy handling for long-context QA. evaluation metrics"
+                          },
+                          "inputs": []
+                        }
+                      ]
+                    },
+                    {
+                      "op": "RANK",
+                      "params": {
+                        "criterion": "relevance"
+                      },
+                      "inputs": [
+                        {
+                          "op": "I",
+                          "params": {
+                            "query": "Compare paper A and paper B on methodology, metrics, and formula-accuracy handling for long-context QA. formula accuracy limitations"
+                          },
+                          "inputs": []
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "__overlap__"
+                  },
+                  "inputs": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "physical_plan": {
+    "root_variant": "DirectGenerate",
+    "variants": [
+      "DirectGenerate",
+      "SimilarityRank",
+      "SemanticDiff",
+      "SimpleUnion",
+      "SimilarityRank",
+      "HybridRetrieve",
+      "SimilarityRank",
+      "HybridRetrieve",
+      "SimilarityRank",
+      "HybridRetrieve",
+      "HybridRetrieve"
+    ],
+    "node": {
+      "variant": "DirectGenerate",
+      "params": {
+        "goal": "compare methodology, metrics, and formula-accuracy tradeoffs",
+        "context_window": 128000,
+        "model_id": "gpt-4o-mini"
+      },
+      "logical_root_op": "AGGREGATE"
+    }
+  },
+  "execute": {
+    "answer_preview": "Catalog-aware long-context synthesis complete.",
+    "trace": [
+      "HybridRetrieve",
+      "SimilarityRank",
+      "HybridRetrieve",
+      "SimilarityRank",
+      "HybridRetrieve",
+      "SimilarityRank",
+      "SimpleUnion",
+      "SemanticDiff",
+      "SimilarityRank",
+      "DirectGenerate"
+    ],
+    "token_counts": {
+      "HybridRetrieve": 8540,
+      "SimilarityRank": 4814,
+      "SimpleUnion": 4270,
+      "SemanticDiff": 544,
+      "DirectGenerate": 11
+    },
+    "errors": []
+  },
+  "catalog": {
+    "default_model_id": "gpt-4o-mini",
+    "doc_ids": [
+      "paper_a",
+      "paper_b",
+      "paper_mix"
+    ],
+    "theme_labels": [
+      "analysis",
+      "evaluation",
+      "method"
+    ],
+    "avg_chunk_tokens": 310.0,
+    "context_window": 128000
+  }
+}

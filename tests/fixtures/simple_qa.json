@@ -1,0 +1,20 @@
+{
+  "test_id": "simple_qa",
+  "query": "What is the main contribution of this paper?",
+  "raw_expression": "AGGREGATE(I(\"main contribution of this paper\"), goal=\"summarize main contribution\")",
+  "plan": {
+    "op": "AGGREGATE",
+    "params": {
+      "goal": "summarize main contribution"
+    },
+    "inputs": [
+      {
+        "op": "I",
+        "params": {
+          "query": "main contribution of this paper"
+        },
+        "inputs": []
+      }
+    ]
+  }
+}
