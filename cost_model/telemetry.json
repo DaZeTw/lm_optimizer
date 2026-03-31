@@ -1,0 +1,122 @@
+{
+  "I": {
+    "DenseRetrieve": {
+      "samples": 14,
+      "token_cost_sum": 190179.0,
+      "call_cost_sum": 14.0,
+      "latency_cost_sum": 14.0,
+      "quality_risk_sum": 0.0,
+      "accuracy_score_sum": 14.0,
+      "accuracy_score_count": 14
+    },
+    "BM25Retrieve": {
+      "samples": 61,
+      "token_cost_sum": 735796.0,
+      "call_cost_sum": 61.0,
+      "latency_cost_sum": 61.0,
+      "quality_risk_sum": 0.0,
+      "accuracy_score_sum": 61.0,
+      "accuracy_score_count": 61
+    },
+    "HybridRetrieve": {
+      "samples": 16,
+      "token_cost_sum": 167413.0,
+      "call_cost_sum": 16.0,
+      "latency_cost_sum": 16.0,
+      "quality_risk_sum": 0.0,
+      "accuracy_score_sum": 16.0,
+      "accuracy_score_count": 16
+    }
+  },
+  "RANK": {
+    "CrossEncoderRank": {
+      "samples": 25,
+      "token_cost_sum": 140651.0,
+      "call_cost_sum": 25.0,
+      "latency_cost_sum": 25.0,
+      "quality_risk_sum": 0.0,
+      "accuracy_score_sum": 25.0,
+      "accuracy_score_count": 25
+    },
+    "SimilarityRank": {
+      "samples": 58,
+      "token_cost_sum": 347506.0,
+      "call_cost_sum": 58.0,
+      "latency_cost_sum": 58.0,
+      "quality_risk_sum": 0.0,
+      "accuracy_score_sum": 58.0,
+      "accuracy_score_count": 58
+    }
+  },
+  "AGGREGATE": {
+    "DirectGenerate": {
+      "samples": 44,
+      "token_cost_sum": 22120.0,
+      "call_cost_sum": 44.0,
+      "latency_cost_sum": 44.0,
+      "quality_risk_sum": 4.4,
+      "accuracy_score_sum": 44.0,
+      "accuracy_score_count": 44
+    },
+    "HierarchicalGenerate": {
+      "samples": 39,
+      "token_cost_sum": 17163.0,
+      "call_cost_sum": 39.0,
+      "latency_cost_sum": 39.0,
+      "quality_risk_sum": 3.900000000000002,
+      "accuracy_score_sum": 39.0,
+      "accuracy_score_count": 39
+    }
+  },
+  "VERIFY": {
+    "CitationVerify": {
+      "samples": 25,
+      "token_cost_sum": 12016.0,
+      "call_cost_sum": 25.0,
+      "latency_cost_sum": 25.0,
+      "quality_risk_sum": 0.0,
+      "accuracy_score_sum": 25.0,
+      "accuracy_score_count": 25
+    },
+    "NliVerify": {
+      "samples": 15,
+      "token_cost_sum": 6390.0,
+      "call_cost_sum": 0.0,
+      "latency_cost_sum": 1.5000000000000002,
+      "quality_risk_sum": 0.0,
+      "accuracy_score_sum": 15.0,
+      "accuracy_score_count": 15
+    }
+  },
+  "TRANSFORM": {
+    "IdentityTransform": {
+      "samples": 16,
+      "token_cost_sum": 111632.0,
+      "call_cost_sum": 16.0,
+      "latency_cost_sum": 16.0,
+      "quality_risk_sum": 0.0,
+      "accuracy_score_sum": 16.0,
+      "accuracy_score_count": 16
+    }
+  },
+  "COMPOSE": {
+    "KeyMatchCompose": {
+      "samples": 4,
+      "token_cost_sum": 69712.0,
+      "call_cost_sum": 4.0,
+      "latency_cost_sum": 4.0,
+      "quality_risk_sum": 0.0,
+      "accuracy_score_sum": 4.0,
+      "accuracy_score_count": 4
+    },
+    "ConcatCompose": {
+      "samples": 4,
+      "token_cost_sum": 55816.0,
+      "call_cost_sum": 4.0,
+      "latency_cost_sum": 4.0,
+      "quality_risk_sum": 0.0,
+      "accuracy_score_sum": 4.0,
+      "accuracy_score_count": 4
+    }
+  }
+}

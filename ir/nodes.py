@@ -115,3 +115,4 @@ class PhysicalNode:
     inputs: tuple[PhysicalNode, ...]
     params: dict[str, Any]
     cost: CostVector = field(default_factory=CostVector)
+    variant_costs: dict[str, CostVector] = field(default_factory=dict)

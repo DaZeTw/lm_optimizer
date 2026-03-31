@@ -22,6 +22,10 @@ class OperatorCostVector:
     quality_risk: float = 0.0
     key_metric: str = ""  # human-readable explanation of dominant cost
     saturation: float = 0.0  # AGGREGATE only: input_tokens / context_window
+    sample_count: int = 0  # telemetry samples backing this estimate
+    accuracy_score: float | None = None  # optional observed accuracy proxy
+    variant_costs: dict[str, dict[str, float]] = field(default_factory=dict)
+    # variant_costs maps variant -> {token_cost, call_cost, latency_cost, quality_risk}
 
     def scalar(self, alpha=1.0, beta=1.0, gamma=1.0, delta=1.0) -> float:
         return (

@@ -1,7 +1,8 @@
-"""LLM-guided physical planner with cost-model feedback.
+"""LLM-driven physical planner with iterative refinement support.
 
-This planner starts from a cost-aware baseline, asks an LLM for variant overrides,
-then scores each proposed plan and keeps the best one.
+This planner starts from a deterministic base physical plan and then asks an
+LLM planning client for per-operator variant overrides. Overrides are validated
+against allowed candidates before being applied.
 """
 
 from __future__ import annotations
@@ -10,146 +11,216 @@ import json
 from dataclasses import replace
 from typing import Any
 
-from cost_model.cost_aware_planner import _CANDIDATES, CostAwarePlanner
+from catalog.catalog import SystemCatalog
+from cost_model.cost_aware_planner import CostAwarePlanner
 from cost_model.scorer import PlanScorer
 from ir.nodes import LogicalNode, PhysicalNode
+from ir.ops import Op
+from planner.variant_candidates import CANDIDATE_VARIANTS
 
 
-class LLMFeedbackPhysicalPlanner:
-    """Refine physical variants using LLM proposals and cost-model scoring."""
+class LlmFeedbackPlanner:
+    """Applies LLM-proposed physical variant overrides over a base plan."""
 
     def __init__(
         self,
         *,
-        cost_planner: CostAwarePlanner,
-        client: Any | None,
+        base_planner: CostAwarePlanner,
+        planning_client: Any,
+        catalog: SystemCatalog | None = None,
         model: str = "gpt-4o-mini",
         temperature: float = 0.0,
         rounds: int = 1,
     ):
-        self._cost_planner = cost_planner
-        self._client = client
-        self._model = model
-        self._temperature = temperature
-        self._rounds = max(1, rounds)
+        self.base_planner = base_planner
+        self.planning_client = planning_client
+        self.catalog = catalog
+        self.model = model
+        self.temperature = temperature
+        self.rounds = max(1, rounds)
 
-    def build(self, root: LogicalNode) -> PhysicalNode:
-        """Build and refine a physical plan. Falls back gracefully on any LLM issues."""
-        baseline = self._cost_planner.build(root)
-        if self._client is None:
-            return baseline
+    def build(
+        self,
+        root: LogicalNode,
+        feedback: dict[str, Any] | None = None,
+    ) -> PhysicalNode:
+        """Build physical plan and refine with one or more LLM planning rounds."""
+        scorer = PlanScorer(catalog=self.catalog)
+        current, current_report = scorer.annotate_plan(self.base_planner.build(root))
 
-        best_plan = baseline
-        best_scalar = self._score(best_plan)
-
-        for _ in range(self._rounds):
-            overrides = self._propose_overrides(best_plan, best_scalar)
+        for round_index in range(self.rounds):
+            response = self._request_overrides(
+                logical=root,
+                current_plan=current,
+                current_feedback=feedback,
+                current_score=current_report,
+                round_index=round_index,
+            )
+            overrides = self._parse_overrides(response)
             if not overrides:
                 continue
-            candidate = self._apply_overrides(best_plan, overrides)
-            candidate_scalar = self._score(candidate)
-            if candidate_scalar < best_scalar:
-                best_plan = candidate
-                best_scalar = candidate_scalar
 
-        return best_plan
+            refined = self._apply_overrides(current, overrides)
+            current, current_report = scorer.annotate_plan(refined)
 
-    def _score(self, plan: PhysicalNode) -> float:
-        scorer = PlanScorer(
-            weights=self._cost_planner.weights,
-            log=self._cost_planner.log,
-            corpus=self._cost_planner.corpus,
-            catalog=self._cost_planner.catalog,
-        )
-        return scorer.score(plan).scalar
+        return current
 
-    def _propose_overrides(
+    def _request_overrides(
         self,
-        plan: PhysicalNode,
-        current_scalar: float,
-    ) -> dict[str, str]:
-        prompt = self._build_prompt(plan, current_scalar)
+        *,
+        logical: LogicalNode,
+        current_plan: PhysicalNode,
+        current_feedback: dict[str, Any] | None,
+        current_score,
+        round_index: int,
+    ) -> Any:
+        allowed = {
+            op.value: list(variants) for op, variants in CANDIDATE_VARIANTS.items()
+        }
+        payload = {
+            "task": "Choose physical variant overrides that reduce scalar cost while preserving quality.",
+            "round": round_index + 1,
+            "logical_plan": logical.to_dict(),
+            "current_physical_plan": self._physical_to_dict(current_plan),
+            "allowed_variants": allowed,
+            "current_score": {
+                "scalar": current_score.scalar,
+                "total_token_cost": current_score.total_token_cost,
+                "total_call_cost": current_score.total_call_cost,
+                "total_latency_cost": current_score.total_latency_cost,
+                "total_quality_risk": current_score.total_quality_risk,
+                "bottleneck": current_score.bottleneck,
+            },
+            "execution_feedback": current_feedback or {},
+            "output_schema": {"variant_overrides": {"<OP or OP_index>": "<variant>"}},
+            "rules": [
+                "Only return JSON.",
+                "Only choose variants in allowed_variants for that operator.",
+                "Prefer lower scalar cost and lower quality risk.",
+                "Do not change operators, only variants.",
+            ],
+        }
+
         messages = [
             {
                 "role": "system",
-                "content": (
-                    "You optimize physical operator variants for a retrieval+LLM pipeline. "
-                    "Return only strict JSON."
-                ),
+                "content": "You are a query-optimizer planner that returns strict JSON.",
             },
-            {"role": "user", "content": prompt},
+            {
+                "role": "user",
+                "content": json.dumps(payload, indent=2),
+            },
         ]
+        return self.planning_client.complete(
+            messages=messages,
+            model=self.model,
+            temperature=self.temperature,
+        )
 
-        try:
-            raw = self._client.complete(
-                messages=messages,
-                model=self._model,
-                temperature=self._temperature,
-            )
-            payload = json.loads(raw)
-        except Exception:
-            return {}
+    def _parse_overrides(self, response: Any) -> dict[str, str]:
+        if isinstance(response, dict):
+            body = response
+        else:
+            text = str(response or "").strip()
+            if text.startswith("```"):
+                text = self._strip_code_fence(text)
+            try:
+                body = json.loads(text)
+            except json.JSONDecodeError:
+                return {}
 
-        overrides = payload.get("variant_overrides", {})
+        overrides = body.get("variant_overrides") if isinstance(body, dict) else None
         if not isinstance(overrides, dict):
             return {}
 
-        normalized: dict[str, str] = {}
-        for op_name, variant in overrides.items():
-            if isinstance(op_name, str) and isinstance(variant, str):
-                normalized[op_name.strip().upper()] = variant.strip()
-        return normalized
+        out: dict[str, str] = {}
+        for k, v in overrides.items():
+            if isinstance(k, str) and isinstance(v, str):
+                out[k.strip()] = v.strip()
+        return out
 
-    def _build_prompt(self, plan: PhysicalNode, current_scalar: float) -> str:
-        lines: list[str] = []
-        self._render_plan(plan, lines, 0)
-        return (
-            "Current physical plan variants by node:\n"
-            + "\n".join(lines)
-            + "\n\n"
-            + f"Current total scalar cost: {current_scalar:.3f}\n"
-            + "You may override variants by logical op name. "
-            + "Only use known variants from this set:\n"
-            + json.dumps({k.value: v for k, v in _CANDIDATES.items()}, indent=2)
-            + "\n\nReturn JSON only in this form:\n"
-            + '{"variant_overrides": {"AGGREGATE": "HierarchicalGenerate"}}'
-        )
-
-    def _render_plan(self, node: PhysicalNode, lines: list[str], depth: int) -> None:
-        indent = "  " * depth
-        lines.append(
-            f"{indent}{node.logical_ref.op.value}: variant={node.variant} params={node.params}"
-        )
-        for child in node.inputs:
-            self._render_plan(child, lines, depth + 1)
+    def _strip_code_fence(self, text: str) -> str:
+        lines = text.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].startswith("```"):
+            lines = lines[:-1]
+        return "\n".join(lines).strip()
 
     def _apply_overrides(
         self,
-        plan: PhysicalNode,
+        root: PhysicalNode,
         overrides: dict[str, str],
     ) -> PhysicalNode:
-        logical_op = plan.logical_ref.op
-        op_name = logical_op.value
-        desired = overrides.get(op_name)
+        counters: dict[str, int] = {}
 
-        allowed = self._cost_planner._filter_candidates(  # noqa: SLF001
-            plan.logical_ref,
-            list(_CANDIDATES.get(logical_op, [plan.variant])),
-        )
-        next_variant = plan.variant
-        if desired and desired in allowed:
-            next_variant = desired
+        def walk(node: PhysicalNode) -> PhysicalNode:
+            op_name = node.logical_ref.op.value
+            op_index = counters.get(op_name, 0)
+            counters[op_name] = op_index + 1
+            op_id = f"{op_name}_{op_index}"
 
-        new_inputs = tuple(
-            self._apply_overrides(child, overrides) for child in plan.inputs
-        )
-        rebuilt = replace(plan, variant=next_variant, inputs=new_inputs)
+            updated_inputs = tuple(walk(c) for c in node.inputs)
 
-        scorer = PlanScorer(
-            weights=self._cost_planner.weights,
-            log=self._cost_planner.log,
-            corpus=self._cost_planner.corpus,
-            catalog=self._cost_planner.catalog,
-        )
-        annotated, _ = scorer.annotate_plan(rebuilt)
-        return annotated
+            desired = overrides.get(op_id)
+            if desired is None:
+                desired = overrides.get(op_name)
+
+            candidates = self._filter_candidates(
+                node.logical_ref,
+                list(CANDIDATE_VARIANTS.get(node.logical_ref.op, [node.variant])),
+            )
+            if not candidates:
+                candidates = [node.variant]
+
+            variant = node.variant
+            if desired in candidates:
+                variant = desired
+
+            return replace(
+                node,
+                variant=variant,
+                inputs=updated_inputs,
+            )
+
+        return walk(root)
+
+    def _filter_candidates(
+        self,
+        logical_node: LogicalNode,
+        candidates: list[str],
+    ) -> list[str]:
+        op = logical_node.op
+
+        if op == Op.TRANSFORM:
+            schema = str(logical_node.params.get("schema", ""))
+            if not schema.strip():
+                return ["IdentityTransform"]
+
+        if op == Op.COMPOSE:
+            condition = str(logical_node.params.get("condition", ""))
+            if not condition.strip():
+                return ["ConcatCompose"]
+
+        if op == Op.DIFF and len(logical_node.inputs) > 1:
+            subtract = logical_node.inputs[1]
+            if subtract.op == Op.I and "__overlap__" in str(
+                subtract.params.get("query", "")
+            ):
+                return ["SemanticDiff"]
+
+        seen: set[str] = set()
+        filtered: list[str] = []
+        for name in candidates:
+            if name not in seen:
+                seen.add(name)
+                filtered.append(name)
+        return filtered
+
+    def _physical_to_dict(self, node: PhysicalNode) -> dict[str, Any]:
+        return {
+            "op": node.logical_ref.op.value,
+            "variant": node.variant,
+            "params": dict(node.params),
+            "inputs": [self._physical_to_dict(c) for c in node.inputs],
+        }

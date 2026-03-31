@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections import Counter
 from dataclasses import dataclass
 from parser.semantic_parser import SemanticParser
 from pathlib import Path
@@ -13,10 +14,13 @@ import executor.ops  # noqa: F401  # Ensure physical variants are registered.
 from catalog.catalog import SystemCatalog
 from catalog.indexer import load_catalog
 from cost_model.cost_aware_planner import CostAwarePlanner
+from cost_model.scorer import PlanScorer
+from cost_model.telemetry import default_telemetry
 from executor.runner import ExecutionResult, PlanRunner
 from ir.nodes import LogicalNode, PhysicalNode
+from ir.ops import Op
 from optimizer.engine import OptimizerEngine, RewriteEntry
-from planner.llm_feedback_planner import LLMFeedbackPhysicalPlanner
+from planner.llm_feedback_planner import LlmFeedbackPlanner
 from planner.physical import build_physical_plan
 
 
@@ -69,9 +73,11 @@ class LmOptimizerPipeline:
         self.optimizer = optimizer or OptimizerEngine()
         self.use_cost_aware_planner = use_cost_aware_planner
         self.planner_preset = planner_preset
+        # Keep for compatibility, but planning now uses a single planner path.
         self.physical_planner_mode = physical_planner_mode
         self.planning_client = planning_client
         self.planning_rounds = planning_rounds
+        self._latest_planning_feedback: dict[str, Any] | None = None
 
         self.runner = PlanRunner(corpus=self.corpus, llm=self.llm, catalog=self.catalog)
 
@@ -79,10 +85,16 @@ class LmOptimizerPipeline:
         self, query: str, log_path: str | Path | None = None
     ) -> PipelineResult:
         """Execute the full pipeline for one query and return all artifacts."""
+        self._latest_planning_feedback = None
         logical = self.parse(query)
         optimized, rewrites = self.optimize(logical)
         physical = self.build_physical(optimized)
         execution = await self.runner.run(physical)
+        self._record_execution_feedback(physical, execution)
+        self._latest_planning_feedback = self._build_planning_feedback(
+            physical,
+            execution,
+        )
         result = PipelineResult(
             query=query,
             logical_plan=logical,
@@ -96,6 +108,63 @@ class LmOptimizerPipeline:
             self._save_logs(result, Path(log_path))
 
         return result
+
+    async def run_with_physical_feedback(
+        self,
+        query: str,
+        corpus,
+        iterations: int,
+        log_path: str | Path | None = None,
+    ) -> PipelineResult:
+        """Run iterative physical planning where each run feeds telemetry for the next."""
+        if iterations < 1:
+            raise ValueError("iterations must be >= 1")
+
+        runner = PlanRunner(corpus=corpus, llm=self.llm, catalog=self.catalog)
+
+        logical = self.parse(query)
+        optimized, rewrites = self.optimize(logical)
+        self._latest_planning_feedback = None
+
+        best: PipelineResult | None = None
+        for _ in range(iterations):
+            physical = self.build_physical(optimized)
+            execution = await runner.run(physical)
+            self._record_execution_feedback(physical, execution)
+            self._latest_planning_feedback = self._build_planning_feedback(
+                physical,
+                execution,
+            )
+            candidate = PipelineResult(
+                query=query,
+                logical_plan=logical,
+                optimized_plan=optimized,
+                physical_plan=physical,
+                rewrite_log=rewrites,
+                execution=execution,
+            )
+            if best is None:
+                best = candidate
+                continue
+
+            # Keep the run with fewer errors and then fewer tokens.
+            best_err = len(best.execution.errors)
+            cand_err = len(candidate.execution.errors)
+            if cand_err < best_err:
+                best = candidate
+                continue
+            if cand_err == best_err:
+                best_tokens = sum(best.execution.token_counts.values())
+                cand_tokens = sum(candidate.execution.token_counts.values())
+                if cand_tokens <= best_tokens:
+                    best = candidate
+
+        if best is None:
+            raise RuntimeError("No pipeline result produced")
+
+        if log_path:
+            self._save_logs(best, Path(log_path))
+        return best
 
     def _save_logs(self, result: PipelineResult, path: Path):
         """Serializes each phase into a JSON file."""
@@ -131,6 +200,23 @@ class LmOptimizerPipeline:
             return asyncio.run(self.run(query))
         raise RuntimeError("run_sync() cannot be called from an active event loop")
 
+    def run_sync_with_physical_feedback(
+        self,
+        query: str,
+        corpus,
+        iterations: int,
+    ) -> PipelineResult:
+        """Synchronous wrapper for iterative physical-feedback execution."""
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(
+                self.run_with_physical_feedback(query, corpus, iterations)
+            )
+        raise RuntimeError(
+            "run_sync_with_physical_feedback() cannot be called from an active event loop"
+        )
+
     def parse(self, query: str) -> LogicalNode:
         return self.parser.parse(query)
 
@@ -148,19 +234,120 @@ class LmOptimizerPipeline:
             model_id=self.model_id,
         )
 
-        if self.physical_planner_mode == "llm_feedback":
-            client = self.planning_client
-            if client is None and hasattr(self.parser, "client"):
-                client = getattr(self.parser, "client")
-            feedback_planner = LLMFeedbackPhysicalPlanner(
-                cost_planner=cost_planner,
-                client=client,
-                model=self.model_id or "gpt-4o-mini",
+        if (
+            self.physical_planner_mode == "llm_feedback"
+            and self.planning_client is not None
+        ):
+            planner = LlmFeedbackPlanner(
+                base_planner=cost_planner,
+                planning_client=self.planning_client,
+                catalog=self.catalog,
                 rounds=self.planning_rounds,
             )
-            return feedback_planner.build(logical)
+            return planner.build(logical, feedback=self._latest_planning_feedback)
 
         return cost_planner.build(logical)
+
+    def _build_planning_feedback(
+        self,
+        physical: PhysicalNode,
+        execution: ExecutionResult,
+    ) -> dict[str, Any]:
+        """Build planner feedback payload with overall and per-operator signals."""
+        report = PlanScorer(catalog=self.catalog).score(physical)
+        per_operator = {}
+        for op_id, vector in report.per_node.items():
+            per_operator[op_id] = {
+                "variant": vector.variant,
+                "scalar": round(vector.scalar(), 4),
+                "token_cost": round(vector.token_cost, 4),
+                "call_cost": round(vector.call_cost, 4),
+                "latency_cost": round(vector.latency_cost, 4),
+                "quality_risk": round(vector.quality_risk, 4),
+                "sample_count": vector.sample_count,
+                "accuracy_score": vector.accuracy_score,
+            }
+
+        total_tokens = sum(execution.token_counts.values())
+        error_count = len(execution.errors)
+        quality_score = max(0.0, 1.0 - (error_count / max(1, len(execution.trace))))
+
+        return {
+            "overall": {
+                "scalar": report.scalar,
+                "token_cost": report.total_token_cost,
+                "call_cost": report.total_call_cost,
+                "latency_cost": report.total_latency_cost,
+                "quality_risk": report.total_quality_risk,
+                "quality_score": round(quality_score, 4),
+                "bottleneck": report.bottleneck,
+                "warnings": list(report.warnings),
+            },
+            "per_operator": per_operator,
+            "execution": {
+                "errors": list(execution.errors),
+                "error_count": error_count,
+                "trace": list(execution.trace),
+                "trace_count": len(execution.trace),
+                "token_counts": dict(execution.token_counts),
+                "total_tokens": total_tokens,
+            },
+        }
+
+    def _record_execution_feedback(
+        self,
+        physical: PhysicalNode,
+        execution: ExecutionResult,
+    ) -> None:
+        """Record coarse operator-variant telemetry from one execution.
+
+        This is intentionally lightweight for the first iteration: it records
+        per-op per-variant token/call/latency/risk signals so later planning
+        rounds can exploit observed outcomes.
+        """
+
+        nodes: list[PhysicalNode] = []
+
+        def walk(node: PhysicalNode) -> None:
+            for child in node.inputs:
+                walk(child)
+            nodes.append(node)
+
+        walk(physical)
+        if not nodes:
+            return
+
+        per_variant_nodes = Counter(n.variant for n in nodes)
+        trace_counts = Counter(execution.trace)
+        total_errors = len(execution.errors)
+        accuracy_proxy = max(0.0, 1.0 - (total_errors / max(1, len(execution.trace))))
+
+        for node in nodes:
+            variant = node.variant
+            op_name = node.logical_ref.op.value
+            token_total = float(execution.token_counts.get(variant, 0))
+            token_per_node = token_total / max(1, per_variant_nodes[variant])
+            call_cost = float(trace_counts.get(variant, 0)) / max(
+                1,
+                per_variant_nodes[variant],
+            )
+
+            # Keep latency as a simple call-proportional proxy until node-level
+            # timing is available from the executor.
+            latency_cost = max(0.1, call_cost)
+            quality_risk = 1.0 - accuracy_proxy
+            if node.logical_ref.op == Op.AGGREGATE:
+                quality_risk += 0.1
+
+            default_telemetry.record(
+                op=op_name,
+                variant=variant,
+                token_cost=token_per_node,
+                call_cost=call_cost,
+                latency_cost=latency_cost,
+                quality_risk=quality_risk,
+                accuracy_score=accuracy_proxy,
+            )
 
     @staticmethod
     def _load_catalog_if_present(
@@ -204,5 +391,4 @@ def run_pipeline_sync(
         planning_client=planning_client,
         planning_rounds=planning_rounds,
     )
-    return pipeline.run_sync(query)
     return pipeline.run_sync(query)

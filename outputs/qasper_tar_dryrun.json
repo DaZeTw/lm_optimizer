@@ -1,0 +1,295 @@
+{
+  "config": {
+    "protocol": "test_aggregate_refine",
+    "input": "qasper_top_100_context.json",
+    "output": "outputs\\qasper_tar_dryrun.json",
+    "max_samples": 1,
+    "split": "train",
+    "model": "gpt-4o-mini",
+    "temperature": 0.0,
+    "query_template": "what are the baselines?",
+    "token_increase_cap": 0.15,
+    "selected_samples": 1
+  },
+  "baseline": {
+    "global_plan": {
+      "root_variant": "DirectGenerate",
+      "op_id_variants": {
+        "AGGREGATE_0": "DirectGenerate",
+        "RANK_0": "CrossEncoderRank",
+        "I_0": "HybridRetrieve"
+      }
+    },
+    "aggregate_summary": {
+      "sample_count": 1,
+      "total_error_count": 0,
+      "avg_token_cost_per_operator": {
+        "AGGREGATE": 428.9091,
+        "I": 6128.0,
+        "RANK": 5144.3333
+      },
+      "most_frequent_bottleneck": "I_0",
+      "warning_frequencies": {},
+      "avg_quality_risk": 0.1,
+      "avg_token_cost": 11701.2
+    },
+    "results": [
+      {
+        "sample_index": 0,
+        "paper_id": "1810.02100",
+        "question": "what are the baselines?",
+        "gold_answer": "Conll, Weblogs, Newsgroups, Reviews, Answers",
+        "predicted_answer": "In the evaluation of co-training approaches for dependency parsing, the baseline accuracy is established using the Mate parser trained on the Conll source domain dataset, particularly focusing on labeled attachment scores (LAS) and unlabelled attachment scores (UAS). The experiments utilize diverse corpora, including a source domain training set (Conll), various test sets (Weblogs, Newsgroups, Reviews, and Answers), and a separate Chemical domain for comparative analysis. \n\nFor self-training evaluation, both confidence-based methods and a random selection-based self-training approach were tested, with the latter yielding no improvements. Confidence-based techniques demonstrated significant gains across multiple domains, particularly notable in the Chemical domain where improvements reached over 1% using predicted part-of-speech (PoS) tags. \n\nIn a multilingual evaluation, a unified setting showed improvements in five languages, particularly Korean, which achieved the largest gain of 2.14% (LAS). Sentence length and complexity were identified as significant factors influencing the effectiveness of self-training.\n\nThe incorporation of Dependency Language Models (DLMs) into the Mate transition-based parser led to substantial performance enhancements for both English and Chinese parsing tasks. The DLM model favored in-domain accuracy, reflecting gains primarily in specific dependency labels such as CONJ and OBJ for in-domain and out-of-domain corpora respectively. \n\nOverall, the study highlights the efficacy of co-/tri-training and confidence-based self-training as robust solutions for out-of-domain dependency parsing, emphasizing the necessity of selecting high-quality parse trees to optimize accuracy.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": false,
+          "gold_token_recall": 1.0,
+          "evidence_overlap": 0.5848
+        },
+        "plan": {
+          "root_variant": "DirectGenerate",
+          "variants": [
+            "DirectGenerate",
+            "CrossEncoderRank",
+            "HybridRetrieve"
+          ],
+          "op_id_variants": {
+            "AGGREGATE_0": "DirectGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "HybridRetrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "HybridRetrieve",
+            "CrossEncoderRank",
+            "DirectGenerate"
+          ],
+          "token_counts": {
+            "HybridRetrieve": 5278,
+            "CrossEncoderRank": 5278,
+            "DirectGenerate": 431
+          },
+          "total_tokens": 10987,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 11707.34,
+            "token_cost": 11701.2,
+            "call_cost": 3.0,
+            "latency_cost": 3.0,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "HybridRetrieve",
+              "scalar": 6130.0,
+              "token_cost": 6128.0,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 2,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 5146.3333,
+              "token_cost": 5144.3333,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 3,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "DirectGenerate",
+              "scalar": 431.0091,
+              "token_cost": 428.9091,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 11,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "HybridRetrieve",
+              "CrossEncoderRank",
+              "DirectGenerate"
+            ],
+            "trace_count": 3,
+            "token_counts": {
+              "HybridRetrieve": 5278,
+              "CrossEncoderRank": 5278,
+              "DirectGenerate": 431
+            },
+            "total_tokens": 10987
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      }
+    ]
+  },
+  "revision": {
+    "single_change_request": {
+      "accepted": true,
+      "reason": "ok",
+      "overrides": {
+        "I_0": "BM25Retrieve"
+      },
+      "rationale": "Switching to BM25Retrieve from HybridRetrieve is expected to reduce the average quality risk while keeping the average token cost increase within the 15% limit."
+    },
+    "revised_overrides": {
+      "AGGREGATE_0": "DirectGenerate",
+      "RANK_0": "CrossEncoderRank",
+      "I_0": "BM25Retrieve"
+    }
+  },
+  "revised": {
+    "aggregate_summary": {
+      "sample_count": 1,
+      "total_error_count": 0,
+      "avg_token_cost_per_operator": {
+        "AGGREGATE": 449.3333,
+        "I": 10181.4444,
+        "RANK": 5177.75
+      },
+      "most_frequent_bottleneck": "I_0",
+      "warning_frequencies": {},
+      "avg_quality_risk": 0.1,
+      "avg_token_cost": 15808.5
+    },
+    "results": [
+      {
+        "sample_index": 0,
+        "paper_id": "1810.02100",
+        "question": "what are the baselines?",
+        "gold_answer": "Conll, Weblogs, Newsgroups, Reviews, Answers",
+        "predicted_answer": "The evidence presents a comprehensive evaluation framework for dependency parsing across various domains, focusing on co-training, self-training, and domain adaptation techniques, utilizing multiple parsers and evaluation methods.\n\n**1. Evaluation Corpora:**\n   - The primary evaluation corpus includes a source domain training set (Conll), a development set (Weblogs), an in-domain test set (Conll), and four out-of-domain test sets (Weblogs, Newsgroups, Reviews, and Answers). For all target domains, a large unlabelled dataset accompanies the training process.\n   - In a specific assessment of the Chemical domain, the evaluation utilized data from the CoNLL 2007 shared task, specifically sections of the Wall Street Journal portion of the Penn Treebank for the training set and the first 256,000 sentences as unlabelled data.\n\n**2. Parsers Used:**\n   - Four different parsers were employed: Malt parser, MST parser, Mate parser, and Turbo parser. The Mate parser is the primary tool for evaluation, with baselines established through its application directly to target domains trained on the Conll dataset.\n\n**3. Baselines and Metrics:**\n   - Baselines were generated using the Mate parser trained solely on the Conll training data and were mainly evaluated using labelled attachment scores (LAS) while also reporting unlabelled attachment scores (UAS). Statistical significance was noted via p-values.\n\n**4. Self-training Approaches:**\n   - Two confidence-based self-training methods were evaluated: one utilizing random selection and two confidence-based methods, both which achieved statistically significant accuracy gains across tested domains.\n   - The Delta-based and parse score-based methods improved accuracy by an average of 0.6% for LAS and UAS across web domains, and noted larger improvements when using gold part-of-speech tags in the Chemical domain.\n\n**5. Co-training Evaluation:**\n   - The co-training approach demonstrated significant improvements in parsing performance, especially when sentence annotation strategies excluded short annotations; tri-training yielded even higher improvements by leveraging novel annotations.\n   \n**6. Multi-language Evaluation:**\n   - The evaluation across nine languages indicated successful outcomes in domain adaptation without unique tuning for individual languages, especially notable gains reported for Korean.\n\n**7. DLM Integration:**\n   - The dependency language models (DLM) approach enhanced parsing performance in both English and Chinese contexts. Modifications led to marked improvements in labelled and unlabelled scores, with the best results demonstrating a blend of DLMs across different dataset qualities.\n\n**8. Detailed",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": false,
+          "gold_token_recall": 1.0,
+          "evidence_overlap": 0.8341
+        },
+        "plan": {
+          "root_variant": "DirectGenerate",
+          "variants": [
+            "DirectGenerate",
+            "CrossEncoderRank",
+            "BM25Retrieve"
+          ],
+          "op_id_variants": {
+            "AGGREGATE_0": "DirectGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "BM25Retrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "DirectGenerate"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 5278,
+            "CrossEncoderRank": 5278,
+            "DirectGenerate": 674
+          },
+          "total_tokens": 11230,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 15814.63,
+            "token_cost": 15808.5,
+            "call_cost": 3.0,
+            "latency_cost": 3.0,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "BM25Retrieve",
+              "scalar": 10183.4444,
+              "token_cost": 10181.4444,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 9,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 5179.75,
+              "token_cost": 5177.75,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 4,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "DirectGenerate",
+              "scalar": 451.4333,
+              "token_cost": 449.3333,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 12,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "BM25Retrieve",
+              "CrossEncoderRank",
+              "DirectGenerate"
+            ],
+            "trace_count": 3,
+            "token_counts": {
+              "BM25Retrieve": 5278,
+              "CrossEncoderRank": 5278,
+              "DirectGenerate": 674
+            },
+            "total_tokens": 11230
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      }
+    ]
+  },
+  "delta": {
+    "accepted": false,
+    "reason": "rejected: quality risk did not improve and token increase exceeded cap",
+    "risk_improved": false,
+    "token_within_cap": false,
+    "token_increase_ratio": 0.351015,
+    "quality_risk_delta": 0.0,
+    "avg_token_cost_delta": 4107.3
+  },
+  "winner": "baseline"
+}

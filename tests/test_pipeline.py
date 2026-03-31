@@ -133,13 +133,15 @@ class LongContextStubParser:
 class PlanningStubClient:
     def __init__(self):
         self.calls = 0
+        self.last_messages = None
 
     def complete(self, messages, model, temperature):
         self.calls += 1
+        self.last_messages = messages
         return json.dumps(
             {
                 "variant_overrides": {
-                    "AGGREGATE": "HierarchicalGenerate",
+                    "AGGREGATE": "DirectGenerate",
                 }
             }
         )
@@ -355,5 +357,32 @@ def test_pipeline_physical_plan_llm_feedback_mode_applies_override():
     result = pipeline.run_sync("long context compare")
 
     assert planning_client.calls == 1
-    assert result.physical_plan.variant in ("DirectGenerate", "HierarchicalGenerate")
+    assert result.physical_plan.variant == "DirectGenerate"
+    assert result.execution.errors == []
+
+
+def test_pipeline_feedback_iterations_call_llm_planner_each_round():
+    planning_client = PlanningStubClient()
+    corpus = _long_context_corpus()
+    pipeline = LmOptimizerPipeline(
+        corpus=corpus,
+        llm=MockLLM("Planner feedback answer."),
+        parser=LongContextStubParser(),
+        catalog=_long_context_catalog(),
+        use_cost_aware_planner=True,
+        planner_preset="balanced",
+        model_id="gpt-4o-mini",
+        physical_planner_mode="llm_feedback",
+        planning_client=planning_client,
+        planning_rounds=1,
+    )
+
+    result = pipeline.run_sync_with_physical_feedback(
+        "long context compare",
+        corpus,
+        iterations=2,
+    )
+
+    assert planning_client.calls == 2
+    assert result.physical_plan.variant == "DirectGenerate"
     assert result.execution.errors == []

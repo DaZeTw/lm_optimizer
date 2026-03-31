@@ -1,0 +1,2506 @@
+{
+  "config": {
+    "protocol": "test_aggregate_refine",
+    "input": "qasper_top_100_context.json",
+    "output": "outputs\\qasper_10_feedback_tar.json",
+    "max_samples": 10,
+    "split": "train",
+    "model": "gpt-4o-mini",
+    "temperature": 0.0,
+    "token_increase_cap": 0.15,
+    "selected_samples": 10
+  },
+  "baseline": {
+    "global_plan": {
+      "root_variant": "HierarchicalGenerate",
+      "op_id_variants": {
+        "AGGREGATE_0": "HierarchicalGenerate",
+        "RANK_0": "CrossEncoderRank",
+        "I_0": "HybridRetrieve"
+      }
+    },
+    "aggregate_summary": {
+      "sample_count": 10,
+      "total_error_count": 0,
+      "avg_token_cost_per_operator": {
+        "AGGREGATE": 436.2946,
+        "COMPOSE": 13954.0,
+        "I": 10730.7171,
+        "RANK": 5832.8933,
+        "TRANSFORM": 6977.0,
+        "VERIFY": 449.8905
+      },
+      "most_frequent_bottleneck": "I_0",
+      "warning_frequencies": {},
+      "avg_quality_risk": 0.1,
+      "avg_token_cost": 21088.71
+    },
+    "results": [
+      {
+        "sample_index": 0,
+        "paper_id": "1810.02100",
+        "question": "Which English domains do they evaluate on?",
+        "gold_answer": "Conll, Weblogs, Newsgroups, Reviews, Answers",
+        "predicted_answer": "The thesis evaluates semi-supervised techniques across several English domains using diverse corpora. The key evaluated English domains include:\n\n1. **In-Domain Evaluation:**\n   - **CoNLL 2009 Corpus:** Primarily derived from the Wall Street Journal (WSJ) and includes a portion from the Brown corpus.\n   - **OntoNotes v5.0 Corpus:** Focused on weblogs, with the last 20% serving as the target domain development set.\n   - **Additional English Domains:** Newsgroups, product reviews, and answers from the first SANCL workshop.\n\n2. **Out-of-Domain Evaluation:**\n   - **Chemical Domain Data:** Utilized from the CoNLL 2007 shared task.\n   - **Multi-Lingual Evaluation:** Included data in nine languages but evaluated using English datasets.\n\n3. **Dependency Language Models:** Evaluated using both WSJ and the Chinese Treebank 5 (CTB5) for comparative analysis.\n\n4. **Unlabelled Data Sources:**\n   - **English:** The chelba13onebillion corpus, which contains 30 million sentences, was employed as an unlabelled data source.\n\nThe evaluation metrics for these domains included labelled and unlabelled attachment scores (LAS and UAS), showcasing the robustness of the semi-supervised approaches across these varied English domains.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": false,
+          "gold_token_recall": 1.0,
+          "evidence_overlap": 0.4447
+        },
+        "plan": {
+          "root_variant": "HierarchicalGenerate",
+          "variants": [
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "HybridRetrieve"
+          ],
+          "op_id_variants": {
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "HybridRetrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "HybridRetrieve",
+            "CrossEncoderRank",
+            "HierarchicalGenerate"
+          ],
+          "token_counts": {
+            "HybridRetrieve": 17072,
+            "CrossEncoderRank": 4185,
+            "HierarchicalGenerate": 306
+          },
+          "total_tokens": 21563,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 14231.88,
+            "token_cost": 14225.8,
+            "call_cost": 3.0,
+            "latency_cost": 3.0,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "HybridRetrieve",
+              "scalar": 8658.4,
+              "token_cost": 8656.4,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 5,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 5146.3333,
+              "token_cost": 5144.3333,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 6,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 427.15,
+              "token_cost": 425.05,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 20,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "HybridRetrieve",
+              "CrossEncoderRank",
+              "HierarchicalGenerate"
+            ],
+            "trace_count": 3,
+            "token_counts": {
+              "HybridRetrieve": 17072,
+              "CrossEncoderRank": 4185,
+              "HierarchicalGenerate": 306
+            },
+            "total_tokens": 21563
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      },
+      {
+        "sample_index": 1,
+        "paper_id": "1804.08186",
+        "question": "what evaluation methods are discussed?",
+        "gold_answer": "document-level accuracy precision recall F-score",
+        "predicted_answer": "The evaluation of language identification methods presents numerous challenges primarily due to variations in datasets used across different studies, which can hinder comparability and the significance of reported results. To address these issues, standardized corpora are being proposed, alongside datasets provided with accompanying publications to allow for replication and validation.\n\nThe key challenges identified include:\n\n1. **Inconsistent Language Codes**: Different labeling systems complicate the creation of reference corpora, particularly for languages with dialectal variations.\n2. **Language Variation**: Differences in orthographies, encodings, and transliterations within the same language can affect data consistency and performance assessments.\n3. **High Manual Labeling Costs**: Accurate labeling requires native speakers, while large datasets often include mislabeled instances from automated sources.\n4. **Dataset Scale and Source Differences**: Variability in the size and sources of datasets can significantly impact classifier performance, with accuracy notably decreasing when evaluated across larger numbers of languages.\n\nCommon evaluation methods include document-level accuracy, which measures correctly labeled documents, alongside precision and recall metrics. Confusion matrices are often used to visualize error distributions, while micro- and macro-averaging techniques help summarize results amidst class imbalances.\n\nImproving accuracy can involve enhancing the quality and quantity of training data, optimizing feature selection, and adjusting text sample lengths. Recent initiatives have contributed to the development of standardized datasets for specific language identification tasks, promoting community benchmarks.\n\nEnsemble methods, like majority voting and probabilistic classifier combinations, have shown potential in improving accuracy and often outperform single classifiers. Additionally, specialized methods have emerged for classifying short texts\u2014important for applications such as microblogs\u2014though results may not always generalize across different contexts.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": false,
+          "gold_token_recall": 0.7143,
+          "evidence_overlap": 0.2869
+        },
+        "plan": {
+          "root_variant": "HierarchicalGenerate",
+          "variants": [
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "HybridRetrieve"
+          ],
+          "op_id_variants": {
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "HybridRetrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "HybridRetrieve",
+            "CrossEncoderRank",
+            "HierarchicalGenerate"
+          ],
+          "token_counts": {
+            "HybridRetrieve": 12928,
+            "CrossEncoderRank": 7521,
+            "HierarchicalGenerate": 528
+          },
+          "total_tokens": 20977,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 15288.24,
+            "token_cost": 15282.1,
+            "call_cost": 3.0,
+            "latency_cost": 3.0,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "HybridRetrieve",
+              "scalar": 9370.3333,
+              "token_cost": 9368.3333,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 6,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 5485.8571,
+              "token_cost": 5483.8571,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 7,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 432.0524,
+              "token_cost": 429.9524,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 21,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "HybridRetrieve",
+              "CrossEncoderRank",
+              "HierarchicalGenerate"
+            ],
+            "trace_count": 3,
+            "token_counts": {
+              "HybridRetrieve": 12928,
+              "CrossEncoderRank": 7521,
+              "HierarchicalGenerate": 528
+            },
+            "total_tokens": 20977
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      },
+      {
+        "sample_index": 2,
+        "paper_id": "1804.08186",
+        "question": "what are the off-the-shelf systems discussed in the paper?",
+        "gold_answer": "Answer with content missing: (Names of many identifiers missing) TextCat, ChromeCLD, LangDetect, langid.py, whatlang, whatthelang, YALI, LDIG, Polyglot 3000, Lextek Language Identifier and Open Xerox Language Identifier.",
+        "predicted_answer": "Off-the-shelf language identification systems are software solutions that utilize pre-trained models to identify various languages without requiring additional training data. A range of systems has been evaluated, showcasing distinct features and capabilities. Key examples include:\n\n- **TextCat**: The original Perl-based system supporting 76 languages but is now outdated.\n- **Libtextcat**: An improved version of TextCat with the same number of language models and enhanced speed.\n- **JTCL**: Supports 15 languages.\n- **Mguesser**: Offers 104 language-encoding models optimized for faster performance.\n- **Whatlang-rs**: Based on character trigrams, pre-trained for 83 languages.\n- **Google Chrome's language identifier**: Employs a Naive Bayes classifier to support 83 languages, and an extended model for 160 languages.\n- **A Java library**: Trained on Wikipedia data for 53 languages, using normalization techniques.\n- **A Python implementation**: Covers 97 languages and has shown favorable accuracy and performance.\n- **A specialized Twitter tool**: Identifies 19 languages using a logistic regression classifier.\n\nMany systems have niche applications, particularly in distinguishing closely-related languages and dialects, which presents unique challenges due to linguistic similarities and shared scripts. \n\nA significant issue within the evaluation of these systems lies in the standardization of datasets, as the diversity in language labeling can hinder meaningful comparisons. Additionally, biases present in the training data may affect system performance, particularly for underrepresented languages.\n\nDespite providing accessible tools for language identification, it is crucial to acknowledge the limitations these systems face, especially in real-life contexts characterized by short, noisy, or mixed-language texts. Continued research is necessary to enhance the capabilities of these systems across varied datasets and applications, emphasizing the complexity and dynamic nature of the language identification field.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": false,
+          "gold_token_recall": 0.32,
+          "evidence_overlap": 0.457
+        },
+        "plan": {
+          "root_variant": "HierarchicalGenerate",
+          "variants": [
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "HybridRetrieve"
+          ],
+          "op_id_variants": {
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "HybridRetrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "HybridRetrieve",
+            "CrossEncoderRank",
+            "HierarchicalGenerate"
+          ],
+          "token_counts": {
+            "HybridRetrieve": 12015,
+            "CrossEncoderRank": 5475,
+            "HierarchicalGenerate": 509
+          },
+          "total_tokens": 17999,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 15668.82,
+            "token_cost": 15662.7,
+            "call_cost": 3.0,
+            "latency_cost": 3.0,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "HybridRetrieve",
+              "scalar": 9748.4286,
+              "token_cost": 9746.4286,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 7,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 5484.75,
+              "token_cost": 5482.75,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 8,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 435.6455,
+              "token_cost": 433.5455,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 22,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "HybridRetrieve",
+              "CrossEncoderRank",
+              "HierarchicalGenerate"
+            ],
+            "trace_count": 3,
+            "token_counts": {
+              "HybridRetrieve": 12015,
+              "CrossEncoderRank": 5475,
+              "HierarchicalGenerate": 509
+            },
+            "total_tokens": 17999
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      },
+      {
+        "sample_index": 3,
+        "paper_id": "1601.04012",
+        "question": "Which datasets are used in this work?",
+        "gold_answer": "GENIA corpus",
+        "predicted_answer": "Here is a list of datasets and resources related to language semantics, event representation, and computational approaches:\n\n1. **FAUST**: A system that combines predictions from different event extraction systems using stacking techniques to enhance accuracy in event identification.\n\n2. **UMass Event Structure Graphs**: This dataset focuses on constructing labeled graphs for mapping event structures, framed as an optimization problem in event representation.\n\n3. **Stanford Events**: This dataset employs dependency parsing methods for event structure extraction, designed to minimize the need for extensive domain-specific training.\n\n4. **Turku Event Dataset**: Another system contributing to the extraction of events from text, highlighting various techniques in computational linguistics.\n\n5. **Event Coreference Frameworks**: Datasets developed for unsupervised learning of coreferences, often utilizing statistical frameworks such as hierarchical Dirichlet processes.\n\n6. **Linguistic Resources**:\n   - **WordNet**: Provides lexical relations and structures.\n   - **VerbNet**: A resource linking verbs to their classes based on event structure and semantic roles.\n   - **FrameNet**: Offers a corpus of examples of how different verbs evoke particular frames of meaning.\n\n7. **Comlex**: A resource combining linguistic analysis with corpus data to improve understanding of event representation.\n\n8. **Vendler\u2019s event classes**: Data reflecting the classification of verbs and clauses into types based on features like boundedness and continuousness.\n\n9. **Countability and Duration Datasets**: Resources that introduce classifications paralleling mass-count distinctions for verbs, focusing on duration and countability.\n\n10. **Moens dataset**: Explores how events can include sub-events, expanding on the concept of event granularity and complexity in representation.\n\nThese datasets and resources collectively enhance the study and computational handling of events in language semantics, contributing to advancements in natural language processing and linguistic analysis.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": false,
+          "gold_token_recall": 0.5,
+          "evidence_overlap": 0.2647
+        },
+        "plan": {
+          "root_variant": "HierarchicalGenerate",
+          "variants": [
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "HybridRetrieve"
+          ],
+          "op_id_variants": {
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "HybridRetrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "HybridRetrieve",
+            "CrossEncoderRank",
+            "HierarchicalGenerate"
+          ],
+          "token_counts": {
+            "HybridRetrieve": 20659,
+            "CrossEncoderRank": 8509,
+            "HierarchicalGenerate": 520
+          },
+          "total_tokens": 29688,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 17372.9,
+            "token_cost": 17366.8,
+            "call_cost": 3.0,
+            "latency_cost": 3.0,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "HybridRetrieve",
+              "scalar": 11112.5,
+              "token_cost": 11110.5,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 8,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 5821.0,
+              "token_cost": 5819.0,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 9,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 439.4043,
+              "token_cost": 437.3043,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 23,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "HybridRetrieve",
+              "CrossEncoderRank",
+              "HierarchicalGenerate"
+            ],
+            "trace_count": 3,
+            "token_counts": {
+              "HybridRetrieve": 20659,
+              "CrossEncoderRank": 8509,
+              "HierarchicalGenerate": 520
+            },
+            "total_tokens": 29688
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      },
+      {
+        "sample_index": 4,
+        "paper_id": "1903.08237",
+        "question": "Does the paper describe experiments with real humans?",
+        "gold_answer": "Yes",
+        "predicted_answer": "Yes, there is confirmed evidence of experiments involving real human participants in the research on referring expressions and communication. \n\nIn the first summarized study, an interactive web-based experiment engaged 116 participants (58 pairs) who completed a reference game involving various arrays of objects. Participants were assigned roles as either speakers or listeners in 72 total trials, generating a dataset of 2177 critical trials. The study examined how speakers produced referring expressions about objects based on their visual characteristics, showcasing significant findings related to the use of color and size in communication.\n\nThe second summary discusses the methodology involving continuous semantics for adjectives (size and color), highlighting how this approach was used in context with human participants. It illustrates the experimental design aimed at understanding how speakers choose descriptors, the influence of context on listener comprehension, and variability in human perception of these attributes.\n\nOverall, both summaries confirm that real humans were actively involved in experiments intended to explore linguistic behaviors and communication strategies, providing a comprehensive understanding of how people use language in context.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": true,
+          "gold_token_recall": 1.0,
+          "evidence_overlap": 0.2992
+        },
+        "plan": {
+          "root_variant": "NliVerify",
+          "variants": [
+            "NliVerify",
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "HybridRetrieve"
+          ],
+          "op_id_variants": {
+            "VERIFY_0": "NliVerify",
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "HybridRetrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "HybridRetrieve",
+            "CrossEncoderRank",
+            "HierarchicalGenerate",
+            "CitationVerify"
+          ],
+          "token_counts": {
+            "HybridRetrieve": 15122,
+            "CrossEncoderRank": 9076,
+            "HierarchicalGenerate": 319,
+            "NliVerify": 319
+          },
+          "total_tokens": 24836,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 18584.16,
+            "token_cost": 18578.0,
+            "call_cost": 3.0,
+            "latency_cost": 3.1,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "HybridRetrieve",
+              "scalar": 11558.2222,
+              "token_cost": 11556.2222,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 9,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 6146.7,
+              "token_cost": 6144.7,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 10,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 434.475,
+              "token_cost": 432.375,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 24,
+              "accuracy_score": 1.0
+            },
+            "VERIFY_0": {
+              "variant": "NliVerify",
+              "scalar": 444.7667,
+              "token_cost": 444.6667,
+              "call_cost": 0.0,
+              "latency_cost": 0.1,
+              "quality_risk": 0.0,
+              "sample_count": 6,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "HybridRetrieve",
+              "CrossEncoderRank",
+              "HierarchicalGenerate",
+              "CitationVerify"
+            ],
+            "trace_count": 4,
+            "token_counts": {
+              "HybridRetrieve": 15122,
+              "CrossEncoderRank": 9076,
+              "HierarchicalGenerate": 319,
+              "NliVerify": 319
+            },
+            "total_tokens": 24836
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      },
+      {
+        "sample_index": 5,
+        "paper_id": "1709.09119",
+        "question": "How successful are they at matching names of authors in Japanese and English?",
+        "gold_answer": "180221 of 231162 author names could be matched successfully",
+        "predicted_answer": "The assessment of success rates in handling Japanese names involves understanding both the technical design of the system and the complex cultural background of Japanese naming conventions.\n\n1. **System Design and Implementation**: A specialized class has been created to manage Japanese names, ensuring they can be stored in both kanji and Latin transcription to facilitate comparison with related databases. However, challenges arise due to the lack of standardized name formats in inputs from sources such as the IPSJ Digital Library, where family and given names may not always be distinctly separated. This necessitates the use of regex for accurate categorization.\n\n2. **Transcription and Matching Challenges**: The system must navigate unique transcription issues, such as the alteration of double vowels, which complicates future matches against the ENAMDICT database. Different transcription systems require adaptations for consistency in matching names.\n\n3. **Quantifying Success**: The success of name matching is gauged through two primary metrics: precision\u2014correctly identifying synonymous names\u2014and recall\u2014identifying all relevant matches. While the tool is expected to achieve high precision due to a low rate of false positives, recall metrics remain ambiguous due to uneven coverage in the ENAMDICT. Nevertheless, initial test results from manual checks on approximately 90,000 publications suggest potential effectiveness.\n\n4. **Cultural Context**: The Japanese naming system is deeply rooted in tradition, with a specified structure and regulations governing the use of family and given names. The historical transition from a system where only nobility used family names to the current standardized practices, along with naming regulations that dictate the number of kanji allowed, impacts how names are processed and registered today.\n\n5. **Future Improvements**: Suggestions for enhancing the system focus on expanding access to common names databases, optimizing name segment arrangements, and resolving encoding inconsistencies. This could lead to better accuracy and an increase in the overall success rate of name identification.\n\nIn conclusion, while the system demonstrates promise for effectively integrating Japanese academic work into wider databases, its success rate hinges on ongoing improvements to address both technical challenges and the intricate nuances of Japanese naming conventions.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": false,
+          "gold_token_recall": 0.4444,
+          "evidence_overlap": 0.2927
+        },
+        "plan": {
+          "root_variant": "HierarchicalGenerate",
+          "variants": [
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "HybridRetrieve"
+          ],
+          "op_id_variants": {
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "HybridRetrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "HybridRetrieve",
+            "CrossEncoderRank",
+            "HierarchicalGenerate"
+          ],
+          "token_counts": {
+            "HybridRetrieve": 15014,
+            "CrossEncoderRank": 9201,
+            "HierarchicalGenerate": 606
+          },
+          "total_tokens": 24821,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 18769.97,
+            "token_cost": 18763.9,
+            "call_cost": 3.0,
+            "latency_cost": 3.0,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "HybridRetrieve",
+              "scalar": 11904.0,
+              "token_cost": 11902.0,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 10,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 6424.5455,
+              "token_cost": 6422.5455,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 11,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 441.42,
+              "token_cost": 439.32,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 25,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "HybridRetrieve",
+              "CrossEncoderRank",
+              "HierarchicalGenerate"
+            ],
+            "trace_count": 3,
+            "token_counts": {
+              "HybridRetrieve": 15014,
+              "CrossEncoderRank": 9201,
+              "HierarchicalGenerate": 606
+            },
+            "total_tokens": 24821
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      },
+      {
+        "sample_index": 6,
+        "paper_id": "1709.09119",
+        "question": "Do they translate metadata from Japanese papers to English?",
+        "gold_answer": "No",
+        "predicted_answer": "The document presents the process of integrating Japanese academic papers into the DBLP database, highlighting several significant challenges primarily related to translation and data quality management. Key issues identified include:\n\n1. **Encoding Discrepancies**: The representation of Japanese names and titles in kanji conflicts with DBLP's use of Latin-1 encoding, requiring the transcription of names for compatibility.\n\n2. **Data Quality Management**: To ensure data integrity, various tools are employed, such as name matching against established dictionaries and performing format checks. However, these measures may not sufficiently address quality discrepancies due to the variability in name transcriptions.\n\n3. **Transcription Variability**: The existence of multiple transcription possibilities for Japanese names complicates the matching process. The development of a co-author indexing system within the tool aims to improve the identification of homonyms and enhance name matching accuracy.\n\n4. **Tool Development**: The Kankoukanyuu tool has been designed to produce customized Bibliography Hypertext (BHT) files for Japanese papers. It underscores the need for the DBLP team to adapt their import system for this new format to maintain data integrity.\n\n5. **Performance Measurement**: The tool has demonstrated acceptable performance metrics, especially considering the limited number of Japanese papers being processed (less than 100,000). However, extensive manual quality assurance remains impractical.\n\n6. **Improvement and Future Prospects**: Future development could include the incorporation of a Chinese name dictionary, refining algorithms for better common paper detection, and the potential storage of common names for more efficient searches.\n\nIn summary, the integration of Japanese academic papers into the DBLP database marks a critical initial effort addressing the complexities of cross-linguistic data management, particularly regarding names, and represents a step toward greater inclusivity for non-Latin scripts within the DBLP platform.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": true,
+          "gold_token_recall": 0.0,
+          "evidence_overlap": 0.0
+        },
+        "plan": {
+          "root_variant": "NliVerify",
+          "variants": [
+            "NliVerify",
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "HybridRetrieve"
+          ],
+          "op_id_variants": {
+            "VERIFY_0": "NliVerify",
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "HybridRetrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "HybridRetrieve",
+            "CrossEncoderRank",
+            "HierarchicalGenerate",
+            "CitationVerify"
+          ],
+          "token_counts": {
+            "HybridRetrieve": 11846,
+            "CrossEncoderRank": 5795,
+            "HierarchicalGenerate": 519,
+            "NliVerify": 519
+          },
+          "total_tokens": 18679,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 19171.03,
+            "token_cost": 19164.8,
+            "call_cost": 3.0,
+            "latency_cost": 3.1,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "HybridRetrieve",
+              "scalar": 11898.9091,
+              "token_cost": 11896.9091,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 11,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 6372.25,
+              "token_cost": 6370.25,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 12,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 444.4846,
+              "token_cost": 442.3846,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 26,
+              "accuracy_score": 1.0
+            },
+            "VERIFY_0": {
+              "variant": "NliVerify",
+              "scalar": 455.3857,
+              "token_cost": 455.2857,
+              "call_cost": 0.0,
+              "latency_cost": 0.1,
+              "quality_risk": 0.0,
+              "sample_count": 7,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "HybridRetrieve",
+              "CrossEncoderRank",
+              "HierarchicalGenerate",
+              "CitationVerify"
+            ],
+            "trace_count": 4,
+            "token_counts": {
+              "HybridRetrieve": 11846,
+              "CrossEncoderRank": 5795,
+              "HierarchicalGenerate": 519,
+              "NliVerify": 519
+            },
+            "total_tokens": 18679
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      },
+      {
+        "sample_index": 7,
+        "paper_id": "1912.09713",
+        "question": "How strong is negative correlation between compound divergence and accuracy in performed experiment?",
+        "gold_answer": "between 0.81 and 0.88",
+        "predicted_answer": "The evidence strongly indicates a significant correlation between accuracy and compound divergence in compositional generalization experiments, particularly across varying training sizes. Key points supporting this conclusion include:\n\n1. **Strong Correlation with Training Sizes**: A pronounced correlation is observed for larger training sizes (96k for CFQ and 8k for SCAN), albeit diminishing as the size decreases, highlighting the importance of dataset size on accuracy.\n\n2. **Diminishing Returns**: Improvements in accuracy become less significant at higher training sizes, suggesting a plateau effect, where increases in dataset size beyond certain thresholds (80k for CFQ and 6k for SCAN) yield minimal additional gains in performance.\n\n3. **Benchmarking Methodology**: A novel approach to constructing compositionality benchmarks highlights the limitations of current state-of-the-art models, which struggle with maximum compound divergence, achieving under 20% accuracy.\n\n4. **Negative Correlation with Accuracy**: An observed strong negative correlation (R\u00b2 between 0.81 and 0.88) between compound divergence and accuracy further emphasizes the difficulties these models face with compositional generalization, despite structural similarities in training and testing.\n\n5. **Weak Correlation with Length Ratios**: In contrast, the correlation between length ratios of input and output and accuracy is considerably weaker (R\u00b2 between 0.11 and 0.22), indicating that length does not primarily influence model performance.\n\nOverall, these findings augment the understanding that compound divergence is a strong predictor of the challenges in achieving compositional generalization in machine learning, affirming that the correlation strength is substantial.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": true,
+          "gold_token_recall": 1.0,
+          "evidence_overlap": 0.439
+        },
+        "plan": {
+          "root_variant": "NliVerify",
+          "variants": [
+            "NliVerify",
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "HybridRetrieve"
+          ],
+          "op_id_variants": {
+            "VERIFY_0": "NliVerify",
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "HybridRetrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "HybridRetrieve",
+            "CrossEncoderRank",
+            "HierarchicalGenerate",
+            "CitationVerify"
+          ],
+          "token_counts": {
+            "HybridRetrieve": 6978,
+            "CrossEncoderRank": 3022,
+            "HierarchicalGenerate": 441,
+            "NliVerify": 441
+          },
+          "total_tokens": 10882,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 18501.73,
+            "token_cost": 18495.5,
+            "call_cost": 3.0,
+            "latency_cost": 3.1,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "HybridRetrieve",
+              "scalar": 11489.0,
+              "token_cost": 11487.0,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 12,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 6114.6923,
+              "token_cost": 6112.6923,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 13,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 444.4333,
+              "token_cost": 442.3333,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 27,
+              "accuracy_score": 1.0
+            },
+            "VERIFY_0": {
+              "variant": "NliVerify",
+              "scalar": 453.6,
+              "token_cost": 453.5,
+              "call_cost": 0.0,
+              "latency_cost": 0.1,
+              "quality_risk": 0.0,
+              "sample_count": 8,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "HybridRetrieve",
+              "CrossEncoderRank",
+              "HierarchicalGenerate",
+              "CitationVerify"
+            ],
+            "trace_count": 4,
+            "token_counts": {
+              "HybridRetrieve": 6978,
+              "CrossEncoderRank": 3022,
+              "HierarchicalGenerate": 441,
+              "NliVerify": 441
+            },
+            "total_tokens": 10882
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      },
+      {
+        "sample_index": 8,
+        "paper_id": "1912.09713",
+        "question": "What are results of comparison between novel method to other approaches for creating compositional generalization benchmarks?",
+        "gold_answer": "The MCD splits achieve a significantly higher compound divergence at a similar atom divergence when compared to the other experiments",
+        "predicted_answer": "Recent research demonstrates that contemporary machine learning methods encounter significant challenges with compositional generalization, underscored by a lack of adequate benchmarking tools. A novel benchmarking method designed to maximize compound divergence while maintaining low atom divergence has been introduced, facilitating the evaluation of machine learning architectures in this domain.\n\nKey insights from the studies indicate that:\n- A newly developed natural language question answering dataset revealed that three different machine learning architectures exhibited poor abilities in compositional generalization. Notably, there was a strong negative correlation between compound divergence and predictive accuracy.\n- The efficacy of this benchmarking approach was further validated using the SCAN dataset, where similar results indicated that accuracy could reliably predict compound divergence.\n- A comparison between the SCAN dataset, consisting of 38 rules, and the more complex CFQ dataset with 443 rules showed that certain systems achieved almost perfect accuracy (near 100%) on SCAN, despite exhibiting higher compound divergences, suggesting that simpler rule structures facilitate better performance.\n\nAdditionally, the research highlighted that variations in subsampling could alter rule frequency distributions, thus affecting performance and accuracy correlations, yet the fundamental insights regarding compound divergence remained intact. Overall, the findings underscore the persistent limitations in compositional generalization among different architectures and the promising potential of the new benchmarking method to inform future research and performance assessments.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": false,
+          "gold_token_recall": 0.4706,
+          "evidence_overlap": 0.3415
+        },
+        "plan": {
+          "root_variant": "NliVerify",
+          "variants": [
+            "NliVerify",
+            "NliVerify",
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "ConcatCompose",
+            "IdentityTransform",
+            "HybridRetrieve",
+            "IdentityTransform",
+            "HybridRetrieve"
+          ],
+          "op_id_variants": {
+            "VERIFY_0": "NliVerify",
+            "VERIFY_1": "NliVerify",
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "COMPOSE_0": "ConcatCompose",
+            "TRANSFORM_0": "IdentityTransform",
+            "I_0": "HybridRetrieve",
+            "TRANSFORM_1": "IdentityTransform",
+            "I_1": "HybridRetrieve"
+          },
+          "rewrite_count": 3
+        },
+        "execution": {
+          "trace": [
+            "HybridRetrieve",
+            "IdentityTransform",
+            "HybridRetrieve",
+            "IdentityTransform",
+            "ConcatCompose",
+            "CrossEncoderRank",
+            "HierarchicalGenerate",
+            "CitationVerify",
+            "CitationVerify"
+          ],
+          "token_counts": {
+            "HybridRetrieve": 13954,
+            "IdentityTransform": 13954,
+            "ConcatCompose": 13954,
+            "CrossEncoderRank": 1330,
+            "HierarchicalGenerate": 426,
+            "NliVerify": 852
+          },
+          "total_tokens": 44470,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 56716.55,
+            "token_cost": 56702.2,
+            "call_cost": 7.0,
+            "latency_cost": 7.2,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "COMPOSE_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "HybridRetrieve",
+              "scalar": 10844.7143,
+              "token_cost": 10842.7143,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 14,
+              "accuracy_score": 1.0
+            },
+            "TRANSFORM_0": {
+              "variant": "IdentityTransform",
+              "scalar": 6979.0,
+              "token_cost": 6977.0,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 14,
+              "accuracy_score": 1.0
+            },
+            "I_1": {
+              "variant": "HybridRetrieve",
+              "scalar": 10844.7143,
+              "token_cost": 10842.7143,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 14,
+              "accuracy_score": 1.0
+            },
+            "TRANSFORM_1": {
+              "variant": "IdentityTransform",
+              "scalar": 6979.0,
+              "token_cost": 6977.0,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 14,
+              "accuracy_score": 1.0
+            },
+            "COMPOSE_0": {
+              "variant": "ConcatCompose",
+              "scalar": 13956.0,
+              "token_cost": 13954.0,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 3,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 5773.0714,
+              "token_cost": 5771.0714,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 14,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 443.85,
+              "token_cost": 441.75,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 28,
+              "accuracy_score": 1.0
+            },
+            "VERIFY_0": {
+              "variant": "NliVerify",
+              "scalar": 448.1,
+              "token_cost": 448.0,
+              "call_cost": 0.0,
+              "latency_cost": 0.1,
+              "quality_risk": 0.0,
+              "sample_count": 10,
+              "accuracy_score": 1.0
+            },
+            "VERIFY_1": {
+              "variant": "NliVerify",
+              "scalar": 448.1,
+              "token_cost": 448.0,
+              "call_cost": 0.0,
+              "latency_cost": 0.1,
+              "quality_risk": 0.0,
+              "sample_count": 10,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "HybridRetrieve",
+              "IdentityTransform",
+              "HybridRetrieve",
+              "IdentityTransform",
+              "ConcatCompose",
+              "CrossEncoderRank",
+              "HierarchicalGenerate",
+              "CitationVerify",
+              "CitationVerify"
+            ],
+            "trace_count": 9,
+            "token_counts": {
+              "HybridRetrieve": 13954,
+              "IdentityTransform": 13954,
+              "ConcatCompose": 13954,
+              "CrossEncoderRank": 1330,
+              "HierarchicalGenerate": 426,
+              "NliVerify": 852
+            },
+            "total_tokens": 44470
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      },
+      {
+        "sample_index": 9,
+        "paper_id": "1912.09713",
+        "question": "How authors justify that question answering dataset presented is realistic?",
+        "gold_answer": "CFQ contains the most query patterns by an order of magnitude and also contains significantly more queries and questions than the other datasets",
+        "predicted_answer": "The authors justify their work by introducing the Compositional Freebase Questions (CFQ) dataset, tailored to assess compositional generalization in natural language understanding using the DBCA method. This dataset, which features 239,357 question-answer pairs linked to SPARQL queries, emphasizes semantic parsing with reduced ambiguity and a high degree of compositionality. It encompasses a variety of linguistic characteristics, ensuring clarity in entity definitions.\n\nThey highlight the shortcomings of current state-of-the-art machine learning models in achieving compositional generalization, noting a significant negative correlation between the diversity of question structures and model accuracy. The authors present a novel benchmarking method that balances atom and compound divergences, facilitating a more meaningful evaluation of machine learning architectures.\n\nTheir rule-based generation approach enhances scalability and control, allowing for accurate tracking of compositional elements within the dataset. By focusing on atomic rules that are context-independent, they provide a diverse yet manageable set of examples, reinforcing the necessity for their comprehensive benchmark in light of existing model limitations. The authors aim to inspire future advancements in compositional generalization through targeted learning strategies and encourage broader applications beyond the natural language understanding domain.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": false,
+          "gold_token_recall": 0.4,
+          "evidence_overlap": 0.287
+        },
+        "plan": {
+          "root_variant": "HierarchicalGenerate",
+          "variants": [
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "HybridRetrieve"
+          ],
+          "op_id_variants": {
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "HybridRetrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "HybridRetrieve",
+            "CrossEncoderRank",
+            "HierarchicalGenerate"
+          ],
+          "token_counts": {
+            "HybridRetrieve": 7632,
+            "CrossEncoderRank": 2871,
+            "HierarchicalGenerate": 360
+          },
+          "total_tokens": 10863,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 16651.43,
+            "token_cost": 16645.3,
+            "call_cost": 3.0,
+            "latency_cost": 3.0,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "HybridRetrieve",
+              "scalar": 10630.6667,
+              "token_cost": 10628.6667,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 15,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 5579.7333,
+              "token_cost": 5577.7333,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 15,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 441.031,
+              "token_cost": 438.931,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 29,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "HybridRetrieve",
+              "CrossEncoderRank",
+              "HierarchicalGenerate"
+            ],
+            "trace_count": 3,
+            "token_counts": {
+              "HybridRetrieve": 7632,
+              "CrossEncoderRank": 2871,
+              "HierarchicalGenerate": 360
+            },
+            "total_tokens": 10863
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      }
+    ]
+  },
+  "revision": {
+    "single_change_request": {
+      "accepted": true,
+      "reason": "ok",
+      "overrides": {
+        "I_0": "BM25Retrieve"
+      },
+      "rationale": "Switching to BM25Retrieve for I_0 is expected to reduce quality risk while keeping the average token cost increase within the 15% limit."
+    },
+    "revised_overrides": {
+      "AGGREGATE_0": "HierarchicalGenerate",
+      "RANK_0": "CrossEncoderRank",
+      "I_0": "BM25Retrieve"
+    }
+  },
+  "revised": {
+    "aggregate_summary": {
+      "sample_count": 10,
+      "total_error_count": 0,
+      "avg_token_cost_per_operator": {
+        "AGGREGATE": 441.3651,
+        "COMPOSE": 13954.0,
+        "I": 12031.4974,
+        "RANK": 5782.2748,
+        "TRANSFORM": 6977.0,
+        "VERIFY": 436.5023
+      },
+      "most_frequent_bottleneck": "I_0",
+      "warning_frequencies": {},
+      "avg_quality_risk": 0.1,
+      "avg_token_cost": 22467.32
+    },
+    "results": [
+      {
+        "sample_index": 0,
+        "paper_id": "1810.02100",
+        "question": "Which English domains do they evaluate on?",
+        "gold_answer": "Conll, Weblogs, Newsgroups, Reviews, Answers",
+        "predicted_answer": "The thesis evaluates major semi-supervised techniques for dependency parsing across various English domains, which include:\n\n1. **In-Domain Evaluation**:\n   - **CoNLL 2009 Shared Task Corpus**: Data sourced from the Wall Street Journal (WSJ) segment of the Penn English Treebank.\n   - **Wall Street Journal (WSJ)**: Additional parsing experiments conducted using sections 2-21 for training and sections 22-23 for development and testing.\n\n2. **Out-of-Domain Evaluations**:\n   - **OntoNotes v5.0**: Specifically utilizing the weblogs portion.\n   - **SANCL Shared Task Data**: Comprising datasets from Newsgroups, Reviews, and Answers domains, targeting parsing of non-canonical web text.\n\n3. **Other Evaluated Domains**:\n   - **Chemical Domain**: Derived from the CoNLL 2007 shared task for comparative analysis.\n   - **Multi-Lingual Evaluation**: Involves nine languages assessed in the SPMRL 2014 shared task, including Arabic, Basque, and French, with each domain utilizing a small in-domain dataset alongside a larger unlabelled corpus.\n\nThe thesis employs transformation tools for data adaptation to dependency parsing and emphasizes evaluations based on labelled and unlabelled attachment scores.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": false,
+          "gold_token_recall": 1.0,
+          "evidence_overlap": 0.4361
+        },
+        "plan": {
+          "root_variant": "HierarchicalGenerate",
+          "variants": [
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "BM25Retrieve"
+          ],
+          "op_id_variants": {
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "BM25Retrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "HierarchicalGenerate"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 17072,
+            "CrossEncoderRank": 4185,
+            "HierarchicalGenerate": 300
+          },
+          "total_tokens": 21557,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 18000.91,
+            "token_cost": 17994.8,
+            "call_cost": 3.0,
+            "latency_cost": 3.0,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "BM25Retrieve",
+              "scalar": 12071.8269,
+              "token_cost": 12069.8269,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 52,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 5492.6875,
+              "token_cost": 5490.6875,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 16,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 436.4,
+              "token_cost": 434.3,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 30,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "BM25Retrieve",
+              "CrossEncoderRank",
+              "HierarchicalGenerate"
+            ],
+            "trace_count": 3,
+            "token_counts": {
+              "BM25Retrieve": 17072,
+              "CrossEncoderRank": 4185,
+              "HierarchicalGenerate": 300
+            },
+            "total_tokens": 21557
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      },
+      {
+        "sample_index": 1,
+        "paper_id": "1804.08186",
+        "question": "what evaluation methods are discussed?",
+        "gold_answer": "document-level accuracy precision recall F-score",
+        "predicted_answer": "Evaluation methods for language identification can be categorized into several key approaches:\n\n1. **Document-Level Classification**: This prevalent approach assesses accuracy by calculating the proportion of correctly labeled documents. Performance is evaluated using precision, recall, and F-score metrics, and confusion matrices can help visualize classification errors across languages.\n\n2. **Accuracy Measurement**: \n   - **Micro-average statistics** give equal weight to each document, reflecting overall accuracy.\n   - **Macro-average statistics** assign equal weight across languages to mitigate biases from unbalanced datasets.\n\n3. **Challenges in Standardization**: The lack of standardized datasets and variations in language coding complicate direct comparisons between evaluations. Issues such as expensive manual labeling and the impacts of automatic labeling on data quality contribute to discrepancies in performance across studies, particularly as results may vary based on data size and source.\n\n4. **Training Data and Sample Length**: The volume and length of training data are critical for accuracy, with longer samples generally making classification easier. However, the amount of data required varies depending on the language and domain of the text.\n\n5. **Processing Speed**: Different algorithms can exhibit considerable variations in processing speed, making it essential to conduct comparisons under controlled conditions for valid assessments.\n\n6. **Ensemble Methods**: By combining multiple classifiers through techniques like majority voting, bagging, and stacking, ensemble methods can enhance accuracy beyond that of individual classifiers. Various ensemble techniques, including the product rule, can refine prediction outputs.\n\n7. **Shared Tasks and Datasets**: Participation in organized shared tasks facilitates access to publicly available datasets and standardized evaluation methodologies, which help benchmark performance in specific language identification challenges.\n\nIn summary, while the evaluation of language identification continues to face challenges, particularly regarding dataset standardization and the volume of training data, established evaluation methods are essential for fostering replicable and meaningful research outcomes.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": false,
+          "gold_token_recall": 1.0,
+          "evidence_overlap": 0.337
+        },
+        "plan": {
+          "root_variant": "HierarchicalGenerate",
+          "variants": [
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "BM25Retrieve"
+          ],
+          "op_id_variants": {
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "BM25Retrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "HierarchicalGenerate"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 12928,
+            "CrossEncoderRank": 7521,
+            "HierarchicalGenerate": 571
+          },
+          "total_tokens": 21020,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 18140.95,
+            "token_cost": 18134.8,
+            "call_cost": 3.0,
+            "latency_cost": 3.0,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "BM25Retrieve",
+              "scalar": 12088.0189,
+              "token_cost": 12086.0189,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 53,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 5612.1176,
+              "token_cost": 5610.1176,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 17,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 440.8097,
+              "token_cost": 438.7097,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 31,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "BM25Retrieve",
+              "CrossEncoderRank",
+              "HierarchicalGenerate"
+            ],
+            "trace_count": 3,
+            "token_counts": {
+              "BM25Retrieve": 12928,
+              "CrossEncoderRank": 7521,
+              "HierarchicalGenerate": 571
+            },
+            "total_tokens": 21020
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      },
+      {
+        "sample_index": 2,
+        "paper_id": "1804.08186",
+        "question": "what are the off-the-shelf systems discussed in the paper?",
+        "gold_answer": "Answer with content missing: (Names of many identifiers missing) TextCat, ChromeCLD, LangDetect, langid.py, whatlang, whatthelang, YALI, LDIG, Polyglot 3000, Lextek Language Identifier and Open Xerox Language Identifier.",
+        "predicted_answer": "Here is a list of off-the-shelf language identification systems that categorize text into languages without user-provided training data:\n\n1. **TextCat**: Perl implementation with models for 76 languages (not actively maintained).\n2. **libtextcat**: Similar to TextCat, also supporting 76 languages.\n3. **JTCL**: Supports 15 languages.\n4. **mguesser**: Fast system offering 104 models for various language-encoding pairs.\n5. **whattlang-rs**: Based on character trigrams, supports 83 languages.\n6. **Google Chrome's built-in identifier**: Uses a Naive Bayes classifier, supports 83 languages (160 in extended model).\n7. **Language Identifier (Java)**: Naive Bayes-based classifier with models for 53 languages sourced from Wikipedia.\n8. **Python identifier**: Pre-trained model for 97 languages using diverse text sources.\n9. **BIBREF153**: Supports 1400 languages through a vector-space model and discriminative training.\n10. **whatthelang**: Newly developed system supporting 176 languages via the FastText algorithm.\n11. **Other systems**: Include Polyglot 3000, Lextek Language Identifier (Windows), and Open Xerox (web service).\n\nThese systems vary significantly in terms of language support and methodology, and recent trends have also focused on dialect identification and challenges in distinguishing similar languages. Standardized datasets are essential for enhancing the reliability of performance comparisons.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": false,
+          "gold_token_recall": 0.48,
+          "evidence_overlap": 0.4821
+        },
+        "plan": {
+          "root_variant": "HierarchicalGenerate",
+          "variants": [
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "BM25Retrieve"
+          ],
+          "op_id_variants": {
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "BM25Retrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "HierarchicalGenerate"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 12015,
+            "CrossEncoderRank": 5475,
+            "HierarchicalGenerate": 355
+          },
+          "total_tokens": 17845,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 18129.51,
+            "token_cost": 18123.4,
+            "call_cost": 3.0,
+            "latency_cost": 3.0,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "BM25Retrieve",
+              "scalar": 12086.7037,
+              "token_cost": 12084.7037,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 54,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 5604.6111,
+              "token_cost": 5602.6111,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 18,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 438.1938,
+              "token_cost": 436.0938,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 32,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "BM25Retrieve",
+              "CrossEncoderRank",
+              "HierarchicalGenerate"
+            ],
+            "trace_count": 3,
+            "token_counts": {
+              "BM25Retrieve": 12015,
+              "CrossEncoderRank": 5475,
+              "HierarchicalGenerate": 355
+            },
+            "total_tokens": 17845
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      },
+      {
+        "sample_index": 3,
+        "paper_id": "1601.04012",
+        "question": "Which datasets are used in this work?",
+        "gold_answer": "GENIA corpus",
+        "predicted_answer": "### Datasets Related to Event Coreference and Extraction\n\n1. **Event Coreference Datasets**:\n   - **ECB+**: A dataset with 502 texts centered on various event types to evaluate decision-tree classifiers for coreference determination.\n\n2. **Corpora for Event Co-reference Annotation**:\n   - **Violent Events Corpus**: Contains annotations for full and partial co-references related to violent events such as bombings and wars.\n   - **Famous People Corpus**: A collection of texts about prominent individuals, annotated similarly for coreference.\n\n3. **Event Extraction Systems and Datasets**:\n   - **Turku Event Extraction System**: Contributed to multiple BioNLP 2011 tasks, focusing on features for event tracking and relation detection.\n   - **Stanford System**: Leveraged Stanford dependency parses for event extraction using dependency graphs.\n\n4. **Named Entity Recognition Features**: \n   - Utilized by the Turku system, it includes token, sentence, dependency chain features, and external resources like WordNet to enhance entity recognition.\n\n5. **Statistical Language Models**: \n   - Frameworks that permit various feature types, integrating lexical, syntactic, and semantic data for effective entity tracking.\n\n6. **Proposed Bayesian Models**: \n   - Applied to open-domain event coreference tasks, particularly using nonparametric methods like hierarchical Dirichlet processes and infinite hidden Markov models.\n\n7. **Feature Types for Event Mention Detection**: \n   - Involve lexical properties, context-specific features, distance measures, and string matches for effective coreference linking.\n\n8. **Predictive Models**: \n   - Techniques like Maximum Entropy and Robust Risk Minimization classifiers are used for mention detection and tracking in coreference tasks.\n\n### Performance Metrics\n- Measurements such as the ACE Value highlight performance in event detection, achieving scores like 73.4 for the MaxEnt classifier and 88-91% accuracy for event co-reference determination.\n\n### Event Classification and Linguistic Research\n- Research has categorized event types based on features such as duration and boundedness, reflecting Vendler\u2019s classes and later refinements that introduced parameters like countability and atomicity.\n- This linguistics inquiry is foundational for exploring how events are represented in language, contributing to richer understanding in event coreference and extraction tasks.\n\nThis synthesis offers an overview of the significant datasets and systems utilized in event coreference and extraction research, as well as the linguistic frameworks that support event classification and understanding.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": false,
+          "gold_token_recall": 0.5,
+          "evidence_overlap": 0.2647
+        },
+        "plan": {
+          "root_variant": "HierarchicalGenerate",
+          "variants": [
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "BM25Retrieve"
+          ],
+          "op_id_variants": {
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "BM25Retrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "HierarchicalGenerate"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 20659,
+            "CrossEncoderRank": 8509,
+            "HierarchicalGenerate": 660
+          },
+          "total_tokens": 29828,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 18445.16,
+            "token_cost": 18439.1,
+            "call_cost": 3.0,
+            "latency_cost": 3.0,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "BM25Retrieve",
+              "scalar": 12242.6,
+              "token_cost": 12240.6,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 55,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 5757.5789,
+              "token_cost": 5755.5789,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 19,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 444.9788,
+              "token_cost": 442.8788,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 33,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "BM25Retrieve",
+              "CrossEncoderRank",
+              "HierarchicalGenerate"
+            ],
+            "trace_count": 3,
+            "token_counts": {
+              "BM25Retrieve": 20659,
+              "CrossEncoderRank": 8509,
+              "HierarchicalGenerate": 660
+            },
+            "total_tokens": 29828
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      },
+      {
+        "sample_index": 4,
+        "paper_id": "1903.08237",
+        "question": "Does the paper describe experiments with real humans?",
+        "gold_answer": "Yes",
+        "predicted_answer": "Yes, the evidence clearly confirms the presence of experiments involving real human participants. Two studies were highlighted that detail participant recruitment, experimental design, and data analysis, showcasing a thorough methodology and reliance on human interactions.\n\n1. **Participant Recruitment and Design**: The first study involved 116 participants from Amazon Mechanical Turk, who were engaged in a web-based production study. Participants took on speaker and listener roles in a reference game format across 72 trials, specifically targeting the use of redundant adjectives.\n\n2. **Experiment and Data Analysis**: A total of 2,076 critical trials were analyzed using mixed effects logistic regression, establishing significant relationships between linguistic variables, and revealing insights into adjective use regarding color and size.\n\n3. **Theoretical Application**: The second study explored continuous semantics in referring expressions, using real human data to assess the effectiveness of various utterances in retrieving intended objects. This aspect highlights how language use is grounded in human perception and communication.\n\nOverall, both studies demonstrate rigorous experimentation with real individual subjects, ensuring the validity of the results through empirical methods and statistical analysis.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": true,
+          "gold_token_recall": 1.0,
+          "evidence_overlap": 0.321
+        },
+        "plan": {
+          "root_variant": "NliVerify",
+          "variants": [
+            "NliVerify",
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "BM25Retrieve"
+          ],
+          "op_id_variants": {
+            "VERIFY_0": "NliVerify",
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "BM25Retrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "HierarchicalGenerate",
+            "CitationVerify"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 15122,
+            "CrossEncoderRank": 9076,
+            "HierarchicalGenerate": 332,
+            "NliVerify": 332
+          },
+          "total_tokens": 24862,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 19096.93,
+            "token_cost": 19090.7,
+            "call_cost": 3.0,
+            "latency_cost": 3.1,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "BM25Retrieve",
+              "scalar": 12294.0536,
+              "token_cost": 12292.0536,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 56,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 5923.6,
+              "token_cost": 5921.6,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 20,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 441.7176,
+              "token_cost": 439.6176,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 34,
+              "accuracy_score": 1.0
+            },
+            "VERIFY_0": {
+              "variant": "NliVerify",
+              "scalar": 437.5545,
+              "token_cost": 437.4545,
+              "call_cost": 0.0,
+              "latency_cost": 0.1,
+              "quality_risk": 0.0,
+              "sample_count": 11,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "BM25Retrieve",
+              "CrossEncoderRank",
+              "HierarchicalGenerate",
+              "CitationVerify"
+            ],
+            "trace_count": 4,
+            "token_counts": {
+              "BM25Retrieve": 15122,
+              "CrossEncoderRank": 9076,
+              "HierarchicalGenerate": 332,
+              "NliVerify": 332
+            },
+            "total_tokens": 24862
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      },
+      {
+        "sample_index": 5,
+        "paper_id": "1709.09119",
+        "question": "How successful are they at matching names of authors in Japanese and English?",
+        "gold_answer": "180221 of 231162 author names could be matched successfully",
+        "predicted_answer": "The project aimed at constructing a class for handling Japanese names has made significant strides in addressing the complexities associated with author name representation for database integration. It focuses on providing standardized representations in kanji and Latin transcription, which is essential for effectively comparing authors from the IPSJ DL and DBLP datasets.\n\nKey aspects contributing to the project\u2019s early success include:\n\n1. **Robust Name Representation**: The class captures names efficiently in both kanji and Latin scripts, which is crucial for proper identification and comparison.\n\n2. **Effective Name Separation**: The system has developed methodologies for parsing names into given and family components, even dealing with ambiguous cases, thereby increasing accuracy in data retrieval.\n\n3. **Transcription Customizations**: By accommodating transcription nuances, such as vowel lengthening and variations in Hepburn transcription, the tool ensures compatibility with established standards like ENAMDICT.\n\n4. **Error Handling Mechanisms**: A status indicator system effectively tracks and assesses the success rate of name matching, categorizing outcomes into successful matches, undefined states due to missing latins, and outright mismatches, which provides a transparent measure of performance.\n\n5. **Sophisticated Matching Strategy**: The approach utilizes advanced algorithms like Jaccard Similarity and Levenshtein Distance, improving the precision of identifying synonymous and homonymous names.\n\n6. **Data Quality Considerations**: The project acknowledges potential data quality issues and emphasizes the importance of DBLP team verification to enhance the reliability of information.\n\n7. **Success Rate Insights**: While the current precision of the tool is expected to be high due to the reliability of ENAMDICT, concerns about recall remain due to possible incompleteness in the dataset. The project team is aware of these limitations and is planning future enhancements, such as examining kanji order and variations in Latin character sets.\n\nIn conclusion, the project is a promising prototype that addresses critical challenges in Japanese name representation for database integration. Although it has achieved a reasonable level of success in its current implementation, ongoing refinements will be necessary to enhance its performance and ensure data integrity. With further development, it holds potential for significant improvements in the retrieval and comparison of Japanese authors in academic databases.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": false,
+          "gold_token_recall": 0.4444,
+          "evidence_overlap": 0.3008
+        },
+        "plan": {
+          "root_variant": "HierarchicalGenerate",
+          "variants": [
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "BM25Retrieve"
+          ],
+          "op_id_variants": {
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "BM25Retrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "HierarchicalGenerate"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 15014,
+            "CrossEncoderRank": 9201,
+            "HierarchicalGenerate": 638
+          },
+          "total_tokens": 24853,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 18868.95,
+            "token_cost": 18862.9,
+            "call_cost": 3.0,
+            "latency_cost": 3.0,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "BM25Retrieve",
+              "scalar": 12341.807,
+              "token_cost": 12339.807,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 57,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 6079.7619,
+              "token_cost": 6077.7619,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 21,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 447.3857,
+              "token_cost": 445.2857,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 35,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "BM25Retrieve",
+              "CrossEncoderRank",
+              "HierarchicalGenerate"
+            ],
+            "trace_count": 3,
+            "token_counts": {
+              "BM25Retrieve": 15014,
+              "CrossEncoderRank": 9201,
+              "HierarchicalGenerate": 638
+            },
+            "total_tokens": 24853
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      },
+      {
+        "sample_index": 6,
+        "paper_id": "1709.09119",
+        "question": "Do they translate metadata from Japanese papers to English?",
+        "gold_answer": "No",
+        "predicted_answer": "The translation process for integrating Japanese papers into the DBLP dataset presents several complexities primarily related to data encoding, name representation, and quality assurance. Key aspects of this process include:\n\n1. **Japanese Name Representation**: Japanese names are often written in kanji, while DBLP utilizes Latin-1 encoding. This difference necessitates the transcription of names, which can lead to ambiguities given that multiple renditions may exist for the same name.\n\n2. **Data Quality Assurance**: To mitigate potential data issues, mechanisms like dictionary-based name matching and format verification are implemented. Custom modifications help enhance metadata quality, including the inclusion of missing contributor details through minimal coding efforts.\n\n3. **System Adaptability**: The developed tool is compatible with the metadata system of the IPSJ digital library and can also adapt to other sources that utilize the OAI-PMH protocol. It features capabilities for identifying overlapping publications and has implemented advanced name matching techniques, including the Jaccard Similarity Coefficient and Levenshtein Distance, to improve data accuracy.\n\n4. **Challenges in Name Matching**: The integration process faces difficulties such as handling synonyms (different names for the same individual) and homonyms (same name for different individuals). While strategies for dealing with synonyms have been formulated, challenges remain in recognizing homonyms effectively.\n\n5. **Metadata Processing**: Automation tools are utilized to classify names into given and family names, which optimizes the data processing given the various formats encountered.\n\n6. **Future Enhancements**: Proposed improvements comprise efficient storage of common names, better handling of special Latin characters used in Japan, and extracting kanji from database entries to enrich the author metadata in DBLP.\n\nIn conclusion, the successful integration of Japanese publications into DBLP requires meticulous attention to translation processes, encoding compatibility, and a robust understanding of Japanese naming conventions to ensure that the resulting dataset maintains high quality and usability on an international scale.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": true,
+          "gold_token_recall": 0.0,
+          "evidence_overlap": 0.0
+        },
+        "plan": {
+          "root_variant": "NliVerify",
+          "variants": [
+            "NliVerify",
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "BM25Retrieve"
+          ],
+          "op_id_variants": {
+            "VERIFY_0": "NliVerify",
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "BM25Retrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "HierarchicalGenerate",
+            "CitationVerify"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 11846,
+            "CrossEncoderRank": 5795,
+            "HierarchicalGenerate": 560,
+            "NliVerify": 560
+          },
+          "total_tokens": 18761,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 19298.54,
+            "token_cost": 19292.3,
+            "call_cost": 3.0,
+            "latency_cost": 3.1,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "BM25Retrieve",
+              "scalar": 12333.2931,
+              "token_cost": 12331.2931,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 58,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 6066.9091,
+              "token_cost": 6064.9091,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 22,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 450.5722,
+              "token_cost": 448.4722,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 36,
+              "accuracy_score": 1.0
+            },
+            "VERIFY_0": {
+              "variant": "NliVerify",
+              "scalar": 447.7667,
+              "token_cost": 447.6667,
+              "call_cost": 0.0,
+              "latency_cost": 0.1,
+              "quality_risk": 0.0,
+              "sample_count": 12,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "BM25Retrieve",
+              "CrossEncoderRank",
+              "HierarchicalGenerate",
+              "CitationVerify"
+            ],
+            "trace_count": 4,
+            "token_counts": {
+              "BM25Retrieve": 11846,
+              "CrossEncoderRank": 5795,
+              "HierarchicalGenerate": 560,
+              "NliVerify": 560
+            },
+            "total_tokens": 18761
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      },
+      {
+        "sample_index": 7,
+        "paper_id": "1912.09713",
+        "question": "How strong is negative correlation between compound divergence and accuracy in performed experiment?",
+        "gold_answer": "between 0.81 and 0.88",
+        "predicted_answer": "The evidence indicates a strong correlation between accuracy and compound divergence in machine learning models focused on compositional generalization. Key findings highlight a significant negative correlation, with correlation coefficients ranging from 0.81 to 0.88. This suggests that as compound divergence increases, accuracy tends to decrease. \n\nMoreover, while increasing training sizes generally improve accuracy, the gains diminish at training sizes around 80k for the CFQ dataset and 6k for SCAN, indicating a plateau effect. Notably, despite achieving over 95% accuracy on random splits, models struggle with maximum compound divergence splits, exhibiting a mean accuracy below 20%. \n\nIn contrast, the correlation between length ratios of inputs and outputs is notably low (0.11 to 0.22), reinforcing that structural complexity, as measured by compound divergence, plays a more critical role in model performance than merely the length of sequences. Common error patterns further support this, as most inaccuracies arise in longer sequences, often due to complexities like omissions of conjunctions and adjectives, rather than length alone.\n\nOverall, these findings firmly establish compound divergence as a vital aspect in evaluating the effectiveness of models in compositional generalization tasks.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": false,
+          "gold_token_recall": 1.0,
+          "evidence_overlap": 0.4024
+        },
+        "plan": {
+          "root_variant": "NliVerify",
+          "variants": [
+            "NliVerify",
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "BM25Retrieve"
+          ],
+          "op_id_variants": {
+            "VERIFY_0": "NliVerify",
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "BM25Retrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "HierarchicalGenerate",
+            "CitationVerify"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 6978,
+            "CrossEncoderRank": 3022,
+            "HierarchicalGenerate": 328,
+            "NliVerify": 328
+          },
+          "total_tokens": 10656,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 19063.05,
+            "token_cost": 19056.8,
+            "call_cost": 3.0,
+            "latency_cost": 3.1,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "BM25Retrieve",
+              "scalar": 12242.5593,
+              "token_cost": 12240.5593,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 59,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 5934.6087,
+              "token_cost": 5932.6087,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 23,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 447.3162,
+              "token_cost": 445.2162,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 37,
+              "accuracy_score": 1.0
+            },
+            "VERIFY_0": {
+              "variant": "NliVerify",
+              "scalar": 438.5615,
+              "token_cost": 438.4615,
+              "call_cost": 0.0,
+              "latency_cost": 0.1,
+              "quality_risk": 0.0,
+              "sample_count": 13,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "BM25Retrieve",
+              "CrossEncoderRank",
+              "HierarchicalGenerate",
+              "CitationVerify"
+            ],
+            "trace_count": 4,
+            "token_counts": {
+              "BM25Retrieve": 6978,
+              "CrossEncoderRank": 3022,
+              "HierarchicalGenerate": 328,
+              "NliVerify": 328
+            },
+            "total_tokens": 10656
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      },
+      {
+        "sample_index": 8,
+        "paper_id": "1912.09713",
+        "question": "What are results of comparison between novel method to other approaches for creating compositional generalization benchmarks?",
+        "gold_answer": "The MCD splits achieve a significantly higher compound divergence at a similar atom divergence when compared to the other experiments",
+        "predicted_answer": "Recent evaluations of compositional generalization in machine learning have revealed significant limitations in existing state-of-the-art methods, highlighting the necessity for robust benchmarks. A novel approach to generating these benchmarks has been introduced, focusing on maximizing compound divergence while minimizing atom divergence in training and testing sets. This method facilitated the development of an extensive natural language question answering dataset and the enhancement of the SCAN dataset.\n\nComparative analyses of three different machine learning architectures indicated a persistent failure to achieve compositional generalization, with a strong negative correlation observed between compound divergence and accuracy. Specifically, while models tested on the SCAN dataset could approach near-perfect accuracy (close to 100%) when the compound divergence was limited to 0.2, performance dramatically declined with higher complexities, exemplified by the CFQ dataset's 443 rules.\n\nAdditionally, an examination of subsampling within the datasets showed alterations in rule frequency, favoring rarer occurrences without affecting the established accuracy-divergence correlation. These findings underscore the challenges faced by machine learning systems in achieving compositional generalization and point to the critical role of comprehensively designed benchmarks in evaluating and improving model performance in this area.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": false,
+          "gold_token_recall": 0.5294,
+          "evidence_overlap": 0.3902
+        },
+        "plan": {
+          "root_variant": "NliVerify",
+          "variants": [
+            "NliVerify",
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "ConcatCompose",
+            "IdentityTransform",
+            "BM25Retrieve",
+            "IdentityTransform",
+            "HybridRetrieve"
+          ],
+          "op_id_variants": {
+            "VERIFY_0": "NliVerify",
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "COMPOSE_0": "ConcatCompose",
+            "TRANSFORM_0": "IdentityTransform",
+            "I_0": "BM25Retrieve",
+            "TRANSFORM_1": "IdentityTransform",
+            "I_1": "HybridRetrieve"
+          },
+          "rewrite_count": 3
+        },
+        "execution": {
+          "trace": [
+            "BM25Retrieve",
+            "IdentityTransform",
+            "HybridRetrieve",
+            "IdentityTransform",
+            "ConcatCompose",
+            "CrossEncoderRank",
+            "HierarchicalGenerate",
+            "CitationVerify"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 5971,
+            "HybridRetrieve": 7983,
+            "IdentityTransform": 13954,
+            "ConcatCompose": 13954,
+            "CrossEncoderRank": 1330,
+            "HierarchicalGenerate": 361,
+            "NliVerify": 361
+          },
+          "total_tokens": 43914,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 57138.34,
+            "token_cost": 57124.1,
+            "call_cost": 7.0,
+            "latency_cost": 7.1,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "COMPOSE_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "BM25Retrieve",
+              "scalar": 12138.0667,
+              "token_cost": 12136.0667,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 60,
+              "accuracy_score": 1.0
+            },
+            "TRANSFORM_0": {
+              "variant": "IdentityTransform",
+              "scalar": 6979.0,
+              "token_cost": 6977.0,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 16,
+              "accuracy_score": 1.0
+            },
+            "I_1": {
+              "variant": "HybridRetrieve",
+              "scalar": 10465.3125,
+              "token_cost": 10463.3125,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 16,
+              "accuracy_score": 1.0
+            },
+            "TRANSFORM_1": {
+              "variant": "IdentityTransform",
+              "scalar": 6979.0,
+              "token_cost": 6977.0,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 16,
+              "accuracy_score": 1.0
+            },
+            "COMPOSE_0": {
+              "variant": "ConcatCompose",
+              "scalar": 13956.0,
+              "token_cost": 13954.0,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 4,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 5742.8333,
+              "token_cost": 5740.8333,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 24,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 445.1,
+              "token_cost": 443.0,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 38,
+              "accuracy_score": 1.0
+            },
+            "VERIFY_0": {
+              "variant": "NliVerify",
+              "scalar": 433.0286,
+              "token_cost": 432.9286,
+              "call_cost": 0.0,
+              "latency_cost": 0.1,
+              "quality_risk": 0.0,
+              "sample_count": 14,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "BM25Retrieve",
+              "IdentityTransform",
+              "HybridRetrieve",
+              "IdentityTransform",
+              "ConcatCompose",
+              "CrossEncoderRank",
+              "HierarchicalGenerate",
+              "CitationVerify"
+            ],
+            "trace_count": 8,
+            "token_counts": {
+              "BM25Retrieve": 5971,
+              "HybridRetrieve": 7983,
+              "IdentityTransform": 13954,
+              "ConcatCompose": 13954,
+              "CrossEncoderRank": 1330,
+              "HierarchicalGenerate": 361,
+              "NliVerify": 361
+            },
+            "total_tokens": 43914
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      },
+      {
+        "sample_index": 9,
+        "paper_id": "1912.09713",
+        "question": "How authors justify that question answering dataset presented is realistic?",
+        "gold_answer": "CFQ contains the most query patterns by an order of magnitude and also contains significantly more queries and questions than the other datasets",
+        "predicted_answer": "The Compositional Freebase Questions (CFQ) dataset is specially crafted to evaluate compositional generalization in semantic parsing, consisting of 239,357 natural language question-answer pairs that correspond to SPARQL queries within the Freebase knowledge base. It aims to minimize ambiguity by ensuring each entity name is uniquely identifiable, reducing interpretational conflicts.\n\nKey features of CFQ include a diverse set of language components, supporting various question forms and complex linguistic structures while retaining clarity. The creation process is rule-based, ensuring a wide range of compound questions is systematically generated. CFQ stands out due to its extensive query patterns, a high volume of unique queries, and stringent filtering against unnatural questions.\n\nDespite the comprehensiveness of the dataset, advanced models have shown limitations in compositional generalization, particularly as performance correlates with differences between training and testing data. The CFQ seeks to set a benchmark for evaluating compositional generalization and suggests future research areas in broader language understanding and application across diverse domains. Its innovative approaches in generation and evaluation are expected to enhance performance in natural language processing tasks.",
+        "metrics": {
+          "exact_match": false,
+          "contains_match": false,
+          "gold_token_recall": 0.45,
+          "evidence_overlap": 0.287
+        },
+        "plan": {
+          "root_variant": "NliVerify",
+          "variants": [
+            "NliVerify",
+            "HierarchicalGenerate",
+            "CrossEncoderRank",
+            "BM25Retrieve"
+          ],
+          "op_id_variants": {
+            "VERIFY_0": "NliVerify",
+            "AGGREGATE_0": "HierarchicalGenerate",
+            "RANK_0": "CrossEncoderRank",
+            "I_0": "BM25Retrieve"
+          },
+          "rewrite_count": 1
+        },
+        "execution": {
+          "trace": [
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "HierarchicalGenerate",
+            "CitationVerify"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 7632,
+            "CrossEncoderRank": 2871,
+            "HierarchicalGenerate": 329,
+            "NliVerify": 329
+          },
+          "total_tokens": 11161,
+          "errors": [],
+          "error_count": 0
+        },
+        "feedback": {
+          "overall": {
+            "scalar": 18560.55,
+            "token_cost": 18554.3,
+            "call_cost": 3.0,
+            "latency_cost": 3.1,
+            "quality_risk": 0.1,
+            "quality_score": 1.0,
+            "bottleneck": "I_0",
+            "warnings": []
+          },
+          "per_operator": {
+            "I_0": {
+              "variant": "BM25Retrieve",
+              "scalar": 12064.2295,
+              "token_cost": 12062.2295,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 61,
+              "accuracy_score": 1.0
+            },
+            "RANK_0": {
+              "variant": "CrossEncoderRank",
+              "scalar": 5628.04,
+              "token_cost": 5626.04,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.0,
+              "sample_count": 25,
+              "accuracy_score": 1.0
+            },
+            "AGGREGATE_0": {
+              "variant": "HierarchicalGenerate",
+              "scalar": 442.1769,
+              "token_cost": 440.0769,
+              "call_cost": 1.0,
+              "latency_cost": 1.0,
+              "quality_risk": 0.1,
+              "sample_count": 39,
+              "accuracy_score": 1.0
+            },
+            "VERIFY_0": {
+              "variant": "NliVerify",
+              "scalar": 426.1,
+              "token_cost": 426.0,
+              "call_cost": 0.0,
+              "latency_cost": 0.1,
+              "quality_risk": 0.0,
+              "sample_count": 15,
+              "accuracy_score": 1.0
+            }
+          },
+          "execution": {
+            "errors": [],
+            "error_count": 0,
+            "trace": [
+              "BM25Retrieve",
+              "CrossEncoderRank",
+              "HierarchicalGenerate",
+              "CitationVerify"
+            ],
+            "trace_count": 4,
+            "token_counts": {
+              "BM25Retrieve": 7632,
+              "CrossEncoderRank": 2871,
+              "HierarchicalGenerate": 329,
+              "NliVerify": 329
+            },
+            "total_tokens": 11161
+          }
+        },
+        "planning": {
+          "planning_rounds": 1,
+          "feedback_iterations": 1,
+          "planning_calls_for_sample": 1
+        }
+      }
+    ]
+  },
+  "delta": {
+    "accepted": false,
+    "reason": "rejected: quality risk did not improve",
+    "risk_improved": false,
+    "token_within_cap": true,
+    "token_increase_ratio": 0.065372,
+    "quality_risk_delta": 0.0,
+    "avg_token_cost_delta": 1378.61
+  },
+  "winner": "baseline"
+}
