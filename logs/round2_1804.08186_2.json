@@ -1,0 +1,235 @@
+{
+  "task_description": "QA over scientific papers",
+  "phases": {
+    "parse": {
+      "op": "AGGREGATE",
+      "params": {
+        "goal": "provide a comprehensive answer to the query"
+      },
+      "inputs": [
+        {
+          "op": "VERIFY",
+          "params": {
+            "constraints": "answer must be grounded in the evidence from the papers"
+          },
+          "inputs": [
+            {
+              "op": "COMPOSE",
+              "params": {
+                "condition": "synthesize information from papers"
+              },
+              "inputs": [
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "relevant evidence from scientific papers"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "TRANSFORM",
+                  "params": {
+                    "schema": "extracted information"
+                  },
+                  "inputs": [
+                    {
+                      "op": "I",
+                      "params": {
+                        "query": "specific sections or metrics"
+                      },
+                      "inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "optimize": {
+      "plan": {
+        "op": "VERIFY",
+        "params": {
+          "constraints": "grounded in evidence"
+        },
+        "inputs": [
+          {
+            "op": "AGGREGATE",
+            "params": {
+              "goal": "provide a comprehensive answer to the query",
+              "__verified__": true
+            },
+            "inputs": [
+              {
+                "op": "RANK",
+                "params": {
+                  "criterion": "relevance"
+                },
+                "inputs": [
+                  {
+                    "op": "VERIFY",
+                    "params": {
+                      "constraints": "answer must be grounded in the evidence from the papers"
+                    },
+                    "inputs": [
+                      {
+                        "op": "COMPOSE",
+                        "params": {
+                          "condition": "synthesize information from papers"
+                        },
+                        "inputs": [
+                          {
+                            "op": "TRANSFORM",
+                            "params": {
+                              "schema": ""
+                            },
+                            "inputs": [
+                              {
+                                "op": "I",
+                                "params": {
+                                  "query": "relevant evidence from scientific papers"
+                                },
+                                "inputs": []
+                              }
+                            ]
+                          },
+                          {
+                            "op": "TRANSFORM",
+                            "params": {
+                              "schema": "extracted information"
+                            },
+                            "inputs": [
+                              {
+                                "op": "I",
+                                "params": {
+                                  "query": "specific sections or metrics"
+                                },
+                                "inputs": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "rewrite_count": 3,
+      "rules_fired": [
+        "R1_transform_pushdown",
+        "R6_delayed_aggregation",
+        "R8_selective_verify"
+      ]
+    },
+    "physical_plan": {
+      "root_variant": "NliVerify",
+      "params": {
+        "constraints": "grounded in evidence"
+      }
+    },
+    "samples": [
+      {
+        "query": "what are the off-the-shelf systems discussed in the paper?",
+        "execute": {
+          "answer": "Recent advancements in natural language processing (NLP) have significantly enhanced language identification techniques, particularly in challenging scenarios such as distinguishing between similar languages and dialects. However, several critical issues and ongoing research areas underscore the complexity of this task.\n\nOne primary challenge observed with current systems is their performance on multilingual documents. Traditional methods tend to work well with monolingual texts but struggle when faced with documents containing multiple languages, especially with certain Arabic dialects. For instance, baseline systems for some dialects achieved a 0% BLEU score, indicating a critical need for the development of specialized models designed to handle such complexities.\n\nIn terms of methodological improvements, research demonstrates that employing a diverse range of linguistic features can significantly boost classification accuracy. One notable approach achieved an impressive 95.6% accuracy by utilizing character 4-grams across different languages, highlighting the necessity of integrating various features to effectively differentiate closely related languages.\n\nFurthermore, historical methods of language identification often neglected the distinctions between spoken and written forms, leading to potential biases in automated classifiers. Mislabeling of languages can severely distort evaluation outcomes, thus emphasizing the importance of refined methodologies that take into account the nuanced characteristics of different languages and dialects.\n\nThe NLP community has been proactive in addressing such challenges, with collective efforts focused on improving language identification systems through initiatives that target specific issues like code-switching and dialect identification. These efforts reflect a commitment to enhancing the robustness of language identification technologies in multilingual contexts.\n\nIn conclusion, despite the notable progress in language identification within NLP, continued research is essential to develop comprehensive models that better account for linguistic diversity. This endeavor will not only improve text categorization but also enrich the capabilities of multilingual processing systems, fostering a deeper understanding of language in automated technologies.",
+          "trace": [
+            "DenseRetrieve",
+            "ExtractiveCompress",
+            "DenseRetrieve",
+            "ExtractiveCompress",
+            "LLMCompose",
+            "CitationVerify",
+            "CrossEncoderRank",
+            "HierarchicalGenerate",
+            "CitationVerify"
+          ],
+          "token_counts": {
+            "DenseRetrieve": 27251,
+            "ExtractiveCompress": 1952,
+            "LLMCompose": 638,
+            "CitationVerify": 638,
+            "CrossEncoderRank": 638,
+            "HierarchicalGenerate": 582,
+            "NliVerify": 582
+          },
+          "errors": []
+        },
+        "feedback": {
+          "accuracy": 0.0,
+          "result": "Recent advancements in natural language processing (NLP) have significantly enhanced language identification techniques, particularly in challenging scenarios such as distinguishing between similar languages and dialects. However, several critical issues and ongoing research areas underscore the complexity of this task.\n\nOne primary challenge observed with current systems is their performance on multilingual documents. Traditional methods tend to work well with monolingual texts but struggle when faced with documents containing multiple languages, especially with certain Arabic dialects. For instance, baseline systems for some dialects achieved a 0% BLEU score, indicating a critical need for the development of specialized models designed to handle such complexities.\n\nIn terms of methodological improvements, research demonstrates that employing a diverse range of linguistic features can significantly boost classification accuracy. One notable approach achieved an impressive 95.6% accuracy by utilizing character 4-grams across different languages, highlighting the necessity of integrating various features to effectively differentiate closely related languages.\n\nFurthermore, historical methods of language identification often neglected the distinctions between spoken and written forms, leading to potential biases in automated classifiers. Mislabeling of languages can severely distort evaluation outcomes, thus emphasizing the importance of refined methodologies that take into account the nuanced characteristics of different languages and dialects.\n\nThe NLP community has been proactive in addressing such challenges, with collective efforts focused on improving language identification systems through initiatives that target specific issues like code-switching and dialect identification. These efforts reflect a commitment to enhancing the robustness of language identification technologies in multilingual contexts.\n\nIn conclusion, despite the notable progress in language identification within NLP, continued research is essential to develop comprehensive models that better account for linguistic diversity. This endeavor will not only improve text categorization but also enrich the capabilities of multilingual processing systems, fostering a deeper understanding of language in automated technologies.",
+          "gold_ans": "Answer with content missing: (Names of many identifiers missing) TextCat, ChromeCLD, LangDetect, langid.py, whatlang, whatthelang, YALI, LDIG, Polyglot 3000, Lextek Language Identifier and Open Xerox Language Identifier.",
+          "items": [
+            {
+              "op_id": "I_0",
+              "variant": "DenseRetrieve",
+              "token_cost": 14010,
+              "latency_ms": 5.62,
+              "output_summary": "While one line of research into has focused on pushing the boundaries of how many languages are supported simultaneously by a single system BIBREF382 , BIBREF36 , BIBREF153 , another has taken a compl"
+            },
+            {
+              "op_id": "I_1",
+              "variant": "DenseRetrieve",
+              "token_cost": 13241,
+              "latency_ms": 5.2,
+              "output_summary": "Language identification (\u201c\u201d) is the task of determining the natural language that a document or part thereof is written in. Recognizing text in a specific language comes naturally to a human reader fa"
+            },
+            {
+              "op_id": "TRANSFORM_0",
+              "variant": "ExtractiveCompress",
+              "token_cost": 762,
+              "latency_ms": 9.58,
+              "output_summary": "g. g. 0% BLEU score compared with a baseline system which does not differentiate between Arabic dialects. In monolingual , the task is to assign each document a unique language label. Research to date"
+            },
+            {
+              "op_id": "TRANSFORM_1",
+              "variant": "ExtractiveCompress",
+              "token_cost": 1190,
+              "latency_ms": 8.47,
+              "output_summary": "Of course, the more similar two classes are, the more challenging it is for a system to discriminate between them. Text processing techniques developed in natural language processing and Information R"
+            },
+            {
+              "op_id": "COMPOSE_0",
+              "variant": "LLMCompose",
+              "token_cost": 638,
+              "latency_ms": 7354.72,
+              "output_summary": "Recent advancements in natural language processing (NLP) have highlighted the complexities associated with language identification, particularly when distinguishing between similar languages or dialec"
+            },
+            {
+              "op_id": "VERIFY_0",
+              "variant": "CitationVerify",
+              "token_cost": 638,
+              "latency_ms": 0.17,
+              "output_summary": "Recent advancements in natural language processing (NLP) have highlighted the complexities associated with language identification, particularly when distinguishing between similar languages or dialec"
+            },
+            {
+              "op_id": "RANK_0",
+              "variant": "CrossEncoderRank",
+              "token_cost": 638,
+              "latency_ms": 4147.56,
+              "output_summary": "Recent advancements in natural language processing (NLP) have highlighted the complexities associated with language identification, particularly when distinguishing between similar languages or dialec"
+            },
+            {
+              "op_id": "AGGREGATE_0",
+              "variant": "HierarchicalGenerate",
+              "token_cost": 582,
+              "latency_ms": 11448.16,
+              "output_summary": "Recent advancements in natural language processing (NLP) have significantly enhanced language identification techniques, particularly in challenging scenarios such as distinguishing between similar la"
+            },
+            {
+              "op_id": "VERIFY_1",
+              "variant": "NliVerify",
+              "token_cost": 582,
+              "latency_ms": 2913.84,
+              "output_summary": "Recent advancements in natural language processing (NLP) have significantly enhanced language identification techniques, particularly in challenging scenarios such as distinguishing between similar la"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

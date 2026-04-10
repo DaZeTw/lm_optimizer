@@ -1,0 +1,242 @@
+{
+  "task_description": "QA over scientific papers",
+  "phases": {
+    "parse": {
+      "op": "AGGREGATE",
+      "params": {
+        "goal": "synthesize final answer from evidence"
+      },
+      "inputs": [
+        {
+          "op": "VERIFY",
+          "params": {
+            "constraints": "evidence must be relevant and correctly sourced"
+          },
+          "inputs": [
+            {
+              "op": "UNION",
+              "params": {},
+              "inputs": [
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "relevant evidence from scientific papers"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "evaluation metrics"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "methodology sections"
+                  },
+                  "inputs": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "optimize": {
+      "plan": {
+        "op": "AGGREGATE",
+        "params": {
+          "goal": "synthesize final answer from evidence"
+        },
+        "inputs": [
+          {
+            "op": "RANK",
+            "params": {
+              "criterion": "relevance"
+            },
+            "inputs": [
+              {
+                "op": "VERIFY",
+                "params": {
+                  "constraints": "evidence must be relevant and correctly sourced"
+                },
+                "inputs": [
+                  {
+                    "op": "UNION",
+                    "params": {},
+                    "inputs": [
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "relevant evidence from scientific papers"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "evaluation metrics"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "methodology sections"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "rewrite_count": 2,
+      "rules_fired": [
+        "R2_filter_pushdown",
+        "R6_delayed_aggregation"
+      ]
+    },
+    "physical_plan": {
+      "root_variant": "DirectGenerate",
+      "params": {
+        "goal": "synthesize final answer from evidence"
+      }
+    },
+    "samples": [
+      {
+        "query": "What are the 12 languages covered?",
+        "execute": {
+          "answer": "Multi-SimLex is a comprehensive lexical resource and evaluation benchmark designed to enhance the study of semantic similarity across 12 typologically diverse languages, including both resource-rich languages like Mandarin Chinese and Spanish, as well as resource-lean languages such as Welsh and Kiswahili. It comprises 1,888 annotated concept pairs for each language, effectively covering various word classes (nouns, verbs, adjectives, and adverbs) and accounting for differences in similarity, frequency, and concreteness. \n\nThe initiative addresses critical gaps in existing datasets, which often suffer from limited coverage, heterogeneous construction methodologies, and a focus on high-frequency concepts dominated by nouns. Multi-SimLex overcomes these issues by employing a meticulously designed translation and annotation protocol that ensures comparability and consistency across languages. This allows for systematic cross-linguistic analyses and facilitates the creation of 66 cross-lingual datasets derived from the multilingual pairs.\n\nEvaluations of state-of-the-art monolingual and cross-lingual representation models reveal substantial performance gaps, underscoring the benefits of monolingual pretraining over multilingual approaches. Significant improvements in correlation scores are observed with unsupervised post-processing techniques, validating their efficacy across languages.\n\nOverall, Multi-SimLex not only provides robust datasets for advancing multilingual natural language understanding but also establishes a foundation for future development and collaboration in the field, with resources made readily available for broader community contribution and growth.",
+          "trace": [
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "SimpleUnion",
+            "CitationVerify",
+            "CrossEncoderRank",
+            "DirectGenerate"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 28767,
+            "SimilarityRank": 16099,
+            "SimpleUnion": 16099,
+            "NliVerify": 16108,
+            "CrossEncoderRank": 16108,
+            "DirectGenerate": 423
+          },
+          "errors": []
+        },
+        "feedback": {
+          "accuracy": 0.0,
+          "result": "Multi-SimLex is a comprehensive lexical resource and evaluation benchmark designed to enhance the study of semantic similarity across 12 typologically diverse languages, including both resource-rich languages like Mandarin Chinese and Spanish, as well as resource-lean languages such as Welsh and Kiswahili. It comprises 1,888 annotated concept pairs for each language, effectively covering various word classes (nouns, verbs, adjectives, and adverbs) and accounting for differences in similarity, frequency, and concreteness. \n\nThe initiative addresses critical gaps in existing datasets, which often suffer from limited coverage, heterogeneous construction methodologies, and a focus on high-frequency concepts dominated by nouns. Multi-SimLex overcomes these issues by employing a meticulously designed translation and annotation protocol that ensures comparability and consistency across languages. This allows for systematic cross-linguistic analyses and facilitates the creation of 66 cross-lingual datasets derived from the multilingual pairs.\n\nEvaluations of state-of-the-art monolingual and cross-lingual representation models reveal substantial performance gaps, underscoring the benefits of monolingual pretraining over multilingual approaches. Significant improvements in correlation scores are observed with unsupervised post-processing techniques, validating their efficacy across languages.\n\nOverall, Multi-SimLex not only provides robust datasets for advancing multilingual natural language understanding but also establishes a foundation for future development and collaboration in the field, with resources made readily available for broader community contribution and growth.",
+          "gold_ans": "Chinese Mandarin, Welsh, English, Estonian, Finnish, French, Hebrew, Polish, Russian, Spanish, Kiswahili, Yue Chinese",
+          "items": [
+            {
+              "op_id": "I_0",
+              "variant": "BM25Retrieve",
+              "token_cost": 15341,
+              "latency_ms": 3.37,
+              "output_summary": "The lack of annotated training and evaluation data for many tasks and domains hinders the development of computational models for the majority of the world's languages BIBREF0, BIBREF1, BIBREF2. The n"
+            },
+            {
+              "op_id": "I_1",
+              "variant": "BM25Retrieve",
+              "token_cost": 12103,
+              "latency_ms": 2.49,
+              "output_summary": "We introduce Multi-SimLex, a large-scale lexical resource and evaluation benchmark covering datasets for 12 typologically diverse languages, including major languages (e.g., Mandarin Chinese, Spanish,"
+            },
+            {
+              "op_id": "I_2",
+              "variant": "BM25Retrieve",
+              "token_cost": 1323,
+              "latency_ms": 2.08,
+              "output_summary": "Word Pair Datasets. Rich expert-created resources such as WordNet BIBREF46, BIBREF71, VerbNet BIBREF72, BIBREF73, or FrameNet BIBREF74 encode a wealth of semantic and syntactic information, but are ex"
+            },
+            {
+              "op_id": "RANK_0",
+              "variant": "SimilarityRank",
+              "token_cost": 10425,
+              "latency_ms": 0.32,
+              "output_summary": "Word Pair Datasets. Rich expert-created resources such as WordNet BIBREF46, BIBREF71, VerbNet BIBREF72, BIBREF73, or FrameNet BIBREF74 encode a wealth of semantic and syntactic information, but are ex"
+            },
+            {
+              "op_id": "RANK_1",
+              "variant": "SimilarityRank",
+              "token_cost": 4351,
+              "latency_ms": 0.23,
+              "output_summary": "Similar to monolingual evaluation in \u00a7SECREF7, we now evaluate several state-of-the-art cross-lingual representation models on the suite of 66 automatically constructed cross-lingual Multi-SimLex data"
+            },
+            {
+              "op_id": "RANK_2",
+              "variant": "SimilarityRank",
+              "token_cost": 1323,
+              "latency_ms": 0.04,
+              "output_summary": "Word Pair Datasets. Rich expert-created resources such as WordNet BIBREF46, BIBREF71, VerbNet BIBREF72, BIBREF73, or FrameNet BIBREF74 encode a wealth of semantic and syntactic information, but are ex"
+            },
+            {
+              "op_id": "UNION_0",
+              "variant": "SimpleUnion",
+              "token_cost": 16099,
+              "latency_ms": 0.0,
+              "output_summary": "Word Pair Datasets. Rich expert-created resources such as WordNet BIBREF46, BIBREF71, VerbNet BIBREF72, BIBREF73, or FrameNet BIBREF74 encode a wealth of semantic and syntactic information, but are ex"
+            },
+            {
+              "op_id": "VERIFY_0",
+              "variant": "NliVerify",
+              "token_cost": 16108,
+              "latency_ms": 2960.63,
+              "output_summary": "Word Pair Datasets. Rich expert-created resources such as WordNet BIBREF46, BIBREF71, VerbNet BIBREF72, BIBREF73, or FrameNet BIBREF74 encode a wealth of semantic and syntactic information, but are ex"
+            },
+            {
+              "op_id": "RANK_3",
+              "variant": "CrossEncoderRank",
+              "token_cost": 16108,
+              "latency_ms": 4039.96,
+              "output_summary": "Word Pair Datasets. Rich expert-created resources such as WordNet BIBREF46, BIBREF71, VerbNet BIBREF72, BIBREF73, or FrameNet BIBREF74 encode a wealth of semantic and syntactic information, but are ex"
+            },
+            {
+              "op_id": "AGGREGATE_0",
+              "variant": "DirectGenerate",
+              "token_cost": 423,
+              "latency_ms": 12515.42,
+              "output_summary": "Multi-SimLex is a comprehensive lexical resource and evaluation benchmark designed to enhance the study of semantic similarity across 12 typologically diverse languages, including both resource-rich l"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

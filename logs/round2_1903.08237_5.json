@@ -1,0 +1,226 @@
+{
+  "task_description": "QA over scientific papers",
+  "phases": {
+    "parse": {
+      "op": "AGGREGATE",
+      "params": {
+        "goal": "synthesize final answer based on evidence"
+      },
+      "inputs": [
+        {
+          "op": "VERIFY",
+          "params": {
+            "constraints": "ensure evidence supports the query"
+          },
+          "inputs": [
+            {
+              "op": "COMPOSE",
+              "params": {
+                "condition": "analyze evidence for query"
+              },
+              "inputs": [
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "evidence from paper"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "specific query details"
+                  },
+                  "inputs": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "optimize": {
+      "plan": {
+        "op": "VERIFY",
+        "params": {
+          "constraints": "grounded in evidence"
+        },
+        "inputs": [
+          {
+            "op": "AGGREGATE",
+            "params": {
+              "goal": "synthesize final answer based on evidence",
+              "__verified__": true
+            },
+            "inputs": [
+              {
+                "op": "RANK",
+                "params": {
+                  "criterion": "relevance"
+                },
+                "inputs": [
+                  {
+                    "op": "VERIFY",
+                    "params": {
+                      "constraints": "ensure evidence supports the query"
+                    },
+                    "inputs": [
+                      {
+                        "op": "COMPOSE",
+                        "params": {
+                          "condition": "analyze evidence for query"
+                        },
+                        "inputs": [
+                          {
+                            "op": "TRANSFORM",
+                            "params": {
+                              "schema": ""
+                            },
+                            "inputs": [
+                              {
+                                "op": "I",
+                                "params": {
+                                  "query": "evidence from paper"
+                                },
+                                "inputs": []
+                              }
+                            ]
+                          },
+                          {
+                            "op": "TRANSFORM",
+                            "params": {
+                              "schema": ""
+                            },
+                            "inputs": [
+                              {
+                                "op": "I",
+                                "params": {
+                                  "query": "specific query details"
+                                },
+                                "inputs": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "rewrite_count": 3,
+      "rules_fired": [
+        "R1_transform_pushdown",
+        "R6_delayed_aggregation",
+        "R8_selective_verify"
+      ]
+    },
+    "physical_plan": {
+      "root_variant": "NliVerify",
+      "params": {
+        "constraints": "grounded in evidence"
+      }
+    },
+    "samples": [
+      {
+        "query": "Does the paper describe experiments with real humans?",
+        "execute": {
+          "answer": "Speakers' choices in referring expressions are shaped by a blend of informativeness, context, and cognitive constraints. The concept of **surprisal** highlights how unexpected elements in language can influence reference processing. Evidence shows that speakers often prefer detailed expressions, opting for modifiers like color or size\u2014even when they may not enhance uniqueness\u2014demonstrating an inclination towards overinformative language. This behavior is supported by the observation that specificity in descriptions, such as \"the small blue pin,\" is favored over more basic terms like \"the small pin.\" \n\nThese preferences are informed by cognitive efficiency and contextual dynamics, including adherence to Grice's conversational maxims, which guide cooperative communication. Overall, this analysis reveals that what may appear as unnecessary overmodification is, in fact, a rational strategy driven by the need to balance clarity with cognitive load, adapting to situational demands to optimize effective communication.",
+          "trace": [
+            "DenseRetrieve",
+            "ExtractiveCompress",
+            "DenseRetrieve",
+            "ExtractiveCompress",
+            "LLMCompose",
+            "CitationVerify",
+            "CrossEncoderRank",
+            "HierarchicalGenerate",
+            "CitationVerify"
+          ],
+          "token_counts": {
+            "DenseRetrieve": 22857,
+            "ExtractiveCompress": 1913,
+            "LLMCompose": 546,
+            "NliVerify": 802,
+            "CrossEncoderRank": 546,
+            "HierarchicalGenerate": 256
+          },
+          "errors": []
+        },
+        "feedback": {
+          "accuracy": 0.0,
+          "result": "Speakers' choices in referring expressions are shaped by a blend of informativeness, context, and cognitive constraints. The concept of **surprisal** highlights how unexpected elements in language can influence reference processing. Evidence shows that speakers often prefer detailed expressions, opting for modifiers like color or size\u2014even when they may not enhance uniqueness\u2014demonstrating an inclination towards overinformative language. This behavior is supported by the observation that specificity in descriptions, such as \"the small blue pin,\" is favored over more basic terms like \"the small pin.\" \n\nThese preferences are informed by cognitive efficiency and contextual dynamics, including adherence to Grice's conversational maxims, which guide cooperative communication. Overall, this analysis reveals that what may appear as unnecessary overmodification is, in fact, a rational strategy driven by the need to balance clarity with cognitive load, adapting to situational demands to optimize effective communication.",
+          "gold_ans": "Yes",
+          "items": [
+            {
+              "op_id": "I_0",
+              "variant": "DenseRetrieve",
+              "token_cost": 12739,
+              "latency_ms": 4.43,
+              "output_summary": "While the account proposed in this paper is an account of the production of referring expressions, it can be extended straightforwardly to comprehension. RSA models typically assume that listeners int"
+            },
+            {
+              "op_id": "I_1",
+              "variant": "DenseRetrieve",
+              "token_cost": 10118,
+              "latency_ms": 2.81,
+              "output_summary": "Reference to objects is one of the most basic and prevalent uses of language. In order to refer, speakers must choose from among a wealth of referring expressions they have at their disposal. How does"
+            },
+            {
+              "op_id": "TRANSFORM_0",
+              "variant": "ExtractiveCompress",
+              "token_cost": 1069,
+              "latency_ms": 8.42,
+              "output_summary": "In this paper we have provided precisely such a model of the speaker. What does the RSA model presented here have to say about this?\nIn sentence processing, the current wisdom is that the processing e"
+            },
+            {
+              "op_id": "TRANSFORM_1",
+              "variant": "ExtractiveCompress",
+              "token_cost": 844,
+              "latency_ms": 7.27,
+              "output_summary": "For instance, speakers are likely to produce referring expressions like the small blue pin instead of the small pin in contexts like Figure 1 , even though the color modifier provides no additional in"
+            },
+            {
+              "op_id": "COMPOSE_0",
+              "variant": "LLMCompose",
+              "token_cost": 546,
+              "latency_ms": 6154.64,
+              "output_summary": "The analysis of referring expressions in language highlights a complex interplay between informativeness, context, and speaker strategies. In Evidence Set A, the authors present a model that frames th"
+            },
+            {
+              "op_id": "VERIFY_0",
+              "variant": "NliVerify",
+              "token_cost": 546,
+              "latency_ms": 3327.49,
+              "output_summary": "The analysis of referring expressions in language highlights a complex interplay between informativeness, context, and speaker strategies. In Evidence Set A, the authors present a model that frames th"
+            },
+            {
+              "op_id": "RANK_0",
+              "variant": "CrossEncoderRank",
+              "token_cost": 546,
+              "latency_ms": 4048.7,
+              "output_summary": "The analysis of referring expressions in language highlights a complex interplay between informativeness, context, and speaker strategies. In Evidence Set A, the authors present a model that frames th"
+            },
+            {
+              "op_id": "AGGREGATE_0",
+              "variant": "HierarchicalGenerate",
+              "token_cost": 256,
+              "latency_ms": 7536.13,
+              "output_summary": "Speakers' choices in referring expressions are shaped by a blend of informativeness, context, and cognitive constraints. The concept of **surprisal** highlights how unexpected elements in language can"
+            },
+            {
+              "op_id": "VERIFY_1",
+              "variant": "NliVerify",
+              "token_cost": 256,
+              "latency_ms": 2934.5,
+              "output_summary": "Speakers' choices in referring expressions are shaped by a blend of informativeness, context, and cognitive constraints. The concept of **surprisal** highlights how unexpected elements in language can"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

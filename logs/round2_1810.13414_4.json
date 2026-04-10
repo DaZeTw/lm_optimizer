@@ -1,0 +1,226 @@
+{
+  "task_description": "QA over scientific papers",
+  "phases": {
+    "parse": {
+      "op": "AGGREGATE",
+      "params": {
+        "goal": "summarize ontologies used in scientific papers"
+      },
+      "inputs": [
+        {
+          "op": "VERIFY",
+          "params": {
+            "constraints": "answer must reference specific ontologies"
+          },
+          "inputs": [
+            {
+              "op": "COMPOSE",
+              "params": {
+                "condition": "identify ontologies used in the papers"
+              },
+              "inputs": [
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "relevant evidence from scientific papers"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "ontologies used"
+                  },
+                  "inputs": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "optimize": {
+      "plan": {
+        "op": "VERIFY",
+        "params": {
+          "constraints": "grounded in evidence"
+        },
+        "inputs": [
+          {
+            "op": "AGGREGATE",
+            "params": {
+              "goal": "summarize ontologies used in scientific papers",
+              "__verified__": true
+            },
+            "inputs": [
+              {
+                "op": "RANK",
+                "params": {
+                  "criterion": "relevance"
+                },
+                "inputs": [
+                  {
+                    "op": "VERIFY",
+                    "params": {
+                      "constraints": "answer must reference specific ontologies"
+                    },
+                    "inputs": [
+                      {
+                        "op": "COMPOSE",
+                        "params": {
+                          "condition": "identify ontologies used in the papers"
+                        },
+                        "inputs": [
+                          {
+                            "op": "TRANSFORM",
+                            "params": {
+                              "schema": ""
+                            },
+                            "inputs": [
+                              {
+                                "op": "I",
+                                "params": {
+                                  "query": "relevant evidence from scientific papers"
+                                },
+                                "inputs": []
+                              }
+                            ]
+                          },
+                          {
+                            "op": "TRANSFORM",
+                            "params": {
+                              "schema": ""
+                            },
+                            "inputs": [
+                              {
+                                "op": "I",
+                                "params": {
+                                  "query": "ontologies used"
+                                },
+                                "inputs": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "rewrite_count": 3,
+      "rules_fired": [
+        "R1_transform_pushdown",
+        "R6_delayed_aggregation",
+        "R8_selective_verify"
+      ]
+    },
+    "physical_plan": {
+      "root_variant": "NliVerify",
+      "params": {
+        "constraints": "grounded in evidence"
+      }
+    },
+    "samples": [
+      {
+        "query": "what ontologies did they use?",
+        "execute": {
+          "answer": "The review identified two fundamental ontologies that play a significant role in transforming structured data into natural language within the biomedical field: the **Disease Ontology** and the **Web Ontology Language (OWL)**. The Disease Ontology, crafted by biomedical professionals, focuses on addressing critical healthcare information needs with precise semantics, which is essential for generating clear and concise natural language descriptions.\n\nOWL is crucial for developing domain-specific linguistic resources, facilitated by tools such as **NaturalOWL**, which converts OWL-defined entities and relationships into readable text. This process involves breaking down OWL identifiers into coherent phrases.\n\nBoth ontologies have significantly enhanced the evaluation of text generation methods, yielding high-quality natural language outputs with limited human intervention. The findings indicate that employing linguistic resources derived from these ontologies leads to improved text quality compared to simpler methods based on basic entity and relation identifiers. Their integration bolsters the structural integrity and relevance of the generated texts, making them particularly effective for conveying intricate biomedical information.",
+          "trace": [
+            "DenseRetrieve",
+            "ExtractiveCompress",
+            "DenseRetrieve",
+            "ExtractiveCompress",
+            "LLMCompose",
+            "CitationVerify",
+            "CrossEncoderRank",
+            "HierarchicalGenerate",
+            "CitationVerify"
+          ],
+          "token_counts": {
+            "DenseRetrieve": 34344,
+            "ExtractiveCompress": 1450,
+            "LLMCompose": 465,
+            "NliVerify": 777,
+            "CrossEncoderRank": 465,
+            "HierarchicalGenerate": 312
+          },
+          "errors": []
+        },
+        "feedback": {
+          "accuracy": 0.5,
+          "result": "The review identified two fundamental ontologies that play a significant role in transforming structured data into natural language within the biomedical field: the **Disease Ontology** and the **Web Ontology Language (OWL)**. The Disease Ontology, crafted by biomedical professionals, focuses on addressing critical healthcare information needs with precise semantics, which is essential for generating clear and concise natural language descriptions.\n\nOWL is crucial for developing domain-specific linguistic resources, facilitated by tools such as **NaturalOWL**, which converts OWL-defined entities and relationships into readable text. This process involves breaking down OWL identifiers into coherent phrases.\n\nBoth ontologies have significantly enhanced the evaluation of text generation methods, yielding high-quality natural language outputs with limited human intervention. The findings indicate that employing linguistic resources derived from these ontologies leads to improved text quality compared to simpler methods based on basic entity and relation identifiers. Their integration bolsters the structural integrity and relevance of the generated texts, making them particularly effective for conveying intricate biomedical information.",
+          "gold_ans": "Wine Ontology m-piro ontology Disease Ontology",
+          "items": [
+            {
+              "op_id": "I_0",
+              "variant": "DenseRetrieve",
+              "token_cost": 12780,
+              "latency_ms": 4.22,
+              "output_summary": "Given an owl ontology and a particular target individual or class to describe, Naturalowl first scans the ontology to select statements relevant to the target. It then converts each relevant statement"
+            },
+            {
+              "op_id": "I_1",
+              "variant": "DenseRetrieve",
+              "token_cost": 21564,
+              "latency_ms": 4.01,
+              "output_summary": "The Semantic Web BIBREF0 , BIBREF1 and the growing popularity of Linked Data (data published using Semantic Web technologies) have renewed interest in concept-to-text generation BIBREF2 , especially t"
+            },
+            {
+              "op_id": "TRANSFORM_0",
+              "variant": "ExtractiveCompress",
+              "token_cost": 525,
+              "latency_ms": 8.65,
+              "output_summary": "Message triples are similar to rdf triples, but they are easier to express as sentences. g. For example, the ObjectHasValue(:madeFrom :cabernetSauvignonGrape) part of the owl statement above is conver"
+            },
+            {
+              "op_id": "TRANSFORM_1",
+              "variant": "ExtractiveCompress",
+              "token_cost": 925,
+              "latency_ms": 16.94,
+              "output_summary": "), with the data having formally defined semantics based on the ontology. , :cabernetSauvignonGrape) typically split into tokens as their natural language names, they express relations using phrases o"
+            },
+            {
+              "op_id": "COMPOSE_0",
+              "variant": "LLMCompose",
+              "token_cost": 465,
+              "latency_ms": 5645.14,
+              "output_summary": "In the papers reviewed, two notable ontologies emerged that were pivotal in the context of generating natural language from structured data: the Disease Ontology and OWL (Web Ontology Language). The D"
+            },
+            {
+              "op_id": "VERIFY_0",
+              "variant": "NliVerify",
+              "token_cost": 465,
+              "latency_ms": 3293.53,
+              "output_summary": "In the papers reviewed, two notable ontologies emerged that were pivotal in the context of generating natural language from structured data: the Disease Ontology and OWL (Web Ontology Language). The D"
+            },
+            {
+              "op_id": "RANK_0",
+              "variant": "CrossEncoderRank",
+              "token_cost": 465,
+              "latency_ms": 4599.14,
+              "output_summary": "In the papers reviewed, two notable ontologies emerged that were pivotal in the context of generating natural language from structured data: the Disease Ontology and OWL (Web Ontology Language). The D"
+            },
+            {
+              "op_id": "AGGREGATE_0",
+              "variant": "HierarchicalGenerate",
+              "token_cost": 312,
+              "latency_ms": 7341.1,
+              "output_summary": "The review identified two fundamental ontologies that play a significant role in transforming structured data into natural language within the biomedical field: the **Disease Ontology** and the **Web "
+            },
+            {
+              "op_id": "VERIFY_1",
+              "variant": "NliVerify",
+              "token_cost": 312,
+              "latency_ms": 2829.3,
+              "output_summary": "The review identified two fundamental ontologies that play a significant role in transforming structured data into natural language within the biomedical field: the **Disease Ontology** and the **Web "
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

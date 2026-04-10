@@ -1,0 +1,317 @@
+{
+  "task_description": "QA over scientific papers",
+  "phases": {
+    "parse": {
+      "op": "AGGREGATE",
+      "params": {
+        "goal": "synthesize answers to various queries about scientific papers"
+      },
+      "inputs": [
+        {
+          "op": "VERIFY",
+          "params": {
+            "constraints": "answers must cite relevant papers and sections"
+          },
+          "inputs": [
+            {
+              "op": "UNION",
+              "params": {},
+              "inputs": [
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "main contribution of this paper"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "evaluation metrics paper A"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "evaluation metrics paper B"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "methodology section evaluation metrics"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "formula accuracy evaluation"
+                  },
+                  "inputs": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "optimize": {
+      "plan": {
+        "op": "AGGREGATE",
+        "params": {
+          "goal": "synthesize answers to various queries about scientific papers"
+        },
+        "inputs": [
+          {
+            "op": "RANK",
+            "params": {
+              "criterion": "relevance"
+            },
+            "inputs": [
+              {
+                "op": "VERIFY",
+                "params": {
+                  "constraints": "answers must cite relevant papers and sections"
+                },
+                "inputs": [
+                  {
+                    "op": "UNION",
+                    "params": {},
+                    "inputs": [
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "main contribution of this paper"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "evaluation metrics paper A"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "evaluation metrics paper B"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "methodology section evaluation metrics"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "formula accuracy evaluation"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "rewrite_count": 2,
+      "rules_fired": [
+        "R2_filter_pushdown",
+        "R6_delayed_aggregation"
+      ]
+    },
+    "physical_plan": {
+      "root_variant": "DirectGenerate",
+      "params": {
+        "goal": "synthesize answers to various queries about scientific papers"
+      }
+    },
+    "samples": [
+      {
+        "query": "How were the datasets annotated?",
+        "execute": {
+          "answer": "The scientific paper presents a comprehensive study introducing **Multi-SimLex**, a large-scale lexical resource and evaluation benchmark designed for assessing semantic similarity across multiple languages. It covers 12 typologically diverse languages, including major languages (like Mandarin Chinese, Spanish, and Russian) and lesser-resourced ones (such as Welsh and Kiswahili), providing 1,888 semantically aligned concept pairs for each language.\n\n### Key Contributions:\n1. **Resource Creation**: Multi-SimLex leverages a diverse dataset that includes various word classes (nouns, verbs, adjectives, adverbs) and respects linguistic phenomena through detailed construction criteria, ensuring coverage over different frequency ranges and lexical fields.\n\n2. **Cross-Lingual Datasets**: The resource enables the creation of 66 cross-lingual datasets due to the alignment of concepts, allowing evaluation of cross-lingual representation learning algorithms effectively. This addresses previous limitations where studies focused predominantly on high-resource languages with fewer concept pairs.\n\n3. **Evaluation of Representation Models**: The paper systematically evaluates state-of-the-art representation models (both static and contextualized), such as fastText, m-BERT, and XLM, observing substantial performance differences across languages and models. Notably, monolingual pretraining outperforms massively multilingual models like m-BERT, particularly for resource-rich languages.\n\n### Main Findings:\n- Fully unsupervised cross-lingual models (like the vecmap model) were found ineffective for many language pairs, especially those that are lower-resource, demonstrating a need for better models incorporating weak supervision.\n- Substantial improvements were documented when applying unsupervised post-processing techniques (e.g., mean centering) across languages, leading to better word similarity scores.\n- The study also highlights the performance variance based on language typology; high-resource and less morphologically rich languages tend to perform better than low-resource ones.\n\n### Methodology for Construction:\n- The initial dataset builds on existing resources (e.g., SimLex-999, SemEval-17), ensuring a representative set of word pairs that are further annotated for semantic similarity, resulting in higher inter-annotator agreement.\n- The dataset's automatic construction employs translation and annotation processes strategically to minimize errors and enhance alignment quality across different languages.\n\n### Implications and Future Work:\n- This resource could serve as a baseline for future improvements in cross-lingual word embeddings (CLWEs) and facilitate research in multilingual NLP by inspiring collaborative efforts for dataset enhancements in additional languages.\n- Future investigations might focus on fine-tuning and adapting the",
+          "trace": [
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "SimpleUnion",
+            "CitationVerify",
+            "CrossEncoderRank",
+            "DirectGenerate"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 69817,
+            "CrossEncoderRank": 69698,
+            "SimpleUnion": 34839,
+            "CitationVerify": 34859,
+            "DirectGenerate": 718
+          },
+          "errors": []
+        },
+        "feedback": {
+          "accuracy": 0.0,
+          "result": "The scientific paper presents a comprehensive study introducing **Multi-SimLex**, a large-scale lexical resource and evaluation benchmark designed for assessing semantic similarity across multiple languages. It covers 12 typologically diverse languages, including major languages (like Mandarin Chinese, Spanish, and Russian) and lesser-resourced ones (such as Welsh and Kiswahili), providing 1,888 semantically aligned concept pairs for each language.\n\n### Key Contributions:\n1. **Resource Creation**: Multi-SimLex leverages a diverse dataset that includes various word classes (nouns, verbs, adjectives, adverbs) and respects linguistic phenomena through detailed construction criteria, ensuring coverage over different frequency ranges and lexical fields.\n\n2. **Cross-Lingual Datasets**: The resource enables the creation of 66 cross-lingual datasets due to the alignment of concepts, allowing evaluation of cross-lingual representation learning algorithms effectively. This addresses previous limitations where studies focused predominantly on high-resource languages with fewer concept pairs.\n\n3. **Evaluation of Representation Models**: The paper systematically evaluates state-of-the-art representation models (both static and contextualized), such as fastText, m-BERT, and XLM, observing substantial performance differences across languages and models. Notably, monolingual pretraining outperforms massively multilingual models like m-BERT, particularly for resource-rich languages.\n\n### Main Findings:\n- Fully unsupervised cross-lingual models (like the vecmap model) were found ineffective for many language pairs, especially those that are lower-resource, demonstrating a need for better models incorporating weak supervision.\n- Substantial improvements were documented when applying unsupervised post-processing techniques (e.g., mean centering) across languages, leading to better word similarity scores.\n- The study also highlights the performance variance based on language typology; high-resource and less morphologically rich languages tend to perform better than low-resource ones.\n\n### Methodology for Construction:\n- The initial dataset builds on existing resources (e.g., SimLex-999, SemEval-17), ensuring a representative set of word pairs that are further annotated for semantic similarity, resulting in higher inter-annotator agreement.\n- The dataset's automatic construction employs translation and annotation processes strategically to minimize errors and enhance alignment quality across different languages.\n\n### Implications and Future Work:\n- This resource could serve as a baseline for future improvements in cross-lingual word embeddings (CLWEs) and facilitate research in multilingual NLP by inspiring collaborative efforts for dataset enhancements in additional languages.\n- Future investigations might focus on fine-tuning and adapting the",
+          "gold_ans": "1. Each annotator must assign an integer score between 0 and 6 (inclusive) indicating how semantically similar the two words in a given pair are. A score of 6 indicates very high similarity (i.e., perfect synonymy), while zero indicates no similarity. 2. Each annotator must score the entire set of 1,888 pairs in the dataset.  able to use external sources (e.g. dictionaries, thesauri, WordNet) if required not able to communicate with each other during the annotation process",
+          "items": [
+            {
+              "op_id": "I_0",
+              "variant": "BM25Retrieve",
+              "token_cost": 16514,
+              "latency_ms": 3.61,
+              "output_summary": "The lack of annotated training and evaluation data for many tasks and domains hinders the development of computational models for the majority of the world's languages BIBREF0, BIBREF1, BIBREF2. The n"
+            },
+            {
+              "op_id": "I_1",
+              "variant": "BM25Retrieve",
+              "token_cost": 13360,
+              "latency_ms": 3.5,
+              "output_summary": "We introduce Multi-SimLex, a large-scale lexical resource and evaluation benchmark covering datasets for 12 typologically diverse languages, including major languages (e.g., Mandarin Chinese, Spanish,"
+            },
+            {
+              "op_id": "I_2",
+              "variant": "BM25Retrieve",
+              "token_cost": 13360,
+              "latency_ms": 2.74,
+              "output_summary": "We introduce Multi-SimLex, a large-scale lexical resource and evaluation benchmark covering datasets for 12 typologically diverse languages, including major languages (e.g., Mandarin Chinese, Spanish,"
+            },
+            {
+              "op_id": "I_3",
+              "variant": "BM25Retrieve",
+              "token_cost": 12103,
+              "latency_ms": 2.55,
+              "output_summary": "Word Pair Datasets. Rich expert-created resources such as WordNet BIBREF46, BIBREF71, VerbNet BIBREF72, BIBREF73, or FrameNet BIBREF74 encode a wealth of semantic and syntactic information, but are ex"
+            },
+            {
+              "op_id": "I_4",
+              "variant": "BM25Retrieve",
+              "token_cost": 14480,
+              "latency_ms": 2.56,
+              "output_summary": "We introduce Multi-SimLex, a large-scale lexical resource and evaluation benchmark covering datasets for 12 typologically diverse languages, including major languages (e.g., Mandarin Chinese, Spanish,"
+            },
+            {
+              "op_id": "RANK_0",
+              "variant": "CrossEncoderRank",
+              "token_cost": 10225,
+              "latency_ms": 4097.4,
+              "output_summary": "Main Results and Differences across Language Pairs. A summary of the results on the 66 cross-lingual Multi-SimLex datasets are provided in Table TABREF59 and Figure FIGREF60. The findings confirm seve"
+            },
+            {
+              "op_id": "RANK_1",
+              "variant": "CrossEncoderRank",
+              "token_cost": 5977,
+              "latency_ms": 4117.34,
+              "output_summary": "After the numerical and qualitative analyses of the Multi-SimLex datasets provided in \u00a7\u00a7 SECREF18\u2013SECREF25, we now benchmark a series of representation learning models on the new evaluation data. We e"
+            },
+            {
+              "op_id": "RANK_2",
+              "variant": "CrossEncoderRank",
+              "token_cost": 5977,
+              "latency_ms": 4048.61,
+              "output_summary": "After the numerical and qualitative analyses of the Multi-SimLex datasets provided in \u00a7\u00a7 SECREF18\u2013SECREF25, we now benchmark a series of representation learning models on the new evaluation data. We e"
+            },
+            {
+              "op_id": "RANK_3",
+              "variant": "CrossEncoderRank",
+              "token_cost": 6683,
+              "latency_ms": 4092.34,
+              "output_summary": "After the numerical and qualitative analyses of the Multi-SimLex datasets provided in \u00a7\u00a7 SECREF18\u2013SECREF25, we now benchmark a series of representation learning models on the new evaluation data. We e"
+            },
+            {
+              "op_id": "RANK_4",
+              "variant": "CrossEncoderRank",
+              "token_cost": 5977,
+              "latency_ms": 4095.95,
+              "output_summary": "After the numerical and qualitative analyses of the Multi-SimLex datasets provided in \u00a7\u00a7 SECREF18\u2013SECREF25, we now benchmark a series of representation learning models on the new evaluation data. We e"
+            },
+            {
+              "op_id": "UNION_0",
+              "variant": "SimpleUnion",
+              "token_cost": 34839,
+              "latency_ms": 0.01,
+              "output_summary": "Main Results and Differences across Language Pairs. A summary of the results on the 66 cross-lingual Multi-SimLex datasets are provided in Table TABREF59 and Figure FIGREF60. The findings confirm seve"
+            },
+            {
+              "op_id": "VERIFY_0",
+              "variant": "CitationVerify",
+              "token_cost": 34859,
+              "latency_ms": 9.65,
+              "output_summary": "Main Results and Differences across Language Pairs. A summary of the results on the 66 cross-lingual Multi-SimLex datasets are provided in Table TABREF59 and Figure FIGREF60. The findings confirm seve"
+            },
+            {
+              "op_id": "RANK_5",
+              "variant": "CrossEncoderRank",
+              "token_cost": 34859,
+              "latency_ms": 4215.56,
+              "output_summary": "Main Results and Differences across Language Pairs. A summary of the results on the 66 cross-lingual Multi-SimLex datasets are provided in Table TABREF59 and Figure FIGREF60. The findings confirm seve"
+            },
+            {
+              "op_id": "AGGREGATE_0",
+              "variant": "DirectGenerate",
+              "token_cost": 718,
+              "latency_ms": 24573.05,
+              "output_summary": "The scientific paper presents a comprehensive study introducing **Multi-SimLex**, a large-scale lexical resource and evaluation benchmark designed for assessing semantic similarity across multiple lan"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

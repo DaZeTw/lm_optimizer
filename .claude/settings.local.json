@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)",
+      "Bash(grep -r \"from planner\\\\|import.*planner\" /c/WorkSpace/lm_optimizer --include=\"*.py\" -not -path \"*/.venv/*\")",
+      "Read(//tmp/**)",
+      "Bash(grep -h \"@register\" /c/WorkSpace/lm_optimizer/executor/ops/*.py)",
+      "Bash(python -m pytest tests/test_qasper.py -v --tb=short -q)",
+      "Bash(python -m pytest tests/test_qasper.py -v --tb=short)",
+      "Bash(python -m pytest tests/test_qasper.py -v)"
+    ]
+  }
+}

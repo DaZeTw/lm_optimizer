@@ -89,23 +89,10 @@ class LogicalNode:
 @dataclass(frozen=True)
 class CostVector:
     token_cost: float = 0.0
-    call_cost: float = 0.0
     latency_cost: float = 0.0
-    quality_risk: float = 0.0
 
-    def scalar(
-        self,
-        alpha: float = 1.0,
-        beta: float = 1.0,
-        gamma: float = 1.0,
-        delta: float = 1.0,
-    ) -> float:
-        return (
-            alpha * self.token_cost
-            + beta * self.call_cost
-            + gamma * self.latency_cost
-            + delta * self.quality_risk
-        )
+    def scalar(self, alpha: float = 1.0, beta: float = 1.0) -> float:
+        return alpha * self.token_cost + beta * self.latency_cost
 
 
 @dataclass(frozen=True)
@@ -115,4 +102,3 @@ class PhysicalNode:
     inputs: tuple[PhysicalNode, ...]
     params: dict[str, Any]
     cost: CostVector = field(default_factory=CostVector)
-    variant_costs: dict[str, CostVector] = field(default_factory=dict)

@@ -1,0 +1,226 @@
+{
+  "task_description": "QA over scientific papers",
+  "phases": {
+    "parse": {
+      "op": "AGGREGATE",
+      "params": {
+        "goal": "provide a comprehensive answer to the query"
+      },
+      "inputs": [
+        {
+          "op": "VERIFY",
+          "params": {
+            "constraints": "ensure evidence is relevant and accurate"
+          },
+          "inputs": [
+            {
+              "op": "COMPOSE",
+              "params": {
+                "condition": "synthesize information based on query"
+              },
+              "inputs": [
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "relevant evidence from scientific papers"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "specific query details"
+                  },
+                  "inputs": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "optimize": {
+      "plan": {
+        "op": "VERIFY",
+        "params": {
+          "constraints": "grounded in evidence"
+        },
+        "inputs": [
+          {
+            "op": "AGGREGATE",
+            "params": {
+              "goal": "provide a comprehensive answer to the query",
+              "__verified__": true
+            },
+            "inputs": [
+              {
+                "op": "RANK",
+                "params": {
+                  "criterion": "relevance"
+                },
+                "inputs": [
+                  {
+                    "op": "VERIFY",
+                    "params": {
+                      "constraints": "ensure evidence is relevant and accurate"
+                    },
+                    "inputs": [
+                      {
+                        "op": "COMPOSE",
+                        "params": {
+                          "condition": "synthesize information based on query"
+                        },
+                        "inputs": [
+                          {
+                            "op": "TRANSFORM",
+                            "params": {
+                              "schema": ""
+                            },
+                            "inputs": [
+                              {
+                                "op": "I",
+                                "params": {
+                                  "query": "relevant evidence from scientific papers"
+                                },
+                                "inputs": []
+                              }
+                            ]
+                          },
+                          {
+                            "op": "TRANSFORM",
+                            "params": {
+                              "schema": ""
+                            },
+                            "inputs": [
+                              {
+                                "op": "I",
+                                "params": {
+                                  "query": "specific query details"
+                                },
+                                "inputs": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "rewrite_count": 3,
+      "rules_fired": [
+        "R1_transform_pushdown",
+        "R6_delayed_aggregation",
+        "R8_selective_verify"
+      ]
+    },
+    "physical_plan": {
+      "root_variant": "CitationVerify",
+      "params": {
+        "constraints": "grounded in evidence"
+      }
+    },
+    "samples": [
+      {
+        "query": "Do they report results only on English data?",
+        "execute": {
+          "answer": "The study of argumentation mining has rapidly evolved, highlighting the need for effective annotation systems capable of categorizing argumentative discourse across various texts such as comments, forum posts, blogs, and articles. This process is crucial for enabling automated analysis of argumentative structures, particularly in user-generated content on the web. \n\n### Background and Methodological Framework\n\nThe argumentation model chosen for this study is a modified version of Toulmin\u2019s model, which has been widely recognized for its utility in analyzing argument components\u2014specifically, claims, premises (grounds), backing, rebuttals, and refutations. This model allows for the identification of both explicit and implicit claims within the discourse, accommodating a variety of argumentation styles prevalent in informal online settings.\n\n1. **Selection and Annotation**: The study began with filtering a corpus of 990 documents to isolate persuasive content from non-argumentative discussions. It was identified that many contributions, even within controversial topics, often lacked any persuasive intent and conveyed personal anecdotes, user interactions, or off-topic commentary. The annotators reached moderate agreement (Fleiss' kappa = 0.59) in categorizing materials as persuasive (524 documents, 53%).\n\n2. **Annotation Process**: Documents were annotated over three phases, with independent annotators labeling argument components based on the modified Toulmin model. The aim was to standardize arguments\u2019 identification while capturing their nuances in online discourse. Annotators underwent training to ensure they grasped the model and its application to the diverse content in the dataset.\n\n3. **Challenges**: Disputes during annotation arose largely due to implicitness in claims and fluctuating relevance to the topic at hand. Details such as sarcasm or culturally nuanced statements added complexity to categorization. These challenges underscore the difficulty of establishing a rigid framework for argumentation within informal contexts, where the intention behind the discourse might not align with conventional argumentative standards.\n\n### Results and Findings\n\n- **Annotated Data**: The final dataset consisted of 340 documents, approximately 90,000 tokens, forming what is termed the \"gold standard Toulmin corpus.\" Analysis of inter-annotator agreement showed variability based on text type, with comments and forum posts achieving higher agreement rates (0.60) than articles and blogs (0.09).\n\n- **Argument Components Distribution**: Within the annotated documents, a significant proportion of claims (48%) were implicit, indicating reliance on the reader to infer the speaker's stance. Additionally, the presence of rebuttals or refutations was notably low across most topics, suggesting a",
+          "trace": [
+            "BM25Retrieve",
+            "IdentityTransform",
+            "BM25Retrieve",
+            "IdentityTransform",
+            "ConcatCompose",
+            "CitationVerify",
+            "SimilarityRank",
+            "DirectGenerate",
+            "CitationVerify"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 29746,
+            "IdentityTransform": 29746,
+            "ConcatCompose": 29746,
+            "CitationVerify": 30464,
+            "SimilarityRank": 29758,
+            "DirectGenerate": 706
+          },
+          "errors": []
+        },
+        "feedback": {
+          "accuracy": 0.0,
+          "result": "The study of argumentation mining has rapidly evolved, highlighting the need for effective annotation systems capable of categorizing argumentative discourse across various texts such as comments, forum posts, blogs, and articles. This process is crucial for enabling automated analysis of argumentative structures, particularly in user-generated content on the web. \n\n### Background and Methodological Framework\n\nThe argumentation model chosen for this study is a modified version of Toulmin\u2019s model, which has been widely recognized for its utility in analyzing argument components\u2014specifically, claims, premises (grounds), backing, rebuttals, and refutations. This model allows for the identification of both explicit and implicit claims within the discourse, accommodating a variety of argumentation styles prevalent in informal online settings.\n\n1. **Selection and Annotation**: The study began with filtering a corpus of 990 documents to isolate persuasive content from non-argumentative discussions. It was identified that many contributions, even within controversial topics, often lacked any persuasive intent and conveyed personal anecdotes, user interactions, or off-topic commentary. The annotators reached moderate agreement (Fleiss' kappa = 0.59) in categorizing materials as persuasive (524 documents, 53%).\n\n2. **Annotation Process**: Documents were annotated over three phases, with independent annotators labeling argument components based on the modified Toulmin model. The aim was to standardize arguments\u2019 identification while capturing their nuances in online discourse. Annotators underwent training to ensure they grasped the model and its application to the diverse content in the dataset.\n\n3. **Challenges**: Disputes during annotation arose largely due to implicitness in claims and fluctuating relevance to the topic at hand. Details such as sarcasm or culturally nuanced statements added complexity to categorization. These challenges underscore the difficulty of establishing a rigid framework for argumentation within informal contexts, where the intention behind the discourse might not align with conventional argumentative standards.\n\n### Results and Findings\n\n- **Annotated Data**: The final dataset consisted of 340 documents, approximately 90,000 tokens, forming what is termed the \"gold standard Toulmin corpus.\" Analysis of inter-annotator agreement showed variability based on text type, with comments and forum posts achieving higher agreement rates (0.60) than articles and blogs (0.09).\n\n- **Argument Components Distribution**: Within the annotated documents, a significant proportion of claims (48%) were implicit, indicating reliance on the reader to infer the speaker's stance. Additionally, the presence of rebuttals or refutations was notably low across most topics, suggesting a",
+          "gold_ans": "Yes",
+          "items": [
+            {
+              "op_id": "I_0",
+              "variant": "BM25Retrieve",
+              "token_cost": 16854,
+              "latency_ms": 4.71,
+              "output_summary": "The argumentation mining field has been evolving very rapidly in the recent years, resulting into several workshops co-located with major NLP conferences. We first present related works with a focus o"
+            },
+            {
+              "op_id": "I_1",
+              "variant": "BM25Retrieve",
+              "token_cost": 12892,
+              "latency_ms": 2.23,
+              "output_summary": "The goal of this study was to annotate documents on a detailed level with respect to an argumentation model. First, we will present the annotation scheme. Second, we will describe the annotation proce"
+            },
+            {
+              "op_id": "TRANSFORM_0",
+              "variant": "IdentityTransform",
+              "token_cost": 16854,
+              "latency_ms": 0.0,
+              "output_summary": "The argumentation mining field has been evolving very rapidly in the recent years, resulting into several workshops co-located with major NLP conferences. We first present related works with a focus o"
+            },
+            {
+              "op_id": "TRANSFORM_1",
+              "variant": "IdentityTransform",
+              "token_cost": 12892,
+              "latency_ms": 0.0,
+              "output_summary": "The goal of this study was to annotate documents on a detailed level with respect to an argumentation model. First, we will present the annotation scheme. Second, we will describe the annotation proce"
+            },
+            {
+              "op_id": "COMPOSE_0",
+              "variant": "ConcatCompose",
+              "token_cost": 29746,
+              "latency_ms": 0.0,
+              "output_summary": "The argumentation mining field has been evolving very rapidly in the recent years, resulting into several workshops co-located with major NLP conferences. We first present related works with a focus o"
+            },
+            {
+              "op_id": "VERIFY_0",
+              "variant": "CitationVerify",
+              "token_cost": 29758,
+              "latency_ms": 6.29,
+              "output_summary": "The argumentation mining field has been evolving very rapidly in the recent years, resulting into several workshops co-located with major NLP conferences. We first present related works with a focus o"
+            },
+            {
+              "op_id": "RANK_0",
+              "variant": "SimilarityRank",
+              "token_cost": 29758,
+              "latency_ms": 0.08,
+              "output_summary": "The argumentation mining field has been evolving very rapidly in the recent years, resulting into several workshops co-located with major NLP conferences. We first present related works with a focus o"
+            },
+            {
+              "op_id": "AGGREGATE_0",
+              "variant": "DirectGenerate",
+              "token_cost": 706,
+              "latency_ms": 7799.14,
+              "output_summary": "The study of argumentation mining has rapidly evolved, highlighting the need for effective annotation systems capable of categorizing argumentative discourse across various texts such as comments, for"
+            },
+            {
+              "op_id": "VERIFY_1",
+              "variant": "CitationVerify",
+              "token_cost": 706,
+              "latency_ms": 0.17,
+              "output_summary": "The study of argumentation mining has rapidly evolved, highlighting the need for effective annotation systems capable of categorizing argumentative discourse across various texts such as comments, for"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

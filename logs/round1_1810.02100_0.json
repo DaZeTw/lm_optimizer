@@ -1,0 +1,279 @@
+{
+  "task_description": "QA over scientific papers",
+  "phases": {
+    "parse": {
+      "op": "AGGREGATE",
+      "params": {
+        "goal": "synthesize relevant information from scientific papers"
+      },
+      "inputs": [
+        {
+          "op": "VERIFY",
+          "params": {
+            "constraints": "answers must be relevant to scientific papers"
+          },
+          "inputs": [
+            {
+              "op": "UNION",
+              "params": {},
+              "inputs": [
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "evaluation metrics"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "main contribution"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "methodology sections"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "domains evaluated"
+                  },
+                  "inputs": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "optimize": {
+      "plan": {
+        "op": "AGGREGATE",
+        "params": {
+          "goal": "synthesize relevant information from scientific papers"
+        },
+        "inputs": [
+          {
+            "op": "RANK",
+            "params": {
+              "criterion": "relevance"
+            },
+            "inputs": [
+              {
+                "op": "VERIFY",
+                "params": {
+                  "constraints": "answers must be relevant to scientific papers"
+                },
+                "inputs": [
+                  {
+                    "op": "UNION",
+                    "params": {},
+                    "inputs": [
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "evaluation metrics"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "main contribution"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "methodology sections"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "domains evaluated"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "rewrite_count": 2,
+      "rules_fired": [
+        "R2_filter_pushdown",
+        "R6_delayed_aggregation"
+      ]
+    },
+    "physical_plan": {
+      "root_variant": "DirectGenerate",
+      "params": {
+        "goal": "synthesize relevant information from scientific papers"
+      }
+    },
+    "samples": [
+      {
+        "query": "Which English domains do they evaluate on?",
+        "execute": {
+          "answer": "This synthesis presents an overview of a thesis focused on enhancing out-of-domain dependency parsing through semi-supervised methods: co-training, self-training, and dependency language models (DLMs). \n\n1. **Overview of Investigated Approaches**:\n   - **Co-training**: Evaluated both normal co-training (using two parsers) and tri-training (using three parsers) to generate additional training data. The tri-training method achieved the largest improvement over co-training, providing 1.8% gain in labeled accuracy on various test domains. The analysis highlighted that tri-training particularly benefited sentences with 15-30 tokens and those containing prepositions or conjunctions.\n   - **Self-training**: Introduced novel confidence-based self-training approaches. The random selection method yielded no improvement, consistent with previous studies, whereas confidence-based methods resulted in statistically significant gains across multiple domains, especially in the Chemical domain where the Delta and parse score methods achieved improvements of 1.42% and 1.12% respectively when using PoS tags. For web domains, improvements averaged around 0.6% for both methods.\n   - **Dependency Language Models (DLMs)**: Adapted DLMs to improve parsing accuracy. Significant improvements were achieved, notably 0.93% and 0.98% for English and Chinese respectively, by integrating unigram, bigram, and trigram DLM features. The DLMs performed variably depending on the domain, showing stronger results for known words in out-of-domain settings compared to unknown words.\n\n2. **Research Questions and Findings**:\n   - The thesis specifically aimed to answer seven research questions regarding the applicability and effectiveness of these techniques for domain adaptation in parsing. \n   - Key insights included the finding that off-the-shelf parsers can be effectively used for co-training despite prior concerns of their similarity. The study demonstrated that semi-supervised methods can substantially mitigate the accuracy drop seen in out-of-domain parsing.\n   - The effectiveness of self-training was emphasized as being contingent on pre-selection strategies that positively correlate with parse quality.\n\n3. **Methodology**:\n   - Experiments were conducted using various corpora, including the Conll English corpus and multiple web-related domains. The findings highlight the framework's robustness across different languages and settings without fine-tuning parameters for each language, supporting its applicability in practical scenarios.\n   - Extensive analyses were performed on token and sentence levels to assess performance improvements, illustrating how different methods contribute to accuracy gains across various syntactic labels and sentence complexities.\n\nThe",
+          "trace": [
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "SimpleUnion",
+            "CitationVerify",
+            "SimilarityRank",
+            "DirectGenerate"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 46908,
+            "SimilarityRank": 55297,
+            "SimpleUnion": 27642,
+            "NliVerify": 27655,
+            "DirectGenerate": 694
+          },
+          "errors": []
+        },
+        "feedback": {
+          "accuracy": 0.0,
+          "result": "This synthesis presents an overview of a thesis focused on enhancing out-of-domain dependency parsing through semi-supervised methods: co-training, self-training, and dependency language models (DLMs). \n\n1. **Overview of Investigated Approaches**:\n   - **Co-training**: Evaluated both normal co-training (using two parsers) and tri-training (using three parsers) to generate additional training data. The tri-training method achieved the largest improvement over co-training, providing 1.8% gain in labeled accuracy on various test domains. The analysis highlighted that tri-training particularly benefited sentences with 15-30 tokens and those containing prepositions or conjunctions.\n   - **Self-training**: Introduced novel confidence-based self-training approaches. The random selection method yielded no improvement, consistent with previous studies, whereas confidence-based methods resulted in statistically significant gains across multiple domains, especially in the Chemical domain where the Delta and parse score methods achieved improvements of 1.42% and 1.12% respectively when using PoS tags. For web domains, improvements averaged around 0.6% for both methods.\n   - **Dependency Language Models (DLMs)**: Adapted DLMs to improve parsing accuracy. Significant improvements were achieved, notably 0.93% and 0.98% for English and Chinese respectively, by integrating unigram, bigram, and trigram DLM features. The DLMs performed variably depending on the domain, showing stronger results for known words in out-of-domain settings compared to unknown words.\n\n2. **Research Questions and Findings**:\n   - The thesis specifically aimed to answer seven research questions regarding the applicability and effectiveness of these techniques for domain adaptation in parsing. \n   - Key insights included the finding that off-the-shelf parsers can be effectively used for co-training despite prior concerns of their similarity. The study demonstrated that semi-supervised methods can substantially mitigate the accuracy drop seen in out-of-domain parsing.\n   - The effectiveness of self-training was emphasized as being contingent on pre-selection strategies that positively correlate with parse quality.\n\n3. **Methodology**:\n   - Experiments were conducted using various corpora, including the Conll English corpus and multiple web-related domains. The findings highlight the framework's robustness across different languages and settings without fine-tuning parameters for each language, supporting its applicability in practical scenarios.\n   - Extensive analyses were performed on token and sentence levels to assess performance improvements, illustrating how different methods contribute to accuracy gains across various syntactic labels and sentence complexities.\n\nThe",
+          "gold_ans": "Conll, Weblogs, Newsgroups, Reviews, Answers",
+          "items": [
+            {
+              "op_id": "I_0",
+              "variant": "BM25Retrieve",
+              "token_cost": 10616,
+              "latency_ms": 7.65,
+              "output_summary": "The focus of this thesis is on using semi-supervised techniques to bridge the accuracies between the in-domain and the out-of-domain dependency parsing. More precisely, this thesis evaluates three imp"
+            },
+            {
+              "op_id": "I_1",
+              "variant": "BM25Retrieve",
+              "token_cost": 18704,
+              "latency_ms": 3.17,
+              "output_summary": "In this chapter, we first briefly introduced dependency parsing and the problems of out-of-domain parsing that we are trying to address in this thesis. We then discussed the research questions that we"
+            },
+            {
+              "op_id": "I_2",
+              "variant": "BM25Retrieve",
+              "token_cost": 3001,
+              "latency_ms": 2.4,
+              "output_summary": "In this chapter, we introduce our co-training approach. Co-training is one of the popular semi-supervised techniques that has been applied to many natural language processing tasks, such as named enti"
+            },
+            {
+              "op_id": "I_3",
+              "variant": "BM25Retrieve",
+              "token_cost": 14587,
+              "latency_ms": 3.09,
+              "output_summary": "Syntactic parsing is an important natural language processing (NLP) task that focuses on analysing the syntactic structures of sentences. The syntax of a sentence has been found to be important to man"
+            },
+            {
+              "op_id": "RANK_0",
+              "variant": "SimilarityRank",
+              "token_cost": 5308,
+              "latency_ms": 0.3,
+              "output_summary": "In total, there are four publications based on this thesis. Each of the publications is related to one chapter of this thesis, pekar2014exploring is related to our evaluation on co-training (Chapter S"
+            },
+            {
+              "op_id": "RANK_1",
+              "variant": "SimilarityRank",
+              "token_cost": 12646,
+              "latency_ms": 0.38,
+              "output_summary": "Agreement based co-training. We first evaluate the parser pairs on the normal agreement based co-training. Each of the other three parsers is paired with Mate parser to be the source learners of our c"
+            },
+            {
+              "op_id": "RANK_2",
+              "variant": "SimilarityRank",
+              "token_cost": 3001,
+              "latency_ms": 0.07,
+              "output_summary": "In this chapter, we introduce our co-training approach. Co-training is one of the popular semi-supervised techniques that has been applied to many natural language processing tasks, such as named enti"
+            },
+            {
+              "op_id": "RANK_3",
+              "variant": "SimilarityRank",
+              "token_cost": 6687,
+              "latency_ms": 0.24,
+              "output_summary": "After the introduction, in Chapter SECREF7 we begin by discussing the background knowledge and previous work related to this thesis. This mainly covers two topics, dependency parsing and domain adapta"
+            },
+            {
+              "op_id": "UNION_0",
+              "variant": "SimpleUnion",
+              "token_cost": 27642,
+              "latency_ms": 0.0,
+              "output_summary": "In total, there are four publications based on this thesis. Each of the publications is related to one chapter of this thesis, pekar2014exploring is related to our evaluation on co-training (Chapter S"
+            },
+            {
+              "op_id": "VERIFY_0",
+              "variant": "NliVerify",
+              "token_cost": 27655,
+              "latency_ms": 12210.26,
+              "output_summary": "In total, there are four publications based on this thesis. Each of the publications is related to one chapter of this thesis, pekar2014exploring is related to our evaluation on co-training (Chapter S"
+            },
+            {
+              "op_id": "RANK_4",
+              "variant": "SimilarityRank",
+              "token_cost": 27655,
+              "latency_ms": 0.08,
+              "output_summary": "In total, there are four publications based on this thesis. Each of the publications is related to one chapter of this thesis, pekar2014exploring is related to our evaluation on co-training (Chapter S"
+            },
+            {
+              "op_id": "AGGREGATE_0",
+              "variant": "DirectGenerate",
+              "token_cost": 694,
+              "latency_ms": 25575.77,
+              "output_summary": "This synthesis presents an overview of a thesis focused on enhancing out-of-domain dependency parsing through semi-supervised methods: co-training, self-training, and dependency language models (DLMs)"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

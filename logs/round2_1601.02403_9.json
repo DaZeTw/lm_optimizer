@@ -1,0 +1,317 @@
+{
+  "task_description": "QA over scientific papers",
+  "phases": {
+    "parse": {
+      "op": "AGGREGATE",
+      "params": {
+        "goal": "synthesize answers to various queries"
+      },
+      "inputs": [
+        {
+          "op": "VERIFY",
+          "params": {
+            "constraints": "answer must cite relevant papers"
+          },
+          "inputs": [
+            {
+              "op": "UNION",
+              "params": {},
+              "inputs": [
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "main contribution of this paper"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "evaluation metrics paper A"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "evaluation metrics paper B"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "methodology section evaluation metrics"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "formula accuracy evaluation"
+                  },
+                  "inputs": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "optimize": {
+      "plan": {
+        "op": "AGGREGATE",
+        "params": {
+          "goal": "synthesize answers to various queries"
+        },
+        "inputs": [
+          {
+            "op": "RANK",
+            "params": {
+              "criterion": "relevance"
+            },
+            "inputs": [
+              {
+                "op": "VERIFY",
+                "params": {
+                  "constraints": "answer must cite relevant papers"
+                },
+                "inputs": [
+                  {
+                    "op": "UNION",
+                    "params": {},
+                    "inputs": [
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "main contribution of this paper"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "evaluation metrics paper A"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "evaluation metrics paper B"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "methodology section evaluation metrics"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "formula accuracy evaluation"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "rewrite_count": 2,
+      "rules_fired": [
+        "R2_filter_pushdown",
+        "R6_delayed_aggregation"
+      ]
+    },
+    "physical_plan": {
+      "root_variant": "DirectGenerate",
+      "params": {
+        "goal": "synthesize answers to various queries"
+      }
+    },
+    "samples": [
+      {
+        "query": "Do they report results only on English data?",
+        "execute": {
+          "answer": "The field of argumentation mining has seen significant developments and research, emphasizing various aspects such as the annotation of argumentative components, classification of arguments, and the challenges presented by user-generated content. Here is a synthesis of the key findings based on the provided evidence:\n\n1. **Growth of the Field**: Argumentation mining has rapidly evolved in recent years, with multiple workshops being organized alongside major NLP conferences. This growth indicates a rising interest and recognition of its relevance in computational linguistics and discourse analysis.\n\n2. **Annotation Studies**: Various studies have focused on annotating argumentative discourse, employing different models and approaches:\n   - Teufel et al. (2009) extended initial categories for argumentative zoning, achieving moderate agreement scores (Fleiss\u2019 kappa 0.71 and 0.65).\n   - Reed & Rowe (2004) developed Araucaria for diagramming arguments but did not report reliability measures for their corpus.\n   - Stab & Gurevych (2014) achieved higher agreement (Krippendorff's alpha 0.72 for argument components) by annotating argumentative essays, highlighting the importance of structured texts in yielding better inter-annotator agreement.\n   - Various works such as Biran & Rambow (2011) and Schneider et al. (2013) explored justification contexts and schemes, respectively, but faced challenges in annotation reliability and representativeness.\n\n3. **Modified Toulmin's Model**: The modified Toulmin's model was employed as a framework for annotation, consisting of five components: claim, premise, backing, rebuttal, and refutation. The model has been adapted to suit user-generated web content, which sometimes lacks formal structure inherent in more traditional argumentative texts.\n\n4. **Domain Challenges**: The transition from formal arguments (found in legal or institutional documents) to informal, user-generated content often introduces complications such as ambiguity, vagueness, and differing intentions in argumentation. The presence of implicit claims (48% in the annotated data) underscores the complexity of identifying stances in casual discourse.\n\n5. **Inter-Annotator Agreement**: Agreement measures have varied, with Krippendorff's alpha revealing moderate agreement scores ranging from 0.48 to 0.60 depending on the text type (comments, posts, etc.). The distinction between argument components (e.g., backing, rebuttal) posed challenges, contributing to lower agreement scores for these categories.\n\n6. **Feature Extraction for Machine Learning**: Recent experiments utilized machine learning techniques for argument",
+          "trace": [
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "SimpleUnion",
+            "CitationVerify",
+            "CrossEncoderRank",
+            "DirectGenerate"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 81972,
+            "CrossEncoderRank": 123940,
+            "SimpleUnion": 61959,
+            "CitationVerify": 61981,
+            "DirectGenerate": 663
+          },
+          "errors": []
+        },
+        "feedback": {
+          "accuracy": 0.0,
+          "result": "The field of argumentation mining has seen significant developments and research, emphasizing various aspects such as the annotation of argumentative components, classification of arguments, and the challenges presented by user-generated content. Here is a synthesis of the key findings based on the provided evidence:\n\n1. **Growth of the Field**: Argumentation mining has rapidly evolved in recent years, with multiple workshops being organized alongside major NLP conferences. This growth indicates a rising interest and recognition of its relevance in computational linguistics and discourse analysis.\n\n2. **Annotation Studies**: Various studies have focused on annotating argumentative discourse, employing different models and approaches:\n   - Teufel et al. (2009) extended initial categories for argumentative zoning, achieving moderate agreement scores (Fleiss\u2019 kappa 0.71 and 0.65).\n   - Reed & Rowe (2004) developed Araucaria for diagramming arguments but did not report reliability measures for their corpus.\n   - Stab & Gurevych (2014) achieved higher agreement (Krippendorff's alpha 0.72 for argument components) by annotating argumentative essays, highlighting the importance of structured texts in yielding better inter-annotator agreement.\n   - Various works such as Biran & Rambow (2011) and Schneider et al. (2013) explored justification contexts and schemes, respectively, but faced challenges in annotation reliability and representativeness.\n\n3. **Modified Toulmin's Model**: The modified Toulmin's model was employed as a framework for annotation, consisting of five components: claim, premise, backing, rebuttal, and refutation. The model has been adapted to suit user-generated web content, which sometimes lacks formal structure inherent in more traditional argumentative texts.\n\n4. **Domain Challenges**: The transition from formal arguments (found in legal or institutional documents) to informal, user-generated content often introduces complications such as ambiguity, vagueness, and differing intentions in argumentation. The presence of implicit claims (48% in the annotated data) underscores the complexity of identifying stances in casual discourse.\n\n5. **Inter-Annotator Agreement**: Agreement measures have varied, with Krippendorff's alpha revealing moderate agreement scores ranging from 0.48 to 0.60 depending on the text type (comments, posts, etc.). The distinction between argument components (e.g., backing, rebuttal) posed challenges, contributing to lower agreement scores for these categories.\n\n6. **Feature Extraction for Machine Learning**: Recent experiments utilized machine learning techniques for argument",
+          "gold_ans": "Yes",
+          "items": [
+            {
+              "op_id": "I_0",
+              "variant": "BM25Retrieve",
+              "token_cost": 20298,
+              "latency_ms": 3.33,
+              "output_summary": "The argumentation mining field has been evolving very rapidly in the recent years, resulting into several workshops co-located with major NLP conferences. We first present related works with a focus o"
+            },
+            {
+              "op_id": "I_1",
+              "variant": "BM25Retrieve",
+              "token_cost": 19601,
+              "latency_ms": 3.12,
+              "output_summary": "In the following experiment, we focus on automatic identification of arguments in the discourse. Our approach is based on supervised and semi-supervised machine learning methods on the gold data Toulm"
+            },
+            {
+              "op_id": "I_2",
+              "variant": "BM25Retrieve",
+              "token_cost": 16279,
+              "latency_ms": 2.77,
+              "output_summary": "In the following experiment, we focus on automatic identification of arguments in the discourse. Our approach is based on supervised and semi-supervised machine learning methods on the gold data Toulm"
+            },
+            {
+              "op_id": "I_3",
+              "variant": "BM25Retrieve",
+              "token_cost": 18281,
+              "latency_ms": 2.74,
+              "output_summary": "The goal of this study was to annotate documents on a detailed level with respect to an argumentation model. First, we will present the annotation scheme. Second, we will describe the annotation proce"
+            },
+            {
+              "op_id": "I_4",
+              "variant": "BM25Retrieve",
+              "token_cost": 7513,
+              "latency_ms": 2.1,
+              "output_summary": "In the following experiment, we focus on automatic identification of arguments in the discourse. Our approach is based on supervised and semi-supervised machine learning methods on the gold data Toulm"
+            },
+            {
+              "op_id": "RANK_0",
+              "variant": "CrossEncoderRank",
+              "token_cost": 13918,
+              "latency_ms": 4238.05,
+              "output_summary": "The argumentation mining field has been evolving very rapidly in the recent years, resulting into several workshops co-located with major NLP conferences. We first present related works with a focus o"
+            },
+            {
+              "op_id": "RANK_1",
+              "variant": "CrossEncoderRank",
+              "token_cost": 13740,
+              "latency_ms": 4050.4,
+              "output_summary": "This section describes the process of data selection, annotation, curation, and evaluation with the goal of creating a new corpus suitable for argumentation mining research in the area of computationa"
+            },
+            {
+              "op_id": "RANK_2",
+              "variant": "CrossEncoderRank",
+              "token_cost": 16279,
+              "latency_ms": 4309.76,
+              "output_summary": "This section describes the process of data selection, annotation, curation, and evaluation with the goal of creating a new corpus suitable for argumentation mining research in the area of computationa"
+            },
+            {
+              "op_id": "RANK_3",
+              "variant": "CrossEncoderRank",
+              "token_cost": 10509,
+              "latency_ms": 4120.78,
+              "output_summary": "This section describes the process of data selection, annotation, curation, and evaluation with the goal of creating a new corpus suitable for argumentation mining research in the area of computationa"
+            },
+            {
+              "op_id": "RANK_4",
+              "variant": "CrossEncoderRank",
+              "token_cost": 7513,
+              "latency_ms": 4368.91,
+              "output_summary": "This section describes the process of data selection, annotation, curation, and evaluation with the goal of creating a new corpus suitable for argumentation mining research in the area of computationa"
+            },
+            {
+              "op_id": "UNION_0",
+              "variant": "SimpleUnion",
+              "token_cost": 61959,
+              "latency_ms": 0.01,
+              "output_summary": "The argumentation mining field has been evolving very rapidly in the recent years, resulting into several workshops co-located with major NLP conferences. We first present related works with a focus o"
+            },
+            {
+              "op_id": "VERIFY_0",
+              "variant": "CitationVerify",
+              "token_cost": 61981,
+              "latency_ms": 16.78,
+              "output_summary": "The argumentation mining field has been evolving very rapidly in the recent years, resulting into several workshops co-located with major NLP conferences. We first present related works with a focus o"
+            },
+            {
+              "op_id": "RANK_5",
+              "variant": "CrossEncoderRank",
+              "token_cost": 61981,
+              "latency_ms": 4069.49,
+              "output_summary": "The argumentation mining field has been evolving very rapidly in the recent years, resulting into several workshops co-located with major NLP conferences. We first present related works with a focus o"
+            },
+            {
+              "op_id": "AGGREGATE_0",
+              "variant": "DirectGenerate",
+              "token_cost": 663,
+              "latency_ms": 10973.68,
+              "output_summary": "The field of argumentation mining has seen significant developments and research, emphasizing various aspects such as the annotation of argumentative components, classification of arguments, and the c"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

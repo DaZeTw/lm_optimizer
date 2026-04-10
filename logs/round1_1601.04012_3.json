@@ -1,0 +1,355 @@
+{
+  "task_description": "QA over scientific papers",
+  "phases": {
+    "parse": {
+      "op": "AGGREGATE",
+      "params": {
+        "goal": "synthesize relevant information from scientific papers"
+      },
+      "inputs": [
+        {
+          "op": "VERIFY",
+          "params": {
+            "constraints": "answer must cite relevant papers and sections"
+          },
+          "inputs": [
+            {
+              "op": "UNION",
+              "params": {},
+              "inputs": [
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "datasets used in this work"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "main contribution of this paper"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "evaluation metrics paper A"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "evaluation metrics paper B"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "methodology section evaluation metrics"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "formula accuracy evaluation"
+                  },
+                  "inputs": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "optimize": {
+      "plan": {
+        "op": "AGGREGATE",
+        "params": {
+          "goal": "synthesize relevant information from scientific papers"
+        },
+        "inputs": [
+          {
+            "op": "RANK",
+            "params": {
+              "criterion": "relevance"
+            },
+            "inputs": [
+              {
+                "op": "VERIFY",
+                "params": {
+                  "constraints": "answer must cite relevant papers and sections"
+                },
+                "inputs": [
+                  {
+                    "op": "UNION",
+                    "params": {},
+                    "inputs": [
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "datasets used in this work"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "main contribution of this paper"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "evaluation metrics paper A"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "evaluation metrics paper B"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "methodology section evaluation metrics"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "formula accuracy evaluation"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "rewrite_count": 2,
+      "rules_fired": [
+        "R2_filter_pushdown",
+        "R6_delayed_aggregation"
+      ]
+    },
+    "physical_plan": {
+      "root_variant": "DirectGenerate",
+      "params": {
+        "goal": "synthesize relevant information from scientific papers"
+      }
+    },
+    "samples": [
+      {
+        "query": "Which datasets are used in this work?",
+        "execute": {
+          "answer": "The extraction and classification of events from textual information is a significant area of research within computational linguistics, driven by the need to understand and utilize the increasing volume of unstructured data generated by Internet users, particularly through social media platforms like Twitter. This synthesis highlights essential concepts and methodologies derived from the provided scientific papers on event extraction.\n\n### 1. Event Generation and Social Media Impact\nWith the rapid growth of the Internet, especially Twitter, the generation of socially driven text has surged, leading to billions of tweets daily. While a majority of these posts are mundane, a significant fraction addresses mainstream news topics, evidenced by Twitter's role in providing real-time updates during pivotal events such as the Mumbai attacks (2008) and the Arab Spring (2010-11) (e.g., the Twitter Revolutions). The extraction of events from such informal and concise texts presents unique challenges, primarily due to the lack of complex discourse and context (e.g., tweets often exhibit minimal content and context).\n\n### 2. Techniques for Event Extraction\nEvent extraction methodologies can be categorized primarily into rule-based systems and machine learning techniques:\n\n- **TwiCal**: An architecture designed for extracting events from Twitter messages, TwiCal utilizes a pipeline that includes POS tagging, named entity recognition, and supervised learning for event trigger phrases. It employs Conditional Random Fields (CRF) for recognizing event triggers, along with contextual and orthographic features to improve extraction accuracy.\n\n- **EDCoW (Event Detection with Clustering of Wavelet-based Signals)**: This system utilizes wavelet analysis to detect bursts of related words, enabling the clustering of these bursts into meaningful events. This method addresses the scalability challenge posed by the high volume of tweets.\n\n- **EVITA**: A linguistically motivated extraction tool that serves multiple purposes within the TimeML framework. It performs various pre-processing tasks, like POS tagging and lemmatization, followed by a rule-based event recognition process that includes disambiguation and identification of grammatical features.\n\n- **TIPSem**: Focused on semantic roles and networks, this system achieved high accuracy in event extraction tasks during the TempEval competitions, indicating the effectiveness of CRF models in this domain.\n\n### 3. Classifications of Events\nVarious event classification schemes have been established, differentiated primarily by the nature of the events and their contexts:\n- **ACE Events**: The ACE (Automatic Content Extraction) framework categorizes events into several predefined types such as Life, Movement, Transaction, and Conflict. Each event has attributes like modality, polarity, and tense,",
+          "trace": [
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "SimpleUnion",
+            "CitationVerify",
+            "SimilarityRank",
+            "DirectGenerate"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 86499,
+            "SimilarityRank": 109010,
+            "SimpleUnion": 54494,
+            "CitationVerify": 54516,
+            "DirectGenerate": 716
+          },
+          "errors": []
+        },
+        "feedback": {
+          "accuracy": 0.0,
+          "result": "The extraction and classification of events from textual information is a significant area of research within computational linguistics, driven by the need to understand and utilize the increasing volume of unstructured data generated by Internet users, particularly through social media platforms like Twitter. This synthesis highlights essential concepts and methodologies derived from the provided scientific papers on event extraction.\n\n### 1. Event Generation and Social Media Impact\nWith the rapid growth of the Internet, especially Twitter, the generation of socially driven text has surged, leading to billions of tweets daily. While a majority of these posts are mundane, a significant fraction addresses mainstream news topics, evidenced by Twitter's role in providing real-time updates during pivotal events such as the Mumbai attacks (2008) and the Arab Spring (2010-11) (e.g., the Twitter Revolutions). The extraction of events from such informal and concise texts presents unique challenges, primarily due to the lack of complex discourse and context (e.g., tweets often exhibit minimal content and context).\n\n### 2. Techniques for Event Extraction\nEvent extraction methodologies can be categorized primarily into rule-based systems and machine learning techniques:\n\n- **TwiCal**: An architecture designed for extracting events from Twitter messages, TwiCal utilizes a pipeline that includes POS tagging, named entity recognition, and supervised learning for event trigger phrases. It employs Conditional Random Fields (CRF) for recognizing event triggers, along with contextual and orthographic features to improve extraction accuracy.\n\n- **EDCoW (Event Detection with Clustering of Wavelet-based Signals)**: This system utilizes wavelet analysis to detect bursts of related words, enabling the clustering of these bursts into meaningful events. This method addresses the scalability challenge posed by the high volume of tweets.\n\n- **EVITA**: A linguistically motivated extraction tool that serves multiple purposes within the TimeML framework. It performs various pre-processing tasks, like POS tagging and lemmatization, followed by a rule-based event recognition process that includes disambiguation and identification of grammatical features.\n\n- **TIPSem**: Focused on semantic roles and networks, this system achieved high accuracy in event extraction tasks during the TempEval competitions, indicating the effectiveness of CRF models in this domain.\n\n### 3. Classifications of Events\nVarious event classification schemes have been established, differentiated primarily by the nature of the events and their contexts:\n- **ACE Events**: The ACE (Automatic Content Extraction) framework categorizes events into several predefined types such as Life, Movement, Transaction, and Conflict. Each event has attributes like modality, polarity, and tense,",
+          "gold_ans": "GENIA corpus",
+          "items": [
+            {
+              "op_id": "I_0",
+              "variant": "BM25Retrieve",
+              "token_cost": 20659,
+              "latency_ms": 4.43,
+              "output_summary": "Many authors in linguistics have delved deeper into the nature of event classes and have tried to come up with features or characteristics that can be used to identify whether something (verb or a cla"
+            },
+            {
+              "op_id": "I_1",
+              "variant": "BM25Retrieve",
+              "token_cost": 19625,
+              "latency_ms": 4.2,
+              "output_summary": "Events of various kinds are mentioned and discussed in text documents, whether they are books, news articles, blogs or microblog feeds. The paper starts by giving an overview of how events are treated"
+            },
+            {
+              "op_id": "I_2",
+              "variant": "BM25Retrieve",
+              "token_cost": 18437,
+              "latency_ms": 4.2,
+              "output_summary": "Events of various kinds are mentioned and discussed in text documents, whether they are books, news articles, blogs or microblog feeds. The paper starts by giving an overview of how events are treated"
+            },
+            {
+              "op_id": "I_3",
+              "variant": "BM25Retrieve",
+              "token_cost": 12367,
+              "latency_ms": 2.86,
+              "output_summary": "Events of various kinds are mentioned and discussed in text documents, whether they are books, news articles, blogs or microblog feeds. The paper starts by giving an overview of how events are treated"
+            },
+            {
+              "op_id": "I_4",
+              "variant": "BM25Retrieve",
+              "token_cost": 6587,
+              "latency_ms": 2.6,
+              "output_summary": "Among the several senses that The Oxford English Dictionary, the most venerable dictionary of English, provides for the word event, are the following.\n Although an event may refer to anything that hap"
+            },
+            {
+              "op_id": "I_5",
+              "variant": "BM25Retrieve",
+              "token_cost": 8824,
+              "latency_ms": 2.69,
+              "output_summary": "Many even extraction systems have been built over the years. A big motivator for development of event extraction systems seem to be various contests that are held every few years, although there has b"
+            },
+            {
+              "op_id": "RANK_0",
+              "variant": "SimilarityRank",
+              "token_cost": 10256,
+              "latency_ms": 0.29,
+              "output_summary": "With the explosive expansion of the Internet during the past twenty years, the volume of socially generated text has skyrocketed. Socially generated text includes blogs and microblogs. For example, Tw"
+            },
+            {
+              "op_id": "RANK_1",
+              "variant": "SimilarityRank",
+              "token_cost": 10293,
+              "latency_ms": 0.25,
+              "output_summary": "Many even extraction systems have been built over the years. A big motivator for development of event extraction systems seem to be various contests that are held every few years, although there has b"
+            },
+            {
+              "op_id": "RANK_2",
+              "variant": "SimilarityRank",
+              "token_cost": 9709,
+              "latency_ms": 0.24,
+              "output_summary": "There have been many attempts at classifying linguistic events. Below, we briefly discuss a few. The primary focus when linguists discuss events is on the verb present in a sentence. Nouns, adjectives"
+            },
+            {
+              "op_id": "RANK_3",
+              "variant": "SimilarityRank",
+              "token_cost": 8825,
+              "latency_ms": 0.16,
+              "output_summary": "Among the several senses that The Oxford English Dictionary, the most venerable dictionary of English, provides for the word event, are the following.\n Although an event may refer to anything that hap"
+            },
+            {
+              "op_id": "RANK_4",
+              "variant": "SimilarityRank",
+              "token_cost": 6587,
+              "latency_ms": 0.12,
+              "output_summary": "Real world events are things that take place or happen. In this section, we present an overview of how real events are represented in terms of language. In particular, we discuss classification of eve"
+            },
+            {
+              "op_id": "RANK_5",
+              "variant": "SimilarityRank",
+              "token_cost": 8824,
+              "latency_ms": 0.06,
+              "output_summary": "Many even extraction systems have been built over the years. A big motivator for development of event extraction systems seem to be various contests that are held every few years, although there has b"
+            },
+            {
+              "op_id": "UNION_0",
+              "variant": "SimpleUnion",
+              "token_cost": 54494,
+              "latency_ms": 0.0,
+              "output_summary": "With the explosive expansion of the Internet during the past twenty years, the volume of socially generated text has skyrocketed. Socially generated text includes blogs and microblogs. For example, Tw"
+            },
+            {
+              "op_id": "VERIFY_0",
+              "variant": "CitationVerify",
+              "token_cost": 54516,
+              "latency_ms": 11.53,
+              "output_summary": "With the explosive expansion of the Internet during the past twenty years, the volume of socially generated text has skyrocketed. Socially generated text includes blogs and microblogs. For example, Tw"
+            },
+            {
+              "op_id": "RANK_6",
+              "variant": "SimilarityRank",
+              "token_cost": 54516,
+              "latency_ms": 0.08,
+              "output_summary": "With the explosive expansion of the Internet during the past twenty years, the volume of socially generated text has skyrocketed. Socially generated text includes blogs and microblogs. For example, Tw"
+            },
+            {
+              "op_id": "AGGREGATE_0",
+              "variant": "DirectGenerate",
+              "token_cost": 716,
+              "latency_ms": 22701.33,
+              "output_summary": "The extraction and classification of events from textual information is a significant area of research within computational linguistics, driven by the need to understand and utilize the increasing vol"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

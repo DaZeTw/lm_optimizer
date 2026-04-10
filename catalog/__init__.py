@@ -9,34 +9,18 @@ from catalog.model_stats import (
     ModelStats,
     get_model_stats,
 )
-from catalog.semantic_stats import (
-    SemanticStats,
-    build_density_map,
-    build_overlap_graph,
-    build_semantic_stats,
-    build_summarization_map,
-    build_theme_clusters,
-    query_hash,
-)
 
 __all__ = [
     "BUILTIN_MODEL_REGISTRY",
     "DEFAULT_MODEL_ID",
     "DocStats",
     "ModelStats",
-    "SemanticStats",
     "SystemCatalog",
     "average_chunk_tokens",
-    "build_density_map",
     "build_doc_stats",
-    "build_overlap_graph",
-    "build_semantic_stats",
-    "build_summarization_map",
     "build_system_catalog",
-    "build_theme_clusters",
     "empty_catalog",
     "get_model_stats",
     "load_catalog",
-    "query_hash",
     "save_catalog",
 ]

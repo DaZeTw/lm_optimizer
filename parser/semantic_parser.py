@@ -69,12 +69,14 @@ class SemanticParser:
         self.max_retries = max_retries
         self.catalog = catalog
 
-    def parse(self, query: str) -> LogicalNode:
+    def parse(self, task_description: str, sample_queries: list[str]) -> LogicalNode:
         """
-        Translate a natural-language query into a LogicalNode DAG.
+        Translate a task description and sample queries into a LogicalNode DAG.
 
         Args:
-            query: The user's natural-language question or task.
+            task_description: High-level description of the overall task (e.g.
+                              "QA over scientific papers").
+            sample_queries:   Representative example questions the plan must handle.
 
         Returns:
             The root LogicalNode of the unoptimized logical plan.
@@ -83,12 +85,24 @@ class SemanticParser:
             ParseError: If the LLM fails to produce a valid plan after
                         max_retries attempts.
         """
-        theme_labels = self._theme_labels()
+        context_window: int | None = None
+        avg_chunk_tokens: float | None = None
+
+        if self.catalog is not None:
+            model_stats = self.catalog.get_model(self.model)
+            context_window = model_stats.context_window or None
+            avg_chunk_tokens = self.catalog.avg_chunk_tokens()
+
         messages: list[dict] = [
             {"role": "system", "content": SYSTEM_PROMPT},
             {
                 "role": "user",
-                "content": build_user_message(query, theme_labels=theme_labels),
+                "content": build_user_message(
+                    task_description,
+                    sample_queries,
+                    context_window=context_window,
+                    avg_chunk_tokens=avg_chunk_tokens,
+                ),
             },
         ]
 
@@ -121,8 +135,3 @@ class SemanticParser:
             f"Last error: {last_error}"
         )
 
-    def _theme_labels(self) -> list[str] | None:
-        if self.catalog is None:
-            return None
-        labels = sorted(self.catalog.semantic_stats.theme_clusters.keys())
-        return labels[:12] if labels else None

@@ -202,21 +202,11 @@ class PlanScorer:
         cv = per_node.get(op_id)
 
         selected_cost = CostVector()
-        per_variant_costs: dict[str, CostVector] = {}
         if cv is not None:
             selected_cost = CostVector(
                 token_cost=cv.token_cost,
-                call_cost=cv.call_cost,
                 latency_cost=cv.latency_cost,
-                quality_risk=cv.quality_risk,
             )
-            for variant, metrics in cv.variant_costs.items():
-                per_variant_costs[variant] = CostVector(
-                    token_cost=float(metrics.get("token_cost", 0.0)),
-                    call_cost=float(metrics.get("call_cost", 0.0)),
-                    latency_cost=float(metrics.get("latency_cost", 0.0)),
-                    quality_risk=float(metrics.get("quality_risk", 0.0)),
-                )
 
         return PhysicalNode(
             variant=node.variant,
@@ -224,7 +214,6 @@ class PlanScorer:
             inputs=annotated_inputs,
             params=node.params,
             cost=selected_cost,
-            variant_costs=per_variant_costs,
         )
 
     def _score_all_variants(

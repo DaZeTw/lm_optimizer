@@ -1,0 +1,226 @@
+{
+  "task_description": "QA over scientific papers",
+  "phases": {
+    "parse": {
+      "op": "AGGREGATE",
+      "params": {
+        "goal": "summarize ontologies used in scientific papers"
+      },
+      "inputs": [
+        {
+          "op": "VERIFY",
+          "params": {
+            "constraints": "answer must reference specific ontologies"
+          },
+          "inputs": [
+            {
+              "op": "COMPOSE",
+              "params": {
+                "condition": "identify ontologies used in the papers"
+              },
+              "inputs": [
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "relevant evidence from scientific papers"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "ontologies used"
+                  },
+                  "inputs": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "optimize": {
+      "plan": {
+        "op": "VERIFY",
+        "params": {
+          "constraints": "grounded in evidence"
+        },
+        "inputs": [
+          {
+            "op": "AGGREGATE",
+            "params": {
+              "goal": "summarize ontologies used in scientific papers",
+              "__verified__": true
+            },
+            "inputs": [
+              {
+                "op": "RANK",
+                "params": {
+                  "criterion": "relevance"
+                },
+                "inputs": [
+                  {
+                    "op": "VERIFY",
+                    "params": {
+                      "constraints": "answer must reference specific ontologies"
+                    },
+                    "inputs": [
+                      {
+                        "op": "COMPOSE",
+                        "params": {
+                          "condition": "identify ontologies used in the papers"
+                        },
+                        "inputs": [
+                          {
+                            "op": "TRANSFORM",
+                            "params": {
+                              "schema": ""
+                            },
+                            "inputs": [
+                              {
+                                "op": "I",
+                                "params": {
+                                  "query": "relevant evidence from scientific papers"
+                                },
+                                "inputs": []
+                              }
+                            ]
+                          },
+                          {
+                            "op": "TRANSFORM",
+                            "params": {
+                              "schema": ""
+                            },
+                            "inputs": [
+                              {
+                                "op": "I",
+                                "params": {
+                                  "query": "ontologies used"
+                                },
+                                "inputs": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "rewrite_count": 3,
+      "rules_fired": [
+        "R1_transform_pushdown",
+        "R6_delayed_aggregation",
+        "R8_selective_verify"
+      ]
+    },
+    "physical_plan": {
+      "root_variant": "CitationVerify",
+      "params": {
+        "constraints": "grounded in evidence"
+      }
+    },
+    "samples": [
+      {
+        "query": "what ontologies did they use?",
+        "execute": {
+          "answer": "The provided research discusses the use of ontologies in scientific papers, specifically focusing on the generation of natural language texts from ontological data in the context of the Semantic Web and related technologies.\n\n1. **Ontology Definition**: An ontology represents a formal conceptualization of a domain, detailing concepts (classes, subclasses), entities, and relationships within that domain. The current widely accepted standard for defining Semantic Web ontologies is the Web Ontology Language (OWL), which is built upon description logics, RDF (Resource Description Framework), and RDF Schema. The most recent version of this standard is OWL 2.\n\n2. **Natural Language Generation (NLG)**: Ontology verbalizers and sophisticated NLG systems aim to generate natural language descriptions from ontologies, improving understandability for those unfamiliar with formal representations. While simple verbalizers produce less coherent texts often using direct tokenization of identifiers, systems like Naturalowl can produce more fluent and structured texts but require domain-specific linguistic resources such as sentence plans and natural language names for classes and individuals.\n\n3. **Linguistic Resources**:\n   - **Natural Language Names**: These are constructed for each class and individual within an ontology, often using guidelines to ensure correct morphology, syntax, and semantics.\n   - **Sentence Plans**: These plans provide templates for constructing factual sentences from message triples formed by ontology statements (e.g., relationships among entities).\n   - **Automatic and Semi-Automatic Extraction**: Methods are discussed for semi-automatically extracting linguistic resources (names, plans) from web sources to improve text generation processes.\n\n4. **Quality Comparisons and Experiments**: Studies indicated that texts generated with domain-specific linguistic resources from Naturalowl were significantly preferred over those generated without such resources or using tokenized identifiers. The semantic accuracy and fluency of the texts correlate closely with the quality of linguistic resources employed. Furthermore, experiments demonstrate that automatic methods for generating names and sentence plans can perform well, but often still require human oversight to ensure quality.\n\n5. **Performance Metrics**: The research evaluates the methods using various metrics like precision, recall, and accuracy to measure how well the automated systems generate acceptable natural language outputs compared to manually authored resources.\n\n6. **Findings**: Results indicated that while fully automated systems like those relying solely on tokenized identifiers yield lower quality texts, semi-automatically generated names and plans can produce results close to human-authored standards, showcasing the potential of combining automated techniques with human oversight to effectively leverage ontological data for natural language generation.\n\nIn summary, the research",
+          "trace": [
+            "BM25Retrieve",
+            "IdentityTransform",
+            "BM25Retrieve",
+            "IdentityTransform",
+            "KeyMatchCompose",
+            "CitationVerify",
+            "SimilarityRank",
+            "DirectGenerate",
+            "CitationVerify"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 34344,
+            "IdentityTransform": 34344,
+            "KeyMatchCompose": 60647,
+            "CitationVerify": 61404,
+            "SimilarityRank": 60654,
+            "DirectGenerate": 750
+          },
+          "errors": []
+        },
+        "feedback": {
+          "accuracy": 0.0,
+          "result": "The provided research discusses the use of ontologies in scientific papers, specifically focusing on the generation of natural language texts from ontological data in the context of the Semantic Web and related technologies.\n\n1. **Ontology Definition**: An ontology represents a formal conceptualization of a domain, detailing concepts (classes, subclasses), entities, and relationships within that domain. The current widely accepted standard for defining Semantic Web ontologies is the Web Ontology Language (OWL), which is built upon description logics, RDF (Resource Description Framework), and RDF Schema. The most recent version of this standard is OWL 2.\n\n2. **Natural Language Generation (NLG)**: Ontology verbalizers and sophisticated NLG systems aim to generate natural language descriptions from ontologies, improving understandability for those unfamiliar with formal representations. While simple verbalizers produce less coherent texts often using direct tokenization of identifiers, systems like Naturalowl can produce more fluent and structured texts but require domain-specific linguistic resources such as sentence plans and natural language names for classes and individuals.\n\n3. **Linguistic Resources**:\n   - **Natural Language Names**: These are constructed for each class and individual within an ontology, often using guidelines to ensure correct morphology, syntax, and semantics.\n   - **Sentence Plans**: These plans provide templates for constructing factual sentences from message triples formed by ontology statements (e.g., relationships among entities).\n   - **Automatic and Semi-Automatic Extraction**: Methods are discussed for semi-automatically extracting linguistic resources (names, plans) from web sources to improve text generation processes.\n\n4. **Quality Comparisons and Experiments**: Studies indicated that texts generated with domain-specific linguistic resources from Naturalowl were significantly preferred over those generated without such resources or using tokenized identifiers. The semantic accuracy and fluency of the texts correlate closely with the quality of linguistic resources employed. Furthermore, experiments demonstrate that automatic methods for generating names and sentence plans can perform well, but often still require human oversight to ensure quality.\n\n5. **Performance Metrics**: The research evaluates the methods using various metrics like precision, recall, and accuracy to measure how well the automated systems generate acceptable natural language outputs compared to manually authored resources.\n\n6. **Findings**: Results indicated that while fully automated systems like those relying solely on tokenized identifiers yield lower quality texts, semi-automatically generated names and plans can produce results close to human-authored standards, showcasing the potential of combining automated techniques with human oversight to effectively leverage ontological data for natural language generation.\n\nIn summary, the research",
+          "gold_ans": "Wine Ontology m-piro ontology Disease Ontology",
+          "items": [
+            {
+              "op_id": "I_0",
+              "variant": "BM25Retrieve",
+              "token_cost": 12780,
+              "latency_ms": 4.18,
+              "output_summary": "Given an owl ontology and a particular target individual or class to describe, Naturalowl first scans the ontology to select statements relevant to the target. It then converts each relevant statement"
+            },
+            {
+              "op_id": "I_1",
+              "variant": "BM25Retrieve",
+              "token_cost": 21564,
+              "latency_ms": 3.91,
+              "output_summary": "The Semantic Web BIBREF0 , BIBREF1 and the growing popularity of Linked Data (data published using Semantic Web technologies) have renewed interest in concept-to-text generation BIBREF2 , especially t"
+            },
+            {
+              "op_id": "TRANSFORM_0",
+              "variant": "IdentityTransform",
+              "token_cost": 12780,
+              "latency_ms": 0.0,
+              "output_summary": "Given an owl ontology and a particular target individual or class to describe, Naturalowl first scans the ontology to select statements relevant to the target. It then converts each relevant statement"
+            },
+            {
+              "op_id": "TRANSFORM_1",
+              "variant": "IdentityTransform",
+              "token_cost": 21564,
+              "latency_ms": 0.0,
+              "output_summary": "The Semantic Web BIBREF0 , BIBREF1 and the growing popularity of Linked Data (data published using Semantic Web technologies) have renewed interest in concept-to-text generation BIBREF2 , especially t"
+            },
+            {
+              "op_id": "COMPOSE_0",
+              "variant": "KeyMatchCompose",
+              "token_cost": 60647,
+              "latency_ms": 33.17,
+              "output_summary": "[Left] The Semantic Web BIBREF0 , BIBREF1 and the growing popularity of Linked Data (data published using Semantic Web technologies) have renewed interest in concept-to-text generation BIBREF2 , espec"
+            },
+            {
+              "op_id": "VERIFY_0",
+              "variant": "CitationVerify",
+              "token_cost": 60654,
+              "latency_ms": 13.26,
+              "output_summary": "[Left] The Semantic Web BIBREF0 , BIBREF1 and the growing popularity of Linked Data (data published using Semantic Web technologies) have renewed interest in concept-to-text generation BIBREF2 , espec"
+            },
+            {
+              "op_id": "RANK_0",
+              "variant": "SimilarityRank",
+              "token_cost": 60654,
+              "latency_ms": 0.09,
+              "output_summary": "[Left] The Semantic Web BIBREF0 , BIBREF1 and the growing popularity of Linked Data (data published using Semantic Web technologies) have renewed interest in concept-to-text generation BIBREF2 , espec"
+            },
+            {
+              "op_id": "AGGREGATE_0",
+              "variant": "DirectGenerate",
+              "token_cost": 750,
+              "latency_ms": 11129.73,
+              "output_summary": "The provided research discusses the use of ontologies in scientific papers, specifically focusing on the generation of natural language texts from ontological data in the context of the Semantic Web a"
+            },
+            {
+              "op_id": "VERIFY_1",
+              "variant": "CitationVerify",
+              "token_cost": 750,
+              "latency_ms": 0.45,
+              "output_summary": "The provided research discusses the use of ontologies in scientific papers, specifically focusing on the generation of natural language texts from ontological data in the context of the Semantic Web a"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

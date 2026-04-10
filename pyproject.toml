@@ -23,3 +23,6 @@ testpaths  = ["tests"]
 filterwarnings = [
     "ignore::DeprecationWarning:torch.*",
 ]
+markers = [
+    "integration: marks tests that require OPENAI_API_KEY (deselect with '-m not integration')",
+]

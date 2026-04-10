@@ -66,15 +66,40 @@ FEW_SHOT_EXAMPLES = [
 ]
 
 
-def build_user_message(query: str, theme_labels: list[str] | None = None) -> str:
-    """Format few-shot examples + optional theme hints + the live query."""
+def build_user_message(
+    task_description: str,
+    sample_queries: list[str],
+    context_window: int | None = None,
+    avg_chunk_tokens: float | None = None,
+) -> str:
+    """Format task context + sample queries + few-shot examples into a user message."""
+    if sample_queries:
+        numbered = "\n".join(f"{i + 1}. {q}" for i, q in enumerate(sample_queries))
+    else:
+        numbered = "(none provided)"
+    task_block = (
+        f"## Task context\n{task_description}\n\n"
+        f"## Representative sample queries\n"
+        f"These are example questions this plan must handle:\n{numbered}"
+    )
+
     shots = [f"Query: {ex['query']}\nPlan:\n{ex['plan']}" for ex in FEW_SHOT_EXAMPLES]
-    examples_block = "\n\n".join(shots)
-    themes_block = ""
-    if theme_labels:
-        rendered = ", ".join(theme_labels)
-        themes_block = (
-            "\n\nCorpus themes (use these when deciding DECOMPOSE sub-queries):\n"
-            f"- {rendered}"
-        )
-    return f"{examples_block}{themes_block}\n\nQuery: {query}\nPlan:"
+    examples_block = "## Examples of query → plan mappings\n" + "\n\n".join(shots)
+
+    corpus_block = ""
+    if context_window is not None or avg_chunk_tokens is not None:
+        lines = []
+        if context_window is not None:
+            lines.append(f"- Model context window: {context_window:,} tokens")
+        if avg_chunk_tokens is not None:
+            lines.append(f"- Avg chunk size in corpus: {avg_chunk_tokens:.0f} tokens")
+        corpus_block = "\n\nCorpus context:\n" + "\n".join(lines)
+
+    job_block = (
+        "## Your job\n"
+        "Produce a single general-purpose logical plan that can handle the sample queries above "
+        "in the context of the task described. The plan should be a reusable operator DAG "
+        "covering the general reasoning pattern."
+    )
+
+    return f"{task_block}\n\n{examples_block}{corpus_block}\n\n{job_block}\n\nPlan:"

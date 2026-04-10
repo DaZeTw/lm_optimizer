@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
-from collections import Counter
 from dataclasses import dataclass
 from parser.semantic_parser import SemanticParser
 from pathlib import Path
@@ -13,53 +11,65 @@ from typing import Any
 import executor.ops  # noqa: F401  # Ensure physical variants are registered.
 from catalog.catalog import SystemCatalog
 from catalog.indexer import load_catalog
-from cost_model.cost_aware_planner import CostAwarePlanner
-from cost_model.scorer import PlanScorer
-from cost_model.telemetry import default_telemetry
+from cost_model.judge import AccuracyJudge
 from executor.runner import ExecutionResult, PlanRunner
+from ir.feedback import Feedback
 from ir.nodes import LogicalNode, PhysicalNode
-from ir.ops import Op
 from optimizer.engine import OptimizerEngine, RewriteEntry
-from planner.llm_feedback_planner import LlmFeedbackPlanner
-from planner.physical import build_physical_plan
+from planner.llm_planner import LLMPhysicalPlanner
 
 
 @dataclass(frozen=True)
 class PipelineResult:
-    """All artifacts produced by one query run."""
+    """All artifacts produced by one pipeline run over a task."""
 
-    query: str
+    task_description: str
+    sample_queries: list[str]
     logical_plan: LogicalNode
     optimized_plan: LogicalNode
     physical_plan: PhysicalNode
     rewrite_log: list[RewriteEntry]
-    execution: ExecutionResult
+    executions: list[ExecutionResult]   # one per sample (last iteration)
+    feedbacks: list[Feedback]           # one per sample (last iteration)
+
+    # Convenience accessors for single-sample callers.
+    @property
+    def execution(self) -> ExecutionResult | None:
+        return self.executions[-1] if self.executions else None
+
+    @property
+    def feedback(self) -> Feedback | None:
+        return self.feedbacks[-1] if self.feedbacks else None
 
 
 class LmOptimizerPipeline:
     """
-    High-level runner that wires parser, optimizer, planner, and executor.
+    Wires parser, optimizer, LLM physical planner, executor, and judge.
 
-    Typical usage:
-            pipeline = LmOptimizerPipeline(corpus=corpus, llm=llm)
-            result = pipeline.run_sync("What is the main contribution?")
-            print(result.execution.answer)
+    Usage::
+
+        pipeline = LmOptimizerPipeline(corpus=corpus, llm=llm,
+                                        planning_client=client)
+        result = pipeline.run_sync_with_samples(
+            task_description="QA over scientific papers",
+            samples=[("What is the main contribution?", "gold answer")],
+            iterations=2,
+        )
+        print(result.execution.answer)
     """
 
     def __init__(
         self,
         corpus,
         llm,
+        planning_client: Any | None = None,
         parser: SemanticParser | Any | None = None,
         optimizer: OptimizerEngine | None = None,
         catalog: SystemCatalog | None = None,
         catalog_path: str | Path | None = None,
-        use_cost_aware_planner: bool = True,
-        planner_preset: str = "balanced",
         model_id: str | None = None,
-        physical_planner_mode: str = "cost",
-        planning_client: Any | None = None,
-        planning_rounds: int = 1,
+        planning_model: str = "gpt-4o-mini",
+        judge_model: str = "gpt-4o-mini",
     ):
         self.corpus = corpus
         self.llm = llm
@@ -71,105 +81,159 @@ class LmOptimizerPipeline:
             setattr(self.parser, "catalog", self.catalog)
 
         self.optimizer = optimizer or OptimizerEngine()
-        self.use_cost_aware_planner = use_cost_aware_planner
-        self.planner_preset = planner_preset
-        # Keep for compatibility, but planning now uses a single planner path.
-        self.physical_planner_mode = physical_planner_mode
-        self.planning_client = planning_client
-        self.planning_rounds = planning_rounds
-        self._latest_planning_feedback: dict[str, Any] | None = None
+
+        self.planner = (
+            LLMPhysicalPlanner(
+                client=planning_client,
+                model=planning_model,
+                catalog=self.catalog,
+            )
+            if planning_client is not None
+            else None
+        )
+
+        self.judge = (
+            AccuracyJudge(client=planning_client, model=judge_model)
+            if planning_client is not None
+            else None
+        )
 
         self.runner = PlanRunner(corpus=self.corpus, llm=self.llm, catalog=self.catalog)
 
-    async def run(
-        self, query: str, log_path: str | Path | None = None
+    # ── public entry points ────────────────────────────────────────
+
+    async def run_with_samples(
+        self,
+        task_description: str,
+        samples: list[tuple[str, str]],
+        iterations: int = 2,
+        log_path: str | Path | None = None,
     ) -> PipelineResult:
-        """Execute the full pipeline for one query and return all artifacts."""
-        self._latest_planning_feedback = None
-        logical = self.parse(query)
+        """
+        Multi-sample iterative pipeline.
+
+        Args:
+            task_description: High-level task label passed to the semantic parser.
+            samples:          List of (query, gold_answer) pairs sharing this pipeline's
+                              corpus. Pass gold_answer="" to skip judging.
+            iterations:       Number of execute→judge→revise cycles. Must be >= 1.
+        """
+        if iterations < 1:
+            raise ValueError("iterations must be >= 1")
+
+        sample_queries = [q for q, _ in samples]
+        gold_answers = [g for _, g in samples]
+
+        logical = self.parse(task_description, sample_queries)
         optimized, rewrites = self.optimize(logical)
-        physical = self.build_physical(optimized)
-        execution = await self.runner.run(physical)
-        self._record_execution_feedback(physical, execution)
-        self._latest_planning_feedback = self._build_planning_feedback(
-            physical,
-            execution,
-        )
+        physical = self._init_physical(task_description, optimized)
+
+        last_executions: list[ExecutionResult] = []
+        last_feedbacks: list[Feedback] = []
+
+        for i in range(iterations):
+            run_results = await asyncio.gather(
+                *[self.runner.run(physical) for _ in samples]
+            )
+
+            last_executions = []
+            last_feedbacks = []
+            for (execution, node_feedbacks), gold_ans in zip(run_results, gold_answers):
+                accuracy = await self._judge(execution.answer, gold_ans)
+                feedback = Feedback(
+                    items=node_feedbacks,
+                    accuracy=accuracy,
+                    result=execution.answer,
+                    gold_ans=gold_ans,
+                )
+                last_executions.append(execution)
+                last_feedbacks.append(feedback)
+
+            if i < iterations - 1 and self.planner is not None:
+                physical = self.planner.revise(
+                    task_description, optimized, physical, last_feedbacks
+                )
+
         result = PipelineResult(
-            query=query,
+            task_description=task_description,
+            sample_queries=sample_queries,
             logical_plan=logical,
             optimized_plan=optimized,
             physical_plan=physical,
             rewrite_log=rewrites,
-            execution=execution,
+            executions=last_executions,
+            feedbacks=last_feedbacks,
         )
-
         if log_path:
             self._save_logs(result, Path(log_path))
-
         return result
 
-    async def run_with_physical_feedback(
+    def run_sync_with_samples(
         self,
-        query: str,
-        corpus,
-        iterations: int,
+        task_description: str,
+        samples: list[tuple[str, str]],
+        iterations: int = 2,
         log_path: str | Path | None = None,
     ) -> PipelineResult:
-        """Run iterative physical planning where each run feeds telemetry for the next."""
-        if iterations < 1:
-            raise ValueError("iterations must be >= 1")
+        return self._run_async(
+            self.run_with_samples(task_description, samples, iterations, log_path)
+        )
 
-        runner = PlanRunner(corpus=corpus, llm=self.llm, catalog=self.catalog)
+    # ── pipeline stages ────────────────────────────────────────────
 
-        logical = self.parse(query)
-        optimized, rewrites = self.optimize(logical)
-        self._latest_planning_feedback = None
+    def parse(self, task_description: str, sample_queries: list[str]) -> LogicalNode:
+        return self.parser.parse(task_description, sample_queries)
 
-        best: PipelineResult | None = None
-        for _ in range(iterations):
-            physical = self.build_physical(optimized)
-            execution = await runner.run(physical)
-            self._record_execution_feedback(physical, execution)
-            self._latest_planning_feedback = self._build_planning_feedback(
-                physical,
-                execution,
-            )
-            candidate = PipelineResult(
-                query=query,
-                logical_plan=logical,
-                optimized_plan=optimized,
-                physical_plan=physical,
-                rewrite_log=rewrites,
-                execution=execution,
-            )
-            if best is None:
-                best = candidate
-                continue
+    def optimize(self, logical: LogicalNode) -> tuple[LogicalNode, list[RewriteEntry]]:
+        return self.optimizer.run(logical)
 
-            # Keep the run with fewer errors and then fewer tokens.
-            best_err = len(best.execution.errors)
-            cand_err = len(candidate.execution.errors)
-            if cand_err < best_err:
-                best = candidate
-                continue
-            if cand_err == best_err:
-                best_tokens = sum(best.execution.token_counts.values())
-                cand_tokens = sum(candidate.execution.token_counts.values())
-                if cand_tokens <= best_tokens:
-                    best = candidate
+    # ── internals ─────────────────────────────────────────────────
 
-        if best is None:
-            raise RuntimeError("No pipeline result produced")
+    def _init_physical(self, task_description: str, logical: LogicalNode) -> PhysicalNode:
+        if self.planner is not None:
+            return self.planner.init(task_description, logical)
+        from planner.plan_parser import parse_physical_plan
+        return parse_physical_plan(logical.to_dict())
 
-        if log_path:
-            self._save_logs(best, Path(log_path))
-        return best
+    async def _judge(self, result: str, gold_ans: str) -> float:
+        if self.judge is None or not gold_ans.strip():
+            return 0.0
+        return await self.judge.score(result, gold_ans)
 
-    def _save_logs(self, result: PipelineResult, path: Path):
-        """Serializes each phase into a JSON file."""
+    def _save_logs(self, result: PipelineResult, path: Path) -> None:
+        import json
+
+        sample_logs = []
+        for query, exec_, fb in zip(
+            result.sample_queries, result.executions, result.feedbacks
+        ):
+            sample_logs.append({
+                "query": query,
+                "execute": {
+                    "answer": exec_.answer,
+                    "trace": exec_.trace,
+                    "token_counts": exec_.token_counts,
+                    "errors": exec_.errors,
+                },
+                "feedback": {
+                    "accuracy": fb.accuracy,
+                    "result": fb.result,
+                    "gold_ans": fb.gold_ans,
+                    "items": [
+                        {
+                            "op_id": item.op_id,
+                            "variant": item.variant,
+                            "token_cost": item.token_cost,
+                            "latency_ms": round(item.latency_ms, 2),
+                            "output_summary": item.output_summary,
+                        }
+                        for item in fb.items
+                    ],
+                },
+            })
+
         log_data = {
-            "query": result.query,
+            "task_description": result.task_description,
             "phases": {
                 "parse": result.logical_plan.to_dict(),
                 "optimize": {
@@ -181,173 +245,46 @@ class LmOptimizerPipeline:
                     "root_variant": result.physical_plan.variant,
                     "params": result.physical_plan.params,
                 },
-                "execute": {
-                    "answer": result.execution.answer,
-                    "trace": result.execution.trace,
-                    "token_counts": result.execution.token_counts,
-                    "errors": result.execution.errors,
-                },
+                "samples": sample_logs,
             },
         }
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(log_data, indent=2), encoding="utf-8")
 
-    def run_sync(self, query: str) -> PipelineResult:
-        """Synchronous wrapper for CLI/scripts."""
+    @staticmethod
+    def _run_async(coro):
+        import sys
         try:
             asyncio.get_running_loop()
         except RuntimeError:
-            return asyncio.run(self.run(query))
-        raise RuntimeError("run_sync() cannot be called from an active event loop")
+            if sys.platform == "win32":
+                asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
 
-    def run_sync_with_physical_feedback(
-        self,
-        query: str,
-        corpus,
-        iterations: int,
-    ) -> PipelineResult:
-        """Synchronous wrapper for iterative physical-feedback execution."""
-        try:
-            asyncio.get_running_loop()
-        except RuntimeError:
-            return asyncio.run(
-                self.run_with_physical_feedback(query, corpus, iterations)
-            )
-        raise RuntimeError(
-            "run_sync_with_physical_feedback() cannot be called from an active event loop"
-        )
+            def _suppress_loop_closed(loop, context):
+                exc = context.get("exception")
+                if isinstance(exc, RuntimeError) and "Event loop is closed" in str(exc):
+                    return
+                loop.default_exception_handler(context)
 
-    def parse(self, query: str) -> LogicalNode:
-        return self.parser.parse(query)
-
-    def optimize(self, logical: LogicalNode) -> tuple[LogicalNode, list[RewriteEntry]]:
-        return self.optimizer.run(logical)
-
-    def build_physical(self, logical: LogicalNode) -> PhysicalNode:
-        if not self.use_cost_aware_planner:
-            return build_physical_plan(logical)
-
-        cost_planner = CostAwarePlanner(
-            preset=self.planner_preset,
-            corpus=self.corpus,
-            catalog=self.catalog,
-            model_id=self.model_id,
-        )
-
-        if (
-            self.physical_planner_mode == "llm_feedback"
-            and self.planning_client is not None
-        ):
-            planner = LlmFeedbackPlanner(
-                base_planner=cost_planner,
-                planning_client=self.planning_client,
-                catalog=self.catalog,
-                rounds=self.planning_rounds,
-            )
-            return planner.build(logical, feedback=self._latest_planning_feedback)
-
-        return cost_planner.build(logical)
-
-    def _build_planning_feedback(
-        self,
-        physical: PhysicalNode,
-        execution: ExecutionResult,
-    ) -> dict[str, Any]:
-        """Build planner feedback payload with overall and per-operator signals."""
-        report = PlanScorer(catalog=self.catalog).score(physical)
-        per_operator = {}
-        for op_id, vector in report.per_node.items():
-            per_operator[op_id] = {
-                "variant": vector.variant,
-                "scalar": round(vector.scalar(), 4),
-                "token_cost": round(vector.token_cost, 4),
-                "call_cost": round(vector.call_cost, 4),
-                "latency_cost": round(vector.latency_cost, 4),
-                "quality_risk": round(vector.quality_risk, 4),
-                "sample_count": vector.sample_count,
-                "accuracy_score": vector.accuracy_score,
-            }
-
-        total_tokens = sum(execution.token_counts.values())
-        error_count = len(execution.errors)
-        quality_score = max(0.0, 1.0 - (error_count / max(1, len(execution.trace))))
-
-        return {
-            "overall": {
-                "scalar": report.scalar,
-                "token_cost": report.total_token_cost,
-                "call_cost": report.total_call_cost,
-                "latency_cost": report.total_latency_cost,
-                "quality_risk": report.total_quality_risk,
-                "quality_score": round(quality_score, 4),
-                "bottleneck": report.bottleneck,
-                "warnings": list(report.warnings),
-            },
-            "per_operator": per_operator,
-            "execution": {
-                "errors": list(execution.errors),
-                "error_count": error_count,
-                "trace": list(execution.trace),
-                "trace_count": len(execution.trace),
-                "token_counts": dict(execution.token_counts),
-                "total_tokens": total_tokens,
-            },
-        }
-
-    def _record_execution_feedback(
-        self,
-        physical: PhysicalNode,
-        execution: ExecutionResult,
-    ) -> None:
-        """Record coarse operator-variant telemetry from one execution.
-
-        This is intentionally lightweight for the first iteration: it records
-        per-op per-variant token/call/latency/risk signals so later planning
-        rounds can exploit observed outcomes.
-        """
-
-        nodes: list[PhysicalNode] = []
-
-        def walk(node: PhysicalNode) -> None:
-            for child in node.inputs:
-                walk(child)
-            nodes.append(node)
-
-        walk(physical)
-        if not nodes:
-            return
-
-        per_variant_nodes = Counter(n.variant for n in nodes)
-        trace_counts = Counter(execution.trace)
-        total_errors = len(execution.errors)
-        accuracy_proxy = max(0.0, 1.0 - (total_errors / max(1, len(execution.trace))))
-
-        for node in nodes:
-            variant = node.variant
-            op_name = node.logical_ref.op.value
-            token_total = float(execution.token_counts.get(variant, 0))
-            token_per_node = token_total / max(1, per_variant_nodes[variant])
-            call_cost = float(trace_counts.get(variant, 0)) / max(
-                1,
-                per_variant_nodes[variant],
-            )
-
-            # Keep latency as a simple call-proportional proxy until node-level
-            # timing is available from the executor.
-            latency_cost = max(0.1, call_cost)
-            quality_risk = 1.0 - accuracy_proxy
-            if node.logical_ref.op == Op.AGGREGATE:
-                quality_risk += 0.1
-
-            default_telemetry.record(
-                op=op_name,
-                variant=variant,
-                token_cost=token_per_node,
-                call_cost=call_cost,
-                latency_cost=latency_cost,
-                quality_risk=quality_risk,
-                accuracy_score=accuracy_proxy,
-            )
+            loop.set_exception_handler(_suppress_loop_closed)
+            try:
+                result = loop.run_until_complete(coro)
+            finally:
+                try:
+                    # Drain any lingering cleanup tasks (e.g. httpx aclose)
+                    pending = asyncio.all_tasks(loop)
+                    if pending:
+                        loop.run_until_complete(
+                            asyncio.gather(*pending, return_exceptions=True)
+                        )
+                    loop.run_until_complete(loop.shutdown_asyncgens())
+                finally:
+                    asyncio.set_event_loop(None)
+                    loop.close()
+            return result
+        raise RuntimeError("run_sync*() cannot be called from an active event loop")
 
     @staticmethod
     def _load_catalog_if_present(
@@ -359,36 +296,3 @@ class LmOptimizerPipeline:
         if not path.exists():
             raise FileNotFoundError(f"Catalog file not found: {path}")
         return load_catalog(path)
-
-
-def run_pipeline_sync(
-    query: str,
-    corpus,
-    llm,
-    parser: SemanticParser | Any | None = None,
-    optimizer: OptimizerEngine | None = None,
-    catalog: SystemCatalog | None = None,
-    catalog_path: str | Path | None = None,
-    use_cost_aware_planner: bool = True,
-    planner_preset: str = "balanced",
-    model_id: str | None = None,
-    physical_planner_mode: str = "cost",
-    planning_client: Any | None = None,
-    planning_rounds: int = 1,
-) -> PipelineResult:
-    """Convenience function for one-off synchronous runs."""
-    pipeline = LmOptimizerPipeline(
-        corpus=corpus,
-        llm=llm,
-        parser=parser,
-        optimizer=optimizer,
-        catalog=catalog,
-        catalog_path=catalog_path,
-        use_cost_aware_planner=use_cost_aware_planner,
-        planner_preset=planner_preset,
-        model_id=model_id,
-        physical_planner_mode=physical_planner_mode,
-        planning_client=planning_client,
-        planning_rounds=planning_rounds,
-    )
-    return pipeline.run_sync(query)

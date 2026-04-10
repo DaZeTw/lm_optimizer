@@ -1,0 +1,317 @@
+{
+  "task_description": "QA over scientific papers",
+  "phases": {
+    "parse": {
+      "op": "AGGREGATE",
+      "params": {
+        "goal": "synthesize answers to various queries about scientific papers"
+      },
+      "inputs": [
+        {
+          "op": "VERIFY",
+          "params": {
+            "constraints": "answer must cite relevant papers and sections"
+          },
+          "inputs": [
+            {
+              "op": "UNION",
+              "params": {},
+              "inputs": [
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "main contribution of this paper"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "evaluation metrics paper A"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "evaluation metrics paper B"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "methodology section evaluation metrics"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "formula accuracy evaluation"
+                  },
+                  "inputs": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "optimize": {
+      "plan": {
+        "op": "AGGREGATE",
+        "params": {
+          "goal": "synthesize answers to various queries about scientific papers"
+        },
+        "inputs": [
+          {
+            "op": "RANK",
+            "params": {
+              "criterion": "relevance"
+            },
+            "inputs": [
+              {
+                "op": "VERIFY",
+                "params": {
+                  "constraints": "answer must cite relevant papers and sections"
+                },
+                "inputs": [
+                  {
+                    "op": "UNION",
+                    "params": {},
+                    "inputs": [
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "main contribution of this paper"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "evaluation metrics paper A"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "evaluation metrics paper B"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "methodology section evaluation metrics"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "formula accuracy evaluation"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "rewrite_count": 2,
+      "rules_fired": [
+        "R2_filter_pushdown",
+        "R6_delayed_aggregation"
+      ]
+    },
+    "physical_plan": {
+      "root_variant": "DirectGenerate",
+      "params": {
+        "goal": "synthesize answers to various queries about scientific papers"
+      }
+    },
+    "samples": [
+      {
+        "query": "Which ontologies did they use?",
+        "execute": {
+          "answer": "### Overview of the Research\n\nThis research focuses on improving concept-to-text generation techniques, specifically through an Integer Linear Programming (ILP) model that addresses inherent inefficiencies in traditional pipeline architectures used in natural language generation (NLG). The main goal is to produce more compact and efficient texts that report more facts per word while maintaining or improving text quality.\n\n### Key Findings\n\n1. **Limitations of Pipeline Architectures**:\n   - Traditional NLG systems utilize a pipeline approach, which results in suboptimal outputs due to greedy local decisions made at each stage (content selection, lexicalization, sentence aggregation) without considering the interdependencies among stages.\n   - This can lead to overly verbose outputs, as essential facts might be expressed in lengthy ways, especially when space or budget is constrained (e.g., advertisements or summaries).\n\n2. **ILP Model Advantages**:\n   - The proposed ILP model integrates choices from content selection, lexicalization, and aggregation to minimize the length of generated texts while maximizing the number of expressed facts.\n   - Experiments using three different ontologies (diseases, consumer electronics, wines) demonstrated that the ILP approach yields significantly more compact texts compared to traditional pipeline models, often without quality deterioration.\n\n3. **Extended ILP Model**:\n   - An extended version of the model allows for using multiple natural language (nl) names for entities, prioritizing shorter names to improve text length estimates.\n   - It can also handle cases where entities are presented as conjunctions or disjunctions and facilitates the generation of referring expressions, thus reducing redundancy in outputs.\n\n4. **Empirical Evaluation**:\n   - The models were validated against a dataset from three ontologies, producing texts that were more concise and, in subjective evaluations, often clearer than outputs from traditional pipelines.\n   - Human judges scored the quality of texts generated by the ILP models higher than those produced by pipeline systems, especially in terms of clarity and overall quality.\n\n5. **Complexity and Efficiency**:\n   - The ILP model is theoretically complex but can be solved efficiently for the practical sizes of problems encountered within the context (i.e., a small number of facts per individual or class).\n   - For larger datasets or more complex narratives, an approximation of the ILP model was developed (ilpnlgapprox) that maintains similar output quality while drastically reducing computation time.\n\n### Conclusion and Future Work\nThe research illustrates that by adopting a more holistic, mathematical approach to NLG as offered by the ILP models, substantial improvements can be made in both",
+          "trace": [
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "SimpleUnion",
+            "CitationVerify",
+            "SimilarityRank",
+            "DirectGenerate"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 50494,
+            "SimilarityRank": 55643,
+            "SimpleUnion": 27815,
+            "CitationVerify": 27828,
+            "DirectGenerate": 701
+          },
+          "errors": []
+        },
+        "feedback": {
+          "accuracy": 0.0,
+          "result": "### Overview of the Research\n\nThis research focuses on improving concept-to-text generation techniques, specifically through an Integer Linear Programming (ILP) model that addresses inherent inefficiencies in traditional pipeline architectures used in natural language generation (NLG). The main goal is to produce more compact and efficient texts that report more facts per word while maintaining or improving text quality.\n\n### Key Findings\n\n1. **Limitations of Pipeline Architectures**:\n   - Traditional NLG systems utilize a pipeline approach, which results in suboptimal outputs due to greedy local decisions made at each stage (content selection, lexicalization, sentence aggregation) without considering the interdependencies among stages.\n   - This can lead to overly verbose outputs, as essential facts might be expressed in lengthy ways, especially when space or budget is constrained (e.g., advertisements or summaries).\n\n2. **ILP Model Advantages**:\n   - The proposed ILP model integrates choices from content selection, lexicalization, and aggregation to minimize the length of generated texts while maximizing the number of expressed facts.\n   - Experiments using three different ontologies (diseases, consumer electronics, wines) demonstrated that the ILP approach yields significantly more compact texts compared to traditional pipeline models, often without quality deterioration.\n\n3. **Extended ILP Model**:\n   - An extended version of the model allows for using multiple natural language (nl) names for entities, prioritizing shorter names to improve text length estimates.\n   - It can also handle cases where entities are presented as conjunctions or disjunctions and facilitates the generation of referring expressions, thus reducing redundancy in outputs.\n\n4. **Empirical Evaluation**:\n   - The models were validated against a dataset from three ontologies, producing texts that were more concise and, in subjective evaluations, often clearer than outputs from traditional pipelines.\n   - Human judges scored the quality of texts generated by the ILP models higher than those produced by pipeline systems, especially in terms of clarity and overall quality.\n\n5. **Complexity and Efficiency**:\n   - The ILP model is theoretically complex but can be solved efficiently for the practical sizes of problems encountered within the context (i.e., a small number of facts per individual or class).\n   - For larger datasets or more complex narratives, an approximation of the ILP model was developed (ilpnlgapprox) that maintains similar output quality while drastically reducing computation time.\n\n### Conclusion and Future Work\nThe research illustrates that by adopting a more holistic, mathematical approach to NLG as offered by the ILP models, substantial improvements can be made in both",
+          "gold_ans": "We experimented with three owl ontologies: (1) the Wine Ontology, which provides information about wines, wine producers etc.; (2) the Consumer Electronics Ontology, intended to help exchange information about consumer electronics products; and (3) the Disease Ontology, which describes diseases, including their symptoms, causes etc. ",
+          "items": [
+            {
+              "op_id": "I_0",
+              "variant": "BM25Retrieve",
+              "token_cost": 16715,
+              "latency_ms": 3.84,
+              "output_summary": "The Semantic Web BIBREF0 , BIBREF1 and the growing popularity of Linked Data (data that are published using Semantic Web technologies) have renewed interest in concept-to-text natural language generat"
+            },
+            {
+              "op_id": "I_1",
+              "variant": "BM25Retrieve",
+              "token_cost": 15808,
+              "latency_ms": 3.84,
+              "output_summary": "We experimented with three owl ontologies: (1) the Wine Ontology, which provides information about wines, wine producers etc.; (2) the Consumer Electronics Ontology, intended to help exchange informat"
+            },
+            {
+              "op_id": "I_2",
+              "variant": "BM25Retrieve",
+              "token_cost": 1322,
+              "latency_ms": 2.18,
+              "output_summary": "We experimented with three owl ontologies: (1) the Wine Ontology, which provides information about wines, wine producers etc.; (2) the Consumer Electronics Ontology, intended to help exchange informat"
+            },
+            {
+              "op_id": "I_3",
+              "variant": "BM25Retrieve",
+              "token_cost": 16649,
+              "latency_ms": 2.83,
+              "output_summary": "The Semantic Web BIBREF0 , BIBREF1 and the growing popularity of Linked Data (data that are published using Semantic Web technologies) have renewed interest in concept-to-text natural language generat"
+            },
+            {
+              "op_id": "I_4",
+              "variant": "BM25Retrieve",
+              "token_cost": 0,
+              "latency_ms": 1.97,
+              "output_summary": ""
+            },
+            {
+              "op_id": "RANK_0",
+              "variant": "SimilarityRank",
+              "token_cost": 8702,
+              "latency_ms": 0.37,
+              "output_summary": "Concept-to-text generation typically employs a pipeline architecture, which often leads to suboptimal texts. Content selection, for example, may greedily select the most important facts, which may req"
+            },
+            {
+              "op_id": "RANK_1",
+              "variant": "SimilarityRank",
+              "token_cost": 4566,
+              "latency_ms": 0.26,
+              "output_summary": "Some message triples can lead to sentences that sound redundant, because they report relations that are obvious (to humans) from the nl names of the individuals or classes, as in the sentence \u201cA red w"
+            },
+            {
+              "op_id": "RANK_2",
+              "variant": "SimilarityRank",
+              "token_cost": 1322,
+              "latency_ms": 0.04,
+              "output_summary": "We experimented with three owl ontologies: (1) the Wine Ontology, which provides information about wines, wine producers etc.; (2) the Consumer Electronics Ontology, intended to help exchange informat"
+            },
+            {
+              "op_id": "RANK_3",
+              "variant": "SimilarityRank",
+              "token_cost": 13225,
+              "latency_ms": 0.23,
+              "output_summary": "We call pipeline the original Naturalowl, which uses a pipeline architecture. Two modified versions of Naturalowl, called ilpnlg and ilpnlgextend, use our first and extended ilp models, respectively. "
+            },
+            {
+              "op_id": "RANK_4",
+              "variant": "SimilarityRank",
+              "token_cost": 0,
+              "latency_ms": 0.0,
+              "output_summary": ""
+            },
+            {
+              "op_id": "UNION_0",
+              "variant": "SimpleUnion",
+              "token_cost": 27815,
+              "latency_ms": 0.01,
+              "output_summary": "Concept-to-text generation typically employs a pipeline architecture, which often leads to suboptimal texts. Content selection, for example, may greedily select the most important facts, which may req"
+            },
+            {
+              "op_id": "VERIFY_0",
+              "variant": "CitationVerify",
+              "token_cost": 27828,
+              "latency_ms": 5.82,
+              "output_summary": "Concept-to-text generation typically employs a pipeline architecture, which often leads to suboptimal texts. Content selection, for example, may greedily select the most important facts, which may req"
+            },
+            {
+              "op_id": "RANK_5",
+              "variant": "SimilarityRank",
+              "token_cost": 27828,
+              "latency_ms": 0.08,
+              "output_summary": "Concept-to-text generation typically employs a pipeline architecture, which often leads to suboptimal texts. Content selection, for example, may greedily select the most important facts, which may req"
+            },
+            {
+              "op_id": "AGGREGATE_0",
+              "variant": "DirectGenerate",
+              "token_cost": 701,
+              "latency_ms": 10274.65,
+              "output_summary": "### Overview of the Research\n\nThis research focuses on improving concept-to-text generation techniques, specifically through an Integer Linear Programming (ILP) model that addresses inherent inefficie"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

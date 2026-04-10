@@ -1,0 +1,279 @@
+{
+  "task_description": "QA over scientific papers",
+  "phases": {
+    "parse": {
+      "op": "AGGREGATE",
+      "params": {
+        "goal": "synthesize answers to various queries about scientific papers"
+      },
+      "inputs": [
+        {
+          "op": "VERIFY",
+          "params": {
+            "constraints": "answers must be relevant to scientific papers"
+          },
+          "inputs": [
+            {
+              "op": "UNION",
+              "params": {},
+              "inputs": [
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "evaluation metrics"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "main contribution"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "methodology sections"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "formula accuracy"
+                  },
+                  "inputs": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "optimize": {
+      "plan": {
+        "op": "AGGREGATE",
+        "params": {
+          "goal": "synthesize answers to various queries about scientific papers"
+        },
+        "inputs": [
+          {
+            "op": "RANK",
+            "params": {
+              "criterion": "relevance"
+            },
+            "inputs": [
+              {
+                "op": "VERIFY",
+                "params": {
+                  "constraints": "answers must be relevant to scientific papers"
+                },
+                "inputs": [
+                  {
+                    "op": "UNION",
+                    "params": {},
+                    "inputs": [
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "evaluation metrics"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "main contribution"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "methodology sections"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "formula accuracy"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "rewrite_count": 2,
+      "rules_fired": [
+        "R2_filter_pushdown",
+        "R6_delayed_aggregation"
+      ]
+    },
+    "physical_plan": {
+      "root_variant": "DirectGenerate",
+      "params": {
+        "goal": "synthesize answers to various queries about scientific papers"
+      }
+    },
+    "samples": [
+      {
+        "query": "Which English domains do they evaluate on?",
+        "execute": {
+          "answer": "This chapter concentrates on evaluating various semi-supervised techniques employed in dependency parsing, particularly utilizing unlabelled and labelled data from diverse corpora, including the CoNLL 2009 dataset, OntoNotes v5.0, and other specific domain texts.\n\n1. **Evaluation Metrics**: The accuracy of the parsers is primarily measured using two metrics \u2013 Labelled Attachment Score (LAS) and Unlabelled Attachment Score (UAS). LAS is considered more stringent, as it requires both correct edge attachment and accurate labeling, whereas UAS focuses only on edge attachment correctness. This thesis predominantly emphasizes LAS for evaluations, aligning with conventional standards in dependency parsing tasks (Evidence: \"the LAS is more strict than UAS thus we mainly focus on LAS in our evaluation\").\n\n2. **Corpora Utilized**: The main evaluation corpora are diverse, covering both in-domain and out-of-domain sources. In-domain evaluation is conducted using the CoNLL English corpus, while out-of-domain evaluations leverage resources like weblog segments from the OntoNotes v5.0 corpus and datasets from the SANCL shared task, which encompasses various non-canonical language samples (Newsgroups, Reviews, Answers). This allows for a comprehensive assessment of the semi-supervised models (Evidence: \"For our main evaluation, we used English data from the conference on computational natural language learning (Conll) 2009 shared task... For out-of-domain evaluation, we used weblogs portion of OntoNotes v5.0 corpus...\").\n\n3. **Semi-Supervised Techniques**: The thesis evaluates semi-supervised techniques such as self-training and co-training. Self-training involves iteratively teaching a single model using its own predictions, while co-training employs multiple models that utilize different feature sets to enhance the training of one another. Both approaches aim to leverage unlabelled data to mitigate the accuracy drop typically experienced when models are applied to out-of-domain data (Evidence: \"Semi-supervised approaches use unlabelled data to bridge the accuracy gap between in-domain and out-of-domain\").\n\n4. **Statistical Significance**: The evaluations incorporate significance testing using a randomised parsing evaluation comparator, which assists in determining whether observed accuracy differences between models are statistically significant. Significantly improved results are encoded with p-values, highlighting the robustness of findings (Evidence: \"p-values represent the probability that the null hypothesis is correct... We mark the significance levels based on their p-values, * for INLINEFORM0 , ** for INLINEFORM1 .\").\n\n5. **Diverse Languages",
+          "trace": [
+            "DenseRetrieve",
+            "CrossEncoderRank",
+            "DenseRetrieve",
+            "CrossEncoderRank",
+            "DenseRetrieve",
+            "CrossEncoderRank",
+            "DenseRetrieve",
+            "CrossEncoderRank",
+            "SimpleUnion",
+            "CitationVerify",
+            "CrossEncoderRank",
+            "DirectGenerate"
+          ],
+          "token_counts": {
+            "DenseRetrieve": 46483,
+            "CrossEncoderRank": 39708,
+            "SimpleUnion": 19847,
+            "CitationVerify": 19861,
+            "DirectGenerate": 670
+          },
+          "errors": []
+        },
+        "feedback": {
+          "accuracy": 0.5,
+          "result": "This chapter concentrates on evaluating various semi-supervised techniques employed in dependency parsing, particularly utilizing unlabelled and labelled data from diverse corpora, including the CoNLL 2009 dataset, OntoNotes v5.0, and other specific domain texts.\n\n1. **Evaluation Metrics**: The accuracy of the parsers is primarily measured using two metrics \u2013 Labelled Attachment Score (LAS) and Unlabelled Attachment Score (UAS). LAS is considered more stringent, as it requires both correct edge attachment and accurate labeling, whereas UAS focuses only on edge attachment correctness. This thesis predominantly emphasizes LAS for evaluations, aligning with conventional standards in dependency parsing tasks (Evidence: \"the LAS is more strict than UAS thus we mainly focus on LAS in our evaluation\").\n\n2. **Corpora Utilized**: The main evaluation corpora are diverse, covering both in-domain and out-of-domain sources. In-domain evaluation is conducted using the CoNLL English corpus, while out-of-domain evaluations leverage resources like weblog segments from the OntoNotes v5.0 corpus and datasets from the SANCL shared task, which encompasses various non-canonical language samples (Newsgroups, Reviews, Answers). This allows for a comprehensive assessment of the semi-supervised models (Evidence: \"For our main evaluation, we used English data from the conference on computational natural language learning (Conll) 2009 shared task... For out-of-domain evaluation, we used weblogs portion of OntoNotes v5.0 corpus...\").\n\n3. **Semi-Supervised Techniques**: The thesis evaluates semi-supervised techniques such as self-training and co-training. Self-training involves iteratively teaching a single model using its own predictions, while co-training employs multiple models that utilize different feature sets to enhance the training of one another. Both approaches aim to leverage unlabelled data to mitigate the accuracy drop typically experienced when models are applied to out-of-domain data (Evidence: \"Semi-supervised approaches use unlabelled data to bridge the accuracy gap between in-domain and out-of-domain\").\n\n4. **Statistical Significance**: The evaluations incorporate significance testing using a randomised parsing evaluation comparator, which assists in determining whether observed accuracy differences between models are statistically significant. Significantly improved results are encoded with p-values, highlighting the robustness of findings (Evidence: \"p-values represent the probability that the null hypothesis is correct... We mark the significance levels based on their p-values, * for INLINEFORM0 , ** for INLINEFORM1 .\").\n\n5. **Diverse Languages",
+          "gold_ans": "Conll, Weblogs, Newsgroups, Reviews, Answers",
+          "items": [
+            {
+              "op_id": "I_0",
+              "variant": "DenseRetrieve",
+              "token_cost": 10616,
+              "latency_ms": 3.6,
+              "output_summary": "The focus of this thesis is on using semi-supervised techniques to bridge the accuracies between the in-domain and the out-of-domain dependency parsing. More precisely, this thesis evaluates three imp"
+            },
+            {
+              "op_id": "I_1",
+              "variant": "DenseRetrieve",
+              "token_cost": 18704,
+              "latency_ms": 3.22,
+              "output_summary": "In this chapter, we first briefly introduced dependency parsing and the problems of out-of-domain parsing that we are trying to address in this thesis. We then discussed the research questions that we"
+            },
+            {
+              "op_id": "I_2",
+              "variant": "DenseRetrieve",
+              "token_cost": 3001,
+              "latency_ms": 2.42,
+              "output_summary": "In this chapter, we introduce our co-training approach. Co-training is one of the popular semi-supervised techniques that has been applied to many natural language processing tasks, such as named enti"
+            },
+            {
+              "op_id": "I_3",
+              "variant": "DenseRetrieve",
+              "token_cost": 14162,
+              "latency_ms": 3.85,
+              "output_summary": "Syntactic parsing is an important natural language processing (NLP) task that focuses on analysing the syntactic structures of sentences. The syntax of a sentence has been found to be important to man"
+            },
+            {
+              "op_id": "RANK_0",
+              "variant": "CrossEncoderRank",
+              "token_cost": 1843,
+              "latency_ms": 4410.86,
+              "output_summary": "In this chapter, we first introduce the background and related work of this thesis, which includes a brief introduction of dependency parsing systems, a detailed introduction of the baseline parser BI"
+            },
+            {
+              "op_id": "RANK_1",
+              "variant": "CrossEncoderRank",
+              "token_cost": 7894,
+              "latency_ms": 4183.66,
+              "output_summary": "As mentioned previously, one contribution of this thesis is evaluating major semi-supervised techniques in a unified framework. For our main evaluation, we used English data from the conference on com"
+            },
+            {
+              "op_id": "RANK_2",
+              "variant": "CrossEncoderRank",
+              "token_cost": 3001,
+              "latency_ms": 4023.42,
+              "output_summary": "In this chapter, we introduce our co-training approach. Co-training is one of the popular semi-supervised techniques that has been applied to many natural language processing tasks, such as named enti"
+            },
+            {
+              "op_id": "RANK_3",
+              "variant": "CrossEncoderRank",
+              "token_cost": 7109,
+              "latency_ms": 4288.92,
+              "output_summary": "Semi-supervised approaches use unlabelled data to bridge the accuracy gap between in-domain and out-of-domain. In recent years, unlabelled data has gained large popularity in syntactic parsing tasks, "
+            },
+            {
+              "op_id": "UNION_0",
+              "variant": "SimpleUnion",
+              "token_cost": 19847,
+              "latency_ms": 0.01,
+              "output_summary": "In this chapter, we first introduce the background and related work of this thesis, which includes a brief introduction of dependency parsing systems, a detailed introduction of the baseline parser BI"
+            },
+            {
+              "op_id": "VERIFY_0",
+              "variant": "CitationVerify",
+              "token_cost": 19861,
+              "latency_ms": 8.05,
+              "output_summary": "In this chapter, we first introduce the background and related work of this thesis, which includes a brief introduction of dependency parsing systems, a detailed introduction of the baseline parser BI"
+            },
+            {
+              "op_id": "RANK_4",
+              "variant": "CrossEncoderRank",
+              "token_cost": 19861,
+              "latency_ms": 4011.77,
+              "output_summary": "In this chapter, we first introduce the background and related work of this thesis, which includes a brief introduction of dependency parsing systems, a detailed introduction of the baseline parser BI"
+            },
+            {
+              "op_id": "AGGREGATE_0",
+              "variant": "DirectGenerate",
+              "token_cost": 670,
+              "latency_ms": 10087.56,
+              "output_summary": "This chapter concentrates on evaluating various semi-supervised techniques employed in dependency parsing, particularly utilizing unlabelled and labelled data from diverse corpora, including the CoNLL"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

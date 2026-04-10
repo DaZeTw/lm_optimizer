@@ -1,0 +1,355 @@
+{
+  "task_description": "QA over scientific papers",
+  "phases": {
+    "parse": {
+      "op": "AGGREGATE",
+      "params": {
+        "goal": "synthesize relevant information from scientific papers"
+      },
+      "inputs": [
+        {
+          "op": "VERIFY",
+          "params": {
+            "constraints": "answer must cite relevant papers and datasets"
+          },
+          "inputs": [
+            {
+              "op": "UNION",
+              "params": {},
+              "inputs": [
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "datasets used in this work"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "main contribution of this paper"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "evaluation metrics paper A"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "evaluation metrics paper B"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "methodology section evaluation metrics"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "formula accuracy evaluation"
+                  },
+                  "inputs": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "optimize": {
+      "plan": {
+        "op": "AGGREGATE",
+        "params": {
+          "goal": "synthesize relevant information from scientific papers"
+        },
+        "inputs": [
+          {
+            "op": "RANK",
+            "params": {
+              "criterion": "relevance"
+            },
+            "inputs": [
+              {
+                "op": "VERIFY",
+                "params": {
+                  "constraints": "answer must cite relevant papers and datasets"
+                },
+                "inputs": [
+                  {
+                    "op": "UNION",
+                    "params": {},
+                    "inputs": [
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "datasets used in this work"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "main contribution of this paper"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "evaluation metrics paper A"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "evaluation metrics paper B"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "methodology section evaluation metrics"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "formula accuracy evaluation"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "rewrite_count": 2,
+      "rules_fired": [
+        "R2_filter_pushdown",
+        "R6_delayed_aggregation"
+      ]
+    },
+    "physical_plan": {
+      "root_variant": "DirectGenerate",
+      "params": {
+        "goal": "synthesize relevant information from scientific papers"
+      }
+    },
+    "samples": [
+      {
+        "query": "Which datasets are used in this work?",
+        "execute": {
+          "answer": "The provided information discusses various aspects of event extraction from textual documents within the contexts of linguistics, philosophy, and computational linguistics. Below is a synthesis of the critical points:\n\n### 1. **Theoretical Framework:**\n- **Mathematical Logic in Linguistics:** Events are mathematically represented using logic to convey semantic meaning of sentences. Davidson introduced the event variable \\( e \\) to standardize event representation, where verbs signify actions and nouns denote entities. This allows for nuanced modifications and quantification over events (BIBREF23).\n- **Event Classification:** Early theorists like Aristotle classified events based on actions and states. Later classifications (e.g., by Vendler and Dowty) distinguished between activities, accomplishments, achievements, and states, using binary features such as duration and boundedness to identify event types (BIBREF9, BIBREF10).\n\n### 2. **Event Extraction Systems:**\n- **Automated Systems:** Various frameworks (e.g., EVITA, TIPSem) utilize machine learning and linguistic rules to extract events from texts, primarily concentrating on verbs, nouns, and their syntactic roles (BIBREF121, BIBREF138). Features include tense, aspect, modality, and polarity.\n- **Evaluation Metrics:** Systems are commonly assessed using precision, recall, F-scores, and specialized values such as ACE values for performance benchmarking in event extraction tasks.\n\n### 3. **Coreference and Event Tracking:**\n- **Coreference Resolution:** Identifying when different mentions refer to the same event is a key challenge. Models incorporate linguistic properties and statistical methods to determine coreferential links among events (BIBREF161, BIBREF167).\n- **Granularity of Events:** Granular analysis of event attributes is essential, particularly when events span various durations and involve multiple participants. This aids in distinguishing between closely related events (BIBREF187).\n\n### 4. **Applications:**\n- **Domains of Application:** Event extraction is utilized across various domains, including business, political, and biomedical texts, as well as social media, underlining its relevance in summarization and information retrieval tasks (BIBREF159).\n\n### 5. **Contests and Collaborative Research:**\n- **Motivation for Systems:** The development of event extraction systems has been propelled by competitions (like ACE and TempEval) that challenge researchers to refine their algorithms based on predefined event types and attributes, driving innovation and system improvements (BIBREF153, BIBREF165).\n\n### 6. **Challenges and Future",
+          "trace": [
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "SimpleUnion",
+            "CitationVerify",
+            "CrossEncoderRank",
+            "DirectGenerate"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 86499,
+            "CrossEncoderRank": 103166,
+            "SimpleUnion": 51572,
+            "CitationVerify": 51594,
+            "DirectGenerate": 659
+          },
+          "errors": []
+        },
+        "feedback": {
+          "accuracy": 0.0,
+          "result": "The provided information discusses various aspects of event extraction from textual documents within the contexts of linguistics, philosophy, and computational linguistics. Below is a synthesis of the critical points:\n\n### 1. **Theoretical Framework:**\n- **Mathematical Logic in Linguistics:** Events are mathematically represented using logic to convey semantic meaning of sentences. Davidson introduced the event variable \\( e \\) to standardize event representation, where verbs signify actions and nouns denote entities. This allows for nuanced modifications and quantification over events (BIBREF23).\n- **Event Classification:** Early theorists like Aristotle classified events based on actions and states. Later classifications (e.g., by Vendler and Dowty) distinguished between activities, accomplishments, achievements, and states, using binary features such as duration and boundedness to identify event types (BIBREF9, BIBREF10).\n\n### 2. **Event Extraction Systems:**\n- **Automated Systems:** Various frameworks (e.g., EVITA, TIPSem) utilize machine learning and linguistic rules to extract events from texts, primarily concentrating on verbs, nouns, and their syntactic roles (BIBREF121, BIBREF138). Features include tense, aspect, modality, and polarity.\n- **Evaluation Metrics:** Systems are commonly assessed using precision, recall, F-scores, and specialized values such as ACE values for performance benchmarking in event extraction tasks.\n\n### 3. **Coreference and Event Tracking:**\n- **Coreference Resolution:** Identifying when different mentions refer to the same event is a key challenge. Models incorporate linguistic properties and statistical methods to determine coreferential links among events (BIBREF161, BIBREF167).\n- **Granularity of Events:** Granular analysis of event attributes is essential, particularly when events span various durations and involve multiple participants. This aids in distinguishing between closely related events (BIBREF187).\n\n### 4. **Applications:**\n- **Domains of Application:** Event extraction is utilized across various domains, including business, political, and biomedical texts, as well as social media, underlining its relevance in summarization and information retrieval tasks (BIBREF159).\n\n### 5. **Contests and Collaborative Research:**\n- **Motivation for Systems:** The development of event extraction systems has been propelled by competitions (like ACE and TempEval) that challenge researchers to refine their algorithms based on predefined event types and attributes, driving innovation and system improvements (BIBREF153, BIBREF165).\n\n### 6. **Challenges and Future",
+          "gold_ans": "GENIA corpus",
+          "items": [
+            {
+              "op_id": "I_0",
+              "variant": "BM25Retrieve",
+              "token_cost": 20659,
+              "latency_ms": 4.71,
+              "output_summary": "Many authors in linguistics have delved deeper into the nature of event classes and have tried to come up with features or characteristics that can be used to identify whether something (verb or a cla"
+            },
+            {
+              "op_id": "I_1",
+              "variant": "BM25Retrieve",
+              "token_cost": 19625,
+              "latency_ms": 4.56,
+              "output_summary": "Events of various kinds are mentioned and discussed in text documents, whether they are books, news articles, blogs or microblog feeds. The paper starts by giving an overview of how events are treated"
+            },
+            {
+              "op_id": "I_2",
+              "variant": "BM25Retrieve",
+              "token_cost": 18437,
+              "latency_ms": 4.42,
+              "output_summary": "Events of various kinds are mentioned and discussed in text documents, whether they are books, news articles, blogs or microblog feeds. The paper starts by giving an overview of how events are treated"
+            },
+            {
+              "op_id": "I_3",
+              "variant": "BM25Retrieve",
+              "token_cost": 12367,
+              "latency_ms": 3.06,
+              "output_summary": "Events of various kinds are mentioned and discussed in text documents, whether they are books, news articles, blogs or microblog feeds. The paper starts by giving an overview of how events are treated"
+            },
+            {
+              "op_id": "I_4",
+              "variant": "BM25Retrieve",
+              "token_cost": 6587,
+              "latency_ms": 2.67,
+              "output_summary": "Among the several senses that The Oxford English Dictionary, the most venerable dictionary of English, provides for the word event, are the following.\n Although an event may refer to anything that hap"
+            },
+            {
+              "op_id": "I_5",
+              "variant": "BM25Retrieve",
+              "token_cost": 8824,
+              "latency_ms": 2.93,
+              "output_summary": "Many even extraction systems have been built over the years. A big motivator for development of event extraction systems seem to be various contests that are held every few years, although there has b"
+            },
+            {
+              "op_id": "RANK_0",
+              "variant": "CrossEncoderRank",
+              "token_cost": 8509,
+              "latency_ms": 4102.55,
+              "output_summary": "Mathematical logic is used to represent the semantics of language. In particular, we use logic to represent the meaning of single sentences. Early work on events, e.g., Panini (as discussed by BIBREF2"
+            },
+            {
+              "op_id": "RANK_1",
+              "variant": "CrossEncoderRank",
+              "token_cost": 5556,
+              "latency_ms": 4068.51,
+              "output_summary": "Events of various kinds are mentioned and discussed in text documents, whether they are books, news articles, blogs or microblog feeds. The paper starts by giving an overview of how events are treated"
+            },
+            {
+              "op_id": "RANK_2",
+              "variant": "CrossEncoderRank",
+              "token_cost": 9928,
+              "latency_ms": 4082.83,
+              "output_summary": "Events of various kinds are mentioned and discussed in text documents, whether they are books, news articles, blogs or microblog feeds. The paper starts by giving an overview of how events are treated"
+            },
+            {
+              "op_id": "RANK_3",
+              "variant": "CrossEncoderRank",
+              "token_cost": 12168,
+              "latency_ms": 4031.25,
+              "output_summary": "Events of various kinds are mentioned and discussed in text documents, whether they are books, news articles, blogs or microblog feeds. The paper starts by giving an overview of how events are treated"
+            },
+            {
+              "op_id": "RANK_4",
+              "variant": "CrossEncoderRank",
+              "token_cost": 6587,
+              "latency_ms": 4106.3,
+              "output_summary": "Different models of events have been used in computational linguistics work geared toward information extraction.\nWe discuss TimeML events next followed by events. We discuss biomedical event extracti"
+            },
+            {
+              "op_id": "RANK_5",
+              "variant": "CrossEncoderRank",
+              "token_cost": 8824,
+              "latency_ms": 4046.13,
+              "output_summary": "When an event is mentioned in several places within a document, finding which references are to the same event is called determining event coreference. These are co-referents to the event. Determining"
+            },
+            {
+              "op_id": "UNION_0",
+              "variant": "SimpleUnion",
+              "token_cost": 51572,
+              "latency_ms": 0.02,
+              "output_summary": "Mathematical logic is used to represent the semantics of language. In particular, we use logic to represent the meaning of single sentences. Early work on events, e.g., Panini (as discussed by BIBREF2"
+            },
+            {
+              "op_id": "VERIFY_0",
+              "variant": "CitationVerify",
+              "token_cost": 51594,
+              "latency_ms": 12.89,
+              "output_summary": "Mathematical logic is used to represent the semantics of language. In particular, we use logic to represent the meaning of single sentences. Early work on events, e.g., Panini (as discussed by BIBREF2"
+            },
+            {
+              "op_id": "RANK_6",
+              "variant": "CrossEncoderRank",
+              "token_cost": 51594,
+              "latency_ms": 4019.2,
+              "output_summary": "Mathematical logic is used to represent the semantics of language. In particular, we use logic to represent the meaning of single sentences. Early work on events, e.g., Panini (as discussed by BIBREF2"
+            },
+            {
+              "op_id": "AGGREGATE_0",
+              "variant": "DirectGenerate",
+              "token_cost": 659,
+              "latency_ms": 24373.48,
+              "output_summary": "The provided information discusses various aspects of event extraction from textual documents within the contexts of linguistics, philosophy, and computational linguistics. Below is a synthesis of the"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

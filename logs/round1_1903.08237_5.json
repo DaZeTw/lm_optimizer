@@ -1,0 +1,279 @@
+{
+  "task_description": "QA over scientific papers",
+  "phases": {
+    "parse": {
+      "op": "AGGREGATE",
+      "params": {
+        "goal": "synthesize relevant information from scientific papers"
+      },
+      "inputs": [
+        {
+          "op": "VERIFY",
+          "params": {
+            "constraints": "answer must cite relevant sections and papers"
+          },
+          "inputs": [
+            {
+              "op": "UNION",
+              "params": {},
+              "inputs": [
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "main contribution of the paper"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "evaluation metrics"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "methodology section"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "experiments with real humans"
+                  },
+                  "inputs": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "optimize": {
+      "plan": {
+        "op": "AGGREGATE",
+        "params": {
+          "goal": "synthesize relevant information from scientific papers"
+        },
+        "inputs": [
+          {
+            "op": "RANK",
+            "params": {
+              "criterion": "relevance"
+            },
+            "inputs": [
+              {
+                "op": "VERIFY",
+                "params": {
+                  "constraints": "answer must cite relevant sections and papers"
+                },
+                "inputs": [
+                  {
+                    "op": "UNION",
+                    "params": {},
+                    "inputs": [
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "main contribution of the paper"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "evaluation metrics"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "methodology section"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "experiments with real humans"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "rewrite_count": 2,
+      "rules_fired": [
+        "R2_filter_pushdown",
+        "R6_delayed_aggregation"
+      ]
+    },
+    "physical_plan": {
+      "root_variant": "DirectGenerate",
+      "params": {
+        "goal": "synthesize relevant information from scientific papers"
+      }
+    },
+    "samples": [
+      {
+        "query": "Does the paper describe experiments with real humans?",
+        "execute": {
+          "answer": "This synthesis provides an overview of the research on referring expressions, particularly focusing on how speakers choose modifiers in varying contexts using the Rational Speech Act (RSA) framework with continuous semantics. \n\n1. **Overinformativeness**: The phenomenon of overinformativeness in language refers to instances where speakers provide more information than necessary to uniquely identify a referent. For instance, instead of simply saying \"the pin,\" a speaker might say \"the small blue pin,\" which technically adds no additional identifying information if the context allows for unique reference. This paper shows that such behavior is systematic and can be modeled rationally, emphasizing that speakers optimize the trade-off between utterance cost and informativeness.\n\n2. **Model Framework**: The research introduces a model that relaxes deterministic semantics\u2014where terms are either true or false\u2014to a continuous semantics allowing for varying degrees of truth. Specifically, instead of strict true/false evaluations, modifiers can apply with different strengths, permitting a more nuanced understanding of how adjectives convey information. For example, the semantic values assigned to adjectives like size and color can vary, leading to predictions about how often each is used in production.\n\n3. **Empirical Findings**:\n   - **Color vs. Size Modifiers**: The model identifies a significant asymmetry in the use of color and size modifiers: speakers tend to use color more redundantly than size. This was evidenced by experimental data showing that speakers are more likely to add color descriptors in contexts where modification is unnecessary compared to size descriptors (e.g., saying \"big blue pin\" instead of \"big pin\").\n   - **Scene Variation Effects**: The study also examines how the variation in scenes influences modifier choice. Increased scene complexity (more distractors with varied features) leads to higher rates of redundant color use. In controlled experiments, it was demonstrated that the probability of redundancy increases with scene variation under conditions where certain dimensions are sufficient for unique reference. Specifically, when size is necessary for reference, the redundancy effect for color diminishes.\n\n4. **Typicality Effects**: The research further explores how the typicality of a feature influences the likelihood of its mention. For example, atypical features prompt more redundancy in descriptions (e.g., a blue banana is more likely to be referred to as \"the blue banana\" than a yellow one). This finding is integrated into the RSA model, suggesting that typicality affects the semantic values assigned to modifiers.\n\n5. **Model Evaluation**: The model's predictions were quantitatively tested against data collected from a series of experiments, leading to highly correlated results",
+          "trace": [
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "SimpleUnion",
+            "CitationVerify",
+            "SimilarityRank",
+            "DirectGenerate"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 44453,
+            "SimilarityRank": 47917,
+            "SimpleUnion": 23953,
+            "CitationVerify": 23964,
+            "DirectGenerate": 712
+          },
+          "errors": []
+        },
+        "feedback": {
+          "accuracy": 0.0,
+          "result": "This synthesis provides an overview of the research on referring expressions, particularly focusing on how speakers choose modifiers in varying contexts using the Rational Speech Act (RSA) framework with continuous semantics. \n\n1. **Overinformativeness**: The phenomenon of overinformativeness in language refers to instances where speakers provide more information than necessary to uniquely identify a referent. For instance, instead of simply saying \"the pin,\" a speaker might say \"the small blue pin,\" which technically adds no additional identifying information if the context allows for unique reference. This paper shows that such behavior is systematic and can be modeled rationally, emphasizing that speakers optimize the trade-off between utterance cost and informativeness.\n\n2. **Model Framework**: The research introduces a model that relaxes deterministic semantics\u2014where terms are either true or false\u2014to a continuous semantics allowing for varying degrees of truth. Specifically, instead of strict true/false evaluations, modifiers can apply with different strengths, permitting a more nuanced understanding of how adjectives convey information. For example, the semantic values assigned to adjectives like size and color can vary, leading to predictions about how often each is used in production.\n\n3. **Empirical Findings**:\n   - **Color vs. Size Modifiers**: The model identifies a significant asymmetry in the use of color and size modifiers: speakers tend to use color more redundantly than size. This was evidenced by experimental data showing that speakers are more likely to add color descriptors in contexts where modification is unnecessary compared to size descriptors (e.g., saying \"big blue pin\" instead of \"big pin\").\n   - **Scene Variation Effects**: The study also examines how the variation in scenes influences modifier choice. Increased scene complexity (more distractors with varied features) leads to higher rates of redundant color use. In controlled experiments, it was demonstrated that the probability of redundancy increases with scene variation under conditions where certain dimensions are sufficient for unique reference. Specifically, when size is necessary for reference, the redundancy effect for color diminishes.\n\n4. **Typicality Effects**: The research further explores how the typicality of a feature influences the likelihood of its mention. For example, atypical features prompt more redundancy in descriptions (e.g., a blue banana is more likely to be referred to as \"the blue banana\" than a yellow one). This finding is integrated into the RSA model, suggesting that typicality affects the semantic values assigned to modifiers.\n\n5. **Model Evaluation**: The model's predictions were quantitatively tested against data collected from a series of experiments, leading to highly correlated results",
+          "gold_ans": "Yes",
+          "items": [
+            {
+              "op_id": "I_0",
+              "variant": "BM25Retrieve",
+              "token_cost": 13309,
+              "latency_ms": 4.57,
+              "output_summary": "Reference to objects is one of the most basic and prevalent uses of language. In order to refer, speakers must choose from among a wealth of referring expressions they have at their disposal. How does"
+            },
+            {
+              "op_id": "I_1",
+              "variant": "BM25Retrieve",
+              "token_cost": 0,
+              "latency_ms": 2.13,
+              "output_summary": ""
+            },
+            {
+              "op_id": "I_2",
+              "variant": "BM25Retrieve",
+              "token_cost": 16022,
+              "latency_ms": 3.55,
+              "output_summary": "Reference to objects is one of the most basic and prevalent uses of language. In order to refer, speakers must choose from among a wealth of referring expressions they have at their disposal. How does"
+            },
+            {
+              "op_id": "I_3",
+              "variant": "BM25Retrieve",
+              "token_cost": 15122,
+              "latency_ms": 4.03,
+              "output_summary": "Reference to objects is one of the most basic and prevalent uses of language. In order to refer, speakers must choose from among a wealth of referring expressions they have at their disposal. How does"
+            },
+            {
+              "op_id": "RANK_0",
+              "variant": "SimilarityRank",
+              "token_cost": 8557,
+              "latency_ms": 0.28,
+              "output_summary": "While the core architecture with relaxed semantics remained constant throughout the paper, some peripheral components were adjusted to accommodate the aims of the different experiments. These differen"
+            },
+            {
+              "op_id": "RANK_1",
+              "variant": "SimilarityRank",
+              "token_cost": 0,
+              "latency_ms": 0.0,
+              "output_summary": ""
+            },
+            {
+              "op_id": "RANK_2",
+              "variant": "SimilarityRank",
+              "token_cost": 8126,
+              "latency_ms": 0.25,
+              "output_summary": "In order to evaluate RSA with continuous semantics we conducted a Bayesian data analysis. This allowed us to simultaneously generate model predictions and infer likely parameter values, by conditionin"
+            },
+            {
+              "op_id": "RANK_3",
+              "variant": "SimilarityRank",
+              "token_cost": 7270,
+              "latency_ms": 0.24,
+              "output_summary": "As discussed in Section \"Overinformativeness in referring expressions\" , increased scene variation has been shown to increase the probability of referring expressions that are overmodified with color."
+            },
+            {
+              "op_id": "UNION_0",
+              "variant": "SimpleUnion",
+              "token_cost": 23953,
+              "latency_ms": 0.0,
+              "output_summary": "While the core architecture with relaxed semantics remained constant throughout the paper, some peripheral components were adjusted to accommodate the aims of the different experiments. These differen"
+            },
+            {
+              "op_id": "VERIFY_0",
+              "variant": "CitationVerify",
+              "token_cost": 23964,
+              "latency_ms": 5.88,
+              "output_summary": "While the core architecture with relaxed semantics remained constant throughout the paper, some peripheral components were adjusted to accommodate the aims of the different experiments. These differen"
+            },
+            {
+              "op_id": "RANK_4",
+              "variant": "SimilarityRank",
+              "token_cost": 23964,
+              "latency_ms": 0.07,
+              "output_summary": "While the core architecture with relaxed semantics remained constant throughout the paper, some peripheral components were adjusted to accommodate the aims of the different experiments. These differen"
+            },
+            {
+              "op_id": "AGGREGATE_0",
+              "variant": "DirectGenerate",
+              "token_cost": 712,
+              "latency_ms": 27952.42,
+              "output_summary": "This synthesis provides an overview of the research on referring expressions, particularly focusing on how speakers choose modifiers in varying contexts using the Rational Speech Act (RSA) framework w"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

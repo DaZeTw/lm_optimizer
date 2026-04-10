@@ -1,0 +1,279 @@
+{
+  "task_description": "QA over scientific papers",
+  "phases": {
+    "parse": {
+      "op": "AGGREGATE",
+      "params": {
+        "goal": "synthesize relevant information from scientific papers"
+      },
+      "inputs": [
+        {
+          "op": "VERIFY",
+          "params": {
+            "constraints": "answers must be relevant to scientific papers"
+          },
+          "inputs": [
+            {
+              "op": "UNION",
+              "params": {},
+              "inputs": [
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "main contribution of paper"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "evaluation metrics"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "methodology sections"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "ontologies used"
+                  },
+                  "inputs": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "optimize": {
+      "plan": {
+        "op": "AGGREGATE",
+        "params": {
+          "goal": "synthesize relevant information from scientific papers"
+        },
+        "inputs": [
+          {
+            "op": "RANK",
+            "params": {
+              "criterion": "relevance"
+            },
+            "inputs": [
+              {
+                "op": "VERIFY",
+                "params": {
+                  "constraints": "answers must be relevant to scientific papers"
+                },
+                "inputs": [
+                  {
+                    "op": "UNION",
+                    "params": {},
+                    "inputs": [
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "main contribution of paper"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "evaluation metrics"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "methodology sections"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "ontologies used"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "rewrite_count": 2,
+      "rules_fired": [
+        "R2_filter_pushdown",
+        "R6_delayed_aggregation"
+      ]
+    },
+    "physical_plan": {
+      "root_variant": "DirectGenerate",
+      "params": {
+        "goal": "synthesize relevant information from scientific papers"
+      }
+    },
+    "samples": [
+      {
+        "query": "Which ontologies did they use?",
+        "execute": {
+          "answer": "The provided evidence discusses advancements in natural language generation (NLG) from ontologies, particularly emphasizing the use of an Integer Linear Programming (ILP) model as a more efficient alternative to traditional pipeline architectures. Here is a synthesis of the relevant information:\n\n### Overview of NLG from Ontologies\n1. **Semantic Web and Ontologies**: The Semantic Web and Linked Data are driving the need for effective NLG systems that can generate human-readable text from machine-readable statements in ontologies, which definitively describe knowledge domains (e.g., consumer electronics, diseases) using OWL (Web Ontology Language) [BIBREF0 - BIBREF14].\n\n2. **NLG Process**: Traditional NLG systems typically follow a pipeline architecture, which includes:\n   - **Content Selection**: Identification of logical facts from the ontology.\n   - **Text Planning**: Ordering facts and determining the rhetorical structure.\n   - **Lexicalization**: Choosing the appropriate words and sentence structures.\n   - **Sentence Aggregation**: Combining simple sentences into more complex ones.\n   - **Surface Realization**: Finalizing the generated text [BIBREF15].\n\n3. **Inefficiencies in Pipeline Architecture**: While pipeline systems offer ease of specification and monitoring, they often lead to suboptimal text quality due to greedy local decisions. For instance, choosing the most important facts without considering word count may lead to excessively verbose texts that compromise clarity [BIBREF16 - BIBREF19].\n\n### Introduction of ILP Models\n4. **ILP Approach**: The authors present an ILP model that optimally considers content selection, lexicalization, and aggregation concurrently, improving the compactness of generated texts. This is particularly useful for generating short descriptions suitable for search result advertisements or mobile devices. The model aims to maximize the facts reported per word and can adjust to importance scores assigned to different facts [BIBREF20 - BIBREF24].\n\n5. **Model Capabilities**:\n   - The ILP model is designed to produce more compact texts by optimizing the choices across multiple stages of NLG.\n   - An extended version accounts for referring expression generation, enhancing clarity by avoiding redundant sentences (e.g., not stating self-evident facts) [BIBREF25 - BIBREF36].\n\n6. **Computational Efficiency**: Although solving ILP problems is generally NP-hard, the authors note that practical applications using off-the-shelf ILP solvers can yield global optimum solutions efficiently, particularly when the problem size",
+          "trace": [
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "BM25Retrieve",
+            "CrossEncoderRank",
+            "SimpleUnion",
+            "CitationVerify",
+            "CrossEncoderRank",
+            "DirectGenerate"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 34359,
+            "CrossEncoderRank": 38319,
+            "SimpleUnion": 19154,
+            "CitationVerify": 19165,
+            "DirectGenerate": 647
+          },
+          "errors": []
+        },
+        "feedback": {
+          "accuracy": 0.0,
+          "result": "The provided evidence discusses advancements in natural language generation (NLG) from ontologies, particularly emphasizing the use of an Integer Linear Programming (ILP) model as a more efficient alternative to traditional pipeline architectures. Here is a synthesis of the relevant information:\n\n### Overview of NLG from Ontologies\n1. **Semantic Web and Ontologies**: The Semantic Web and Linked Data are driving the need for effective NLG systems that can generate human-readable text from machine-readable statements in ontologies, which definitively describe knowledge domains (e.g., consumer electronics, diseases) using OWL (Web Ontology Language) [BIBREF0 - BIBREF14].\n\n2. **NLG Process**: Traditional NLG systems typically follow a pipeline architecture, which includes:\n   - **Content Selection**: Identification of logical facts from the ontology.\n   - **Text Planning**: Ordering facts and determining the rhetorical structure.\n   - **Lexicalization**: Choosing the appropriate words and sentence structures.\n   - **Sentence Aggregation**: Combining simple sentences into more complex ones.\n   - **Surface Realization**: Finalizing the generated text [BIBREF15].\n\n3. **Inefficiencies in Pipeline Architecture**: While pipeline systems offer ease of specification and monitoring, they often lead to suboptimal text quality due to greedy local decisions. For instance, choosing the most important facts without considering word count may lead to excessively verbose texts that compromise clarity [BIBREF16 - BIBREF19].\n\n### Introduction of ILP Models\n4. **ILP Approach**: The authors present an ILP model that optimally considers content selection, lexicalization, and aggregation concurrently, improving the compactness of generated texts. This is particularly useful for generating short descriptions suitable for search result advertisements or mobile devices. The model aims to maximize the facts reported per word and can adjust to importance scores assigned to different facts [BIBREF20 - BIBREF24].\n\n5. **Model Capabilities**:\n   - The ILP model is designed to produce more compact texts by optimizing the choices across multiple stages of NLG.\n   - An extended version accounts for referring expression generation, enhancing clarity by avoiding redundant sentences (e.g., not stating self-evident facts) [BIBREF25 - BIBREF36].\n\n6. **Computational Efficiency**: Although solving ILP problems is generally NP-hard, the authors note that practical applications using off-the-shelf ILP solvers can yield global optimum solutions efficiently, particularly when the problem size",
+          "gold_ans": "We experimented with three owl ontologies: (1) the Wine Ontology, which provides information about wines, wine producers etc.; (2) the Consumer Electronics Ontology, intended to help exchange information about consumer electronics products; and (3) the Disease Ontology, which describes diseases, including their symptoms, causes etc. ",
+          "items": [
+            {
+              "op_id": "I_0",
+              "variant": "BM25Retrieve",
+              "token_cost": 14005,
+              "latency_ms": 3.8,
+              "output_summary": "The Semantic Web BIBREF0 , BIBREF1 and the growing popularity of Linked Data (data that are published using Semantic Web technologies) have renewed interest in concept-to-text natural language generat"
+            },
+            {
+              "op_id": "I_1",
+              "variant": "BM25Retrieve",
+              "token_cost": 0,
+              "latency_ms": 1.79,
+              "output_summary": ""
+            },
+            {
+              "op_id": "I_2",
+              "variant": "BM25Retrieve",
+              "token_cost": 6449,
+              "latency_ms": 2.13,
+              "output_summary": "Let us now focus on our first ilp model. As already noted, this model assumes that there is a single nl name per individual and class (excluding anonymous ones). Furthermore, the model assumes that al"
+            },
+            {
+              "op_id": "I_3",
+              "variant": "BM25Retrieve",
+              "token_cost": 13905,
+              "latency_ms": 3.42,
+              "output_summary": "Concept-to-text generation typically employs a pipeline architecture, which often leads to suboptimal texts. Content selection, for example, may greedily select the most important facts, which may req"
+            },
+            {
+              "op_id": "RANK_0",
+              "variant": "CrossEncoderRank",
+              "token_cost": 6003,
+              "latency_ms": 4209.5,
+              "output_summary": "The Semantic Web BIBREF0 , BIBREF1 and the growing popularity of Linked Data (data that are published using Semantic Web technologies) have renewed interest in concept-to-text natural language generat"
+            },
+            {
+              "op_id": "RANK_1",
+              "variant": "CrossEncoderRank",
+              "token_cost": 0,
+              "latency_ms": 0.0,
+              "output_summary": ""
+            },
+            {
+              "op_id": "RANK_2",
+              "variant": "CrossEncoderRank",
+              "token_cost": 6449,
+              "latency_ms": 4066.7,
+              "output_summary": "The models of Sections \"Our First ILP Model\" and \"Our Extended ILP Model\" are formulated as ilp problems, more precisely binary ilp problems since all their variables are binary. Solving binary ilp pr"
+            },
+            {
+              "op_id": "RANK_3",
+              "variant": "CrossEncoderRank",
+              "token_cost": 6702,
+              "latency_ms": 4197.95,
+              "output_summary": "We experimented with three owl ontologies: (1) the Wine Ontology, which provides information about wines, wine producers etc.; (2) the Consumer Electronics Ontology, intended to help exchange informat"
+            },
+            {
+              "op_id": "UNION_0",
+              "variant": "SimpleUnion",
+              "token_cost": 19154,
+              "latency_ms": 0.01,
+              "output_summary": "The Semantic Web BIBREF0 , BIBREF1 and the growing popularity of Linked Data (data that are published using Semantic Web technologies) have renewed interest in concept-to-text natural language generat"
+            },
+            {
+              "op_id": "VERIFY_0",
+              "variant": "CitationVerify",
+              "token_cost": 19165,
+              "latency_ms": 5.0,
+              "output_summary": "The Semantic Web BIBREF0 , BIBREF1 and the growing popularity of Linked Data (data that are published using Semantic Web technologies) have renewed interest in concept-to-text natural language generat"
+            },
+            {
+              "op_id": "RANK_4",
+              "variant": "CrossEncoderRank",
+              "token_cost": 19165,
+              "latency_ms": 3972.98,
+              "output_summary": "The Semantic Web BIBREF0 , BIBREF1 and the growing popularity of Linked Data (data that are published using Semantic Web technologies) have renewed interest in concept-to-text natural language generat"
+            },
+            {
+              "op_id": "AGGREGATE_0",
+              "variant": "DirectGenerate",
+              "token_cost": 647,
+              "latency_ms": 9512.48,
+              "output_summary": "The provided evidence discusses advancements in natural language generation (NLG) from ontologies, particularly emphasizing the use of an Integer Linear Programming (ILP) model as a more efficient alt"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

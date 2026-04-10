@@ -1,0 +1,355 @@
+{
+  "task_description": "QA over scientific papers",
+  "phases": {
+    "parse": {
+      "op": "AGGREGATE",
+      "params": {
+        "goal": "synthesize relevant information from scientific papers"
+      },
+      "inputs": [
+        {
+          "op": "VERIFY",
+          "params": {
+            "constraints": "answer must cite relevant sections and papers"
+          },
+          "inputs": [
+            {
+              "op": "UNION",
+              "params": {},
+              "inputs": [
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "off-the-shelf systems discussed in the paper"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "main contribution of this paper"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "evaluation metrics paper A"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "evaluation metrics paper B"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "methodology section evaluation metrics"
+                  },
+                  "inputs": []
+                },
+                {
+                  "op": "I",
+                  "params": {
+                    "query": "formula accuracy evaluation"
+                  },
+                  "inputs": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "optimize": {
+      "plan": {
+        "op": "AGGREGATE",
+        "params": {
+          "goal": "synthesize relevant information from scientific papers"
+        },
+        "inputs": [
+          {
+            "op": "RANK",
+            "params": {
+              "criterion": "relevance"
+            },
+            "inputs": [
+              {
+                "op": "VERIFY",
+                "params": {
+                  "constraints": "answer must cite relevant sections and papers"
+                },
+                "inputs": [
+                  {
+                    "op": "UNION",
+                    "params": {},
+                    "inputs": [
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "off-the-shelf systems discussed in the paper"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "main contribution of this paper"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "evaluation metrics paper A"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "evaluation metrics paper B"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "methodology section evaluation metrics"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "formula accuracy evaluation"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "rewrite_count": 2,
+      "rules_fired": [
+        "R2_filter_pushdown",
+        "R6_delayed_aggregation"
+      ]
+    },
+    "physical_plan": {
+      "root_variant": "DirectGenerate",
+      "params": {
+        "goal": "synthesize relevant information from scientific papers"
+      }
+    },
+    "samples": [
+      {
+        "query": "what are the off-the-shelf systems discussed in the paper?",
+        "execute": {
+          "answer": "**Overview of Language Identification (LI)**\n\nLanguage identification (LI) is the computational or statistical process of determining the natural language of a given text, and it has a rich history spanning over fifty years. LI is essential in various applications, particularly in text processing pipelines where identifying the language of input text is crucial for subsequent tasks (e.g., translation, information retrieval).\n\n**Historical Context and Early Development**\n\n1. **Manual Methods and Early Programs**: The motivation for LI was initially driven by the needs of translators, leading to simple manual methods that helped identify documents in specific languages. Notably, early work in this area was documented by Mustonen, who applied multiple discriminant analysis to classify words among English, Swedish, and Finnish with a success rate of 76% using limited training data (300 words per language) (BIBREF18). \n\n2. **Expansion to Multiple Languages**: By the early 1970s, methods had evolved to distinguish among 25 languages using character frequencies and binary presence/absence features (BIBREF20). A master's thesis by BIBREF20 even included program code for language identification tackling English and Spanish with 89% accuracy using character frequencies and bigrams.\n\n3. **Introduction of Robust Statistical Methods**: In the late 1980s, Cavnar and Trenkle developed a widely-cited method that analyzed document profiles to classify language, achieving 99.8% accuracy across eight languages, marking a significant milestone in LI research (BIBREF7).\n\n**Modern Approaches and Methods**\n\n1. **Text Classification Techniques**: LI is often treated as a specific case of text categorization, with various classification techniques including naive Bayes (NB), support vector machines (SVM), and ensemble methods. SVMs have been popular for LI due to their effectiveness and the introduction of various kernels designed to optimize their performance (including linear and polynomial kernels) (BIBREF339, BIBREF100).\n\n2. **Feature Utilization**: Common features used in LI include character n-grams, frequencies of characters and words, and their occurrences in segments of text. Many systems rely on character-based features due to their robustness in identifying languages regardless of content (BIBREF153).\n\n3. **Handling Short Texts**: LI methods have been adapted to handle short text segments, such as tweets or search queries, which present unique challenges due to their brevity and potential ambiguity (BIBREF145, BIBREF299).\n\n4. **Unknown Languages and Ensemble Methods",
+          "trace": [
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "SimpleUnion",
+            "CitationVerify",
+            "SimilarityRank",
+            "DirectGenerate"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 72290,
+            "SimilarityRank": 60802,
+            "SimpleUnion": 30390,
+            "CitationVerify": 30412,
+            "DirectGenerate": 649
+          },
+          "errors": []
+        },
+        "feedback": {
+          "accuracy": 0.0,
+          "result": "**Overview of Language Identification (LI)**\n\nLanguage identification (LI) is the computational or statistical process of determining the natural language of a given text, and it has a rich history spanning over fifty years. LI is essential in various applications, particularly in text processing pipelines where identifying the language of input text is crucial for subsequent tasks (e.g., translation, information retrieval).\n\n**Historical Context and Early Development**\n\n1. **Manual Methods and Early Programs**: The motivation for LI was initially driven by the needs of translators, leading to simple manual methods that helped identify documents in specific languages. Notably, early work in this area was documented by Mustonen, who applied multiple discriminant analysis to classify words among English, Swedish, and Finnish with a success rate of 76% using limited training data (300 words per language) (BIBREF18). \n\n2. **Expansion to Multiple Languages**: By the early 1970s, methods had evolved to distinguish among 25 languages using character frequencies and binary presence/absence features (BIBREF20). A master's thesis by BIBREF20 even included program code for language identification tackling English and Spanish with 89% accuracy using character frequencies and bigrams.\n\n3. **Introduction of Robust Statistical Methods**: In the late 1980s, Cavnar and Trenkle developed a widely-cited method that analyzed document profiles to classify language, achieving 99.8% accuracy across eight languages, marking a significant milestone in LI research (BIBREF7).\n\n**Modern Approaches and Methods**\n\n1. **Text Classification Techniques**: LI is often treated as a specific case of text categorization, with various classification techniques including naive Bayes (NB), support vector machines (SVM), and ensemble methods. SVMs have been popular for LI due to their effectiveness and the introduction of various kernels designed to optimize their performance (including linear and polynomial kernels) (BIBREF339, BIBREF100).\n\n2. **Feature Utilization**: Common features used in LI include character n-grams, frequencies of characters and words, and their occurrences in segments of text. Many systems rely on character-based features due to their robustness in identifying languages regardless of content (BIBREF153).\n\n3. **Handling Short Texts**: LI methods have been adapted to handle short text segments, such as tweets or search queries, which present unique challenges due to their brevity and potential ambiguity (BIBREF145, BIBREF299).\n\n4. **Unknown Languages and Ensemble Methods",
+          "gold_ans": "Answer with content missing: (Names of many identifiers missing) TextCat, ChromeCLD, LangDetect, langid.py, whatlang, whatthelang, YALI, LDIG, Polyglot 3000, Lextek Language Identifier and Open Xerox Language Identifier.",
+          "items": [
+            {
+              "op_id": "I_0",
+              "variant": "BM25Retrieve",
+              "token_cost": 12015,
+              "latency_ms": 5.17,
+              "output_summary": "As discussed in standardevaluation, the objective comparison of different methods for is difficult due to the variation in the data that different authors have used to evaluate methods. BIBREF32 empha"
+            },
+            {
+              "op_id": "I_1",
+              "variant": "BM25Retrieve",
+              "token_cost": 10214,
+              "latency_ms": 5.14,
+              "output_summary": "as a task predates computational methods \u2013 the earliest interest in the area was motivated by the needs of translators, and simple manual methods were developed to quickly identify documents in specif"
+            },
+            {
+              "op_id": "I_2",
+              "variant": "BM25Retrieve",
+              "token_cost": 11667,
+              "latency_ms": 5.06,
+              "output_summary": "In the previous two sections, we have alluded to issues of evaluation in research to date. In this section, we examine the literature more closely, providing a broad overview of the evaluation metrics"
+            },
+            {
+              "op_id": "I_3",
+              "variant": "BM25Retrieve",
+              "token_cost": 11667,
+              "latency_ms": 3.35,
+              "output_summary": "In the previous two sections, we have alluded to issues of evaluation in research to date. In this section, we examine the literature more closely, providing a broad overview of the evaluation metrics"
+            },
+            {
+              "op_id": "I_4",
+              "variant": "BM25Retrieve",
+              "token_cost": 12311,
+              "latency_ms": 3.48,
+              "output_summary": "In the previous two sections, we have alluded to issues of evaluation in research to date. In this section, we examine the literature more closely, providing a broad overview of the evaluation metrics"
+            },
+            {
+              "op_id": "I_5",
+              "variant": "BM25Retrieve",
+              "token_cost": 14416,
+              "latency_ms": 4.8,
+              "output_summary": "Ensemble methods are meta-classification methods capable of combining several base classifiers into a combined model via a \u201cmeta-classifier\u201d over the outputs of the base classifiers, either explicitly"
+            },
+            {
+              "op_id": "RANK_0",
+              "variant": "SimilarityRank",
+              "token_cost": 3922,
+              "latency_ms": 0.28,
+              "output_summary": "as a task predates computational methods \u2013 the earliest interest in the area was motivated by the needs of translators, and simple manual methods were developed to quickly identify documents in specif"
+            },
+            {
+              "op_id": "RANK_1",
+              "variant": "SimilarityRank",
+              "token_cost": 5967,
+              "latency_ms": 0.24,
+              "output_summary": "The most common approach is to treat the task as a document-level classification problem. Given a set of evaluation documents, each having a known correct label from a closed set of labels (often refe"
+            },
+            {
+              "op_id": "RANK_2",
+              "variant": "SimilarityRank",
+              "token_cost": 6430,
+              "latency_ms": 0.24,
+              "output_summary": "As discussed in standardevaluation, the objective comparison of different methods for is difficult due to the variation in the data that different authors have used to evaluate methods. BIBREF32 empha"
+            },
+            {
+              "op_id": "RANK_3",
+              "variant": "SimilarityRank",
+              "token_cost": 5843,
+              "latency_ms": 0.24,
+              "output_summary": "\u201cUnseen\u201d languages are languages that we do not have training data for but may nonetheless be encountered by a system when applied to real-world data. Dealing with languages for which we do not have t"
+            },
+            {
+              "op_id": "RANK_4",
+              "variant": "SimilarityRank",
+              "token_cost": 2954,
+              "latency_ms": 0.24,
+              "output_summary": "As discussed in standardevaluation, the objective comparison of different methods for is difficult due to the variation in the data that different authors have used to evaluate methods. BIBREF32 empha"
+            },
+            {
+              "op_id": "RANK_5",
+              "variant": "SimilarityRank",
+              "token_cost": 5274,
+              "latency_ms": 0.26,
+              "output_summary": "Ensemble methods are meta-classification methods capable of combining several base classifiers into a combined model via a \u201cmeta-classifier\u201d over the outputs of the base classifiers, either explicitly"
+            },
+            {
+              "op_id": "UNION_0",
+              "variant": "SimpleUnion",
+              "token_cost": 30390,
+              "latency_ms": 0.01,
+              "output_summary": "as a task predates computational methods \u2013 the earliest interest in the area was motivated by the needs of translators, and simple manual methods were developed to quickly identify documents in specif"
+            },
+            {
+              "op_id": "VERIFY_0",
+              "variant": "CitationVerify",
+              "token_cost": 30412,
+              "latency_ms": 5.93,
+              "output_summary": "as a task predates computational methods \u2013 the earliest interest in the area was motivated by the needs of translators, and simple manual methods were developed to quickly identify documents in specif"
+            },
+            {
+              "op_id": "RANK_6",
+              "variant": "SimilarityRank",
+              "token_cost": 30412,
+              "latency_ms": 0.06,
+              "output_summary": "as a task predates computational methods \u2013 the earliest interest in the area was motivated by the needs of translators, and simple manual methods were developed to quickly identify documents in specif"
+            },
+            {
+              "op_id": "AGGREGATE_0",
+              "variant": "DirectGenerate",
+              "token_cost": 649,
+              "latency_ms": 20153.21,
+              "output_summary": "**Overview of Language Identification (LI)**\n\nLanguage identification (LI) is the computational or statistical process of determining the natural language of a given text, and it has a rich history sp"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

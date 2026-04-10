@@ -1,0 +1,322 @@
+{
+  "task_description": "QA over scientific papers",
+  "phases": {
+    "parse": {
+      "op": "AGGREGATE",
+      "params": {
+        "goal": "synthesize relevant information from scientific papers"
+      },
+      "inputs": [
+        {
+          "op": "UNION",
+          "params": {},
+          "inputs": [
+            {
+              "op": "I",
+              "params": {
+                "query": "evaluation methods discussed"
+              },
+              "inputs": []
+            },
+            {
+              "op": "I",
+              "params": {
+                "query": "evaluation metrics"
+              },
+              "inputs": []
+            },
+            {
+              "op": "I",
+              "params": {
+                "query": "main contribution of this paper"
+              },
+              "inputs": []
+            },
+            {
+              "op": "I",
+              "params": {
+                "query": "methodology section evaluation metrics"
+              },
+              "inputs": []
+            },
+            {
+              "op": "I",
+              "params": {
+                "query": "formula accuracy evaluation"
+              },
+              "inputs": []
+            }
+          ]
+        }
+      ]
+    },
+    "optimize": {
+      "plan": {
+        "op": "AGGREGATE",
+        "params": {
+          "goal": "synthesize relevant information from scientific papers"
+        },
+        "inputs": [
+          {
+            "op": "RANK",
+            "params": {
+              "criterion": "relevance"
+            },
+            "inputs": [
+              {
+                "op": "DIFF",
+                "params": {},
+                "inputs": [
+                  {
+                    "op": "UNION",
+                    "params": {},
+                    "inputs": [
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "evaluation methods discussed"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "evaluation metrics"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "main contribution of this paper"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "methodology section evaluation metrics"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "op": "RANK",
+                        "params": {
+                          "criterion": "relevance"
+                        },
+                        "inputs": [
+                          {
+                            "op": "I",
+                            "params": {
+                              "query": "formula accuracy evaluation"
+                            },
+                            "inputs": []
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "op": "I",
+                    "params": {
+                      "query": "__overlap__"
+                    },
+                    "inputs": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "rewrite_count": 3,
+      "rules_fired": [
+        "R2_filter_pushdown",
+        "R6_delayed_aggregation",
+        "R7_early_dedup"
+      ]
+    },
+    "physical_plan": {
+      "root_variant": "DirectGenerate",
+      "params": {
+        "goal": "synthesize relevant information from scientific papers"
+      }
+    },
+    "samples": [
+      {
+        "query": "what evaluation methods are discussed?",
+        "execute": {
+          "answer": "Language identification (LI) is a well-researched area focused on determining the natural language of a given text segment. The article provides a comprehensive overview of LI, highlighting the development of methods and features utilized over the years, as well as discussing evaluation metrics and the experimental settings in which these methods have been tested.\n\nKey aspects of language identification studied in the article include:\n\n1. **Notation and Features**: A unified notation is introduced for consistency across various methods, allowing for easier comparison of features and their implementations. A corpus consists of individual tokens, which can be segmented into parts, and various counts of features and tokens are defined across sections of the text (e.g., the number of segments, unique features, etc.).\n\n2. **Evaluation Metrics**: The challenges of evaluating LI methods are acknowledged, particularly the impact of different data sets on the results. Some studies have shown that system performance can vary significantly based on the volume and type of text used for evaluation (e.g., BIBREF32). This highlights the concern that results from one paper may not generalize to another context.\n\n3. **Challenges with Short Texts**: Research indicates that identifying the language of short strings poses significant difficulties, with accuracy dropping notably for texts shorter than 125 characters (BIBREF37). Specific methods targeting short texts, such as those by BIBREF195 and BIBREF145, demonstrate the potential for effectiveness within limited domains, although their generalizability remains under question.\n\n4. **Standardization Issues**: A significant theme discusses challenges in standardizing datasets for LI research, which include:\n   - Non-standardized language codes and the diversity of language classification (BIBREF381, BIBREF382).\n   - Variations within languages that complicate corpus creation and evaluation (orthographies and transliteration).\n   - The high cost and logistical challenges of acquiring accurately labeled data (requiring native speakers for many languages).\n\n5. **Proposed Future Directions**: The article suggests the need for standardized datasets to facilitate replicable and comparable research. Future work could focus on improving the methodology for correct labeling of data with less resource expenditure, thus enhancing the reliability of LI systems.\n\n6. **Advancements in Techniques**: Conditional random fields (CRFs) represent a notable advancement for word-level identification, where methods have demonstrated high accuracy (BIBREF40, BIBREF263). This technique utilizes observed features from the documents being analyzed to make predictions about the language of each word.\n\nIn summary, the article outlines the rich history and current state of",
+          "trace": [
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "BM25Retrieve",
+            "SimilarityRank",
+            "SimpleUnion",
+            "SemanticDiff",
+            "SimilarityRank",
+            "DirectGenerate"
+          ],
+          "token_counts": {
+            "BM25Retrieve": 61362,
+            "SimilarityRank": 28088,
+            "SimpleUnion": 24847,
+            "SemanticDiff": 13446,
+            "DirectGenerate": 706
+          },
+          "errors": []
+        },
+        "feedback": {
+          "accuracy": 0.0,
+          "result": "Language identification (LI) is a well-researched area focused on determining the natural language of a given text segment. The article provides a comprehensive overview of LI, highlighting the development of methods and features utilized over the years, as well as discussing evaluation metrics and the experimental settings in which these methods have been tested.\n\nKey aspects of language identification studied in the article include:\n\n1. **Notation and Features**: A unified notation is introduced for consistency across various methods, allowing for easier comparison of features and their implementations. A corpus consists of individual tokens, which can be segmented into parts, and various counts of features and tokens are defined across sections of the text (e.g., the number of segments, unique features, etc.).\n\n2. **Evaluation Metrics**: The challenges of evaluating LI methods are acknowledged, particularly the impact of different data sets on the results. Some studies have shown that system performance can vary significantly based on the volume and type of text used for evaluation (e.g., BIBREF32). This highlights the concern that results from one paper may not generalize to another context.\n\n3. **Challenges with Short Texts**: Research indicates that identifying the language of short strings poses significant difficulties, with accuracy dropping notably for texts shorter than 125 characters (BIBREF37). Specific methods targeting short texts, such as those by BIBREF195 and BIBREF145, demonstrate the potential for effectiveness within limited domains, although their generalizability remains under question.\n\n4. **Standardization Issues**: A significant theme discusses challenges in standardizing datasets for LI research, which include:\n   - Non-standardized language codes and the diversity of language classification (BIBREF381, BIBREF382).\n   - Variations within languages that complicate corpus creation and evaluation (orthographies and transliteration).\n   - The high cost and logistical challenges of acquiring accurately labeled data (requiring native speakers for many languages).\n\n5. **Proposed Future Directions**: The article suggests the need for standardized datasets to facilitate replicable and comparable research. Future work could focus on improving the methodology for correct labeling of data with less resource expenditure, thus enhancing the reliability of LI systems.\n\n6. **Advancements in Techniques**: Conditional random fields (CRFs) represent a notable advancement for word-level identification, where methods have demonstrated high accuracy (BIBREF40, BIBREF263). This technique utilizes observed features from the documents being analyzed to make predictions about the language of each word.\n\nIn summary, the article outlines the rich history and current state of",
+          "gold_ans": "document-level accuracy precision recall F-score",
+          "items": [
+            {
+              "op_id": "I_0",
+              "variant": "BM25Retrieve",
+              "token_cost": 0,
+              "latency_ms": 2.87,
+              "output_summary": ""
+            },
+            {
+              "op_id": "I_1",
+              "variant": "BM25Retrieve",
+              "token_cost": 12928,
+              "latency_ms": 5.13,
+              "output_summary": "As discussed in standardevaluation, the objective comparison of different methods for is difficult due to the variation in the data that different authors have used to evaluate methods. BIBREF32 empha"
+            },
+            {
+              "op_id": "I_2",
+              "variant": "BM25Retrieve",
+              "token_cost": 11493,
+              "latency_ms": 3.39,
+              "output_summary": "In the previous two sections, we have alluded to issues of evaluation in research to date. In this section, we examine the literature more closely, providing a broad overview of the evaluation metrics"
+            },
+            {
+              "op_id": "I_3",
+              "variant": "BM25Retrieve",
+              "token_cost": 10214,
+              "latency_ms": 5.5,
+              "output_summary": "as a task predates computational methods \u2013 the earliest interest in the area was motivated by the needs of translators, and simple manual methods were developed to quickly identify documents in specif"
+            },
+            {
+              "op_id": "I_4",
+              "variant": "BM25Retrieve",
+              "token_cost": 12311,
+              "latency_ms": 3.9,
+              "output_summary": "In the previous two sections, we have alluded to issues of evaluation in research to date. In this section, we examine the literature more closely, providing a broad overview of the evaluation metrics"
+            },
+            {
+              "op_id": "I_5",
+              "variant": "BM25Retrieve",
+              "token_cost": 14416,
+              "latency_ms": 5.07,
+              "output_summary": "Ensemble methods are meta-classification methods capable of combining several base classifiers into a combined model via a \u201cmeta-classifier\u201d over the outputs of the base classifiers, either explicitly"
+            },
+            {
+              "op_id": "RANK_0",
+              "variant": "SimilarityRank",
+              "token_cost": 5589,
+              "latency_ms": 0.32,
+              "output_summary": "Language identification (LI) is the problem of determining the natural language that a document or part thereof is written in. Automatic LI has been extensively researched for over fifty years. Today,"
+            },
+            {
+              "op_id": "RANK_1",
+              "variant": "SimilarityRank",
+              "token_cost": 5063,
+              "latency_ms": 0.27,
+              "output_summary": "To address specific sub-problems in , a number of shared tasks have been organized on problems such as in multilingual documents BIBREF378 , code-switched data BIBREF383 , discriminating between close"
+            },
+            {
+              "op_id": "RANK_2",
+              "variant": "SimilarityRank",
+              "token_cost": 5967,
+              "latency_ms": 0.26,
+              "output_summary": "The most common approach is to treat the task as a document-level classification problem. Given a set of evaluation documents, each having a known correct label from a closed set of labels (often refe"
+            },
+            {
+              "op_id": "RANK_3",
+              "variant": "SimilarityRank",
+              "token_cost": 2954,
+              "latency_ms": 0.26,
+              "output_summary": "As discussed in standardevaluation, the objective comparison of different methods for is difficult due to the variation in the data that different authors have used to evaluate methods. BIBREF32 empha"
+            },
+            {
+              "op_id": "RANK_4",
+              "variant": "SimilarityRank",
+              "token_cost": 5274,
+              "latency_ms": 0.26,
+              "output_summary": "Ensemble methods are meta-classification methods capable of combining several base classifiers into a combined model via a \u201cmeta-classifier\u201d over the outputs of the base classifiers, either explicitly"
+            },
+            {
+              "op_id": "UNION_0",
+              "variant": "SimpleUnion",
+              "token_cost": 24847,
+              "latency_ms": 0.01,
+              "output_summary": "Language identification (LI) is the problem of determining the natural language that a document or part thereof is written in. Automatic LI has been extensively researched for over fifty years. Today,"
+            },
+            {
+              "op_id": "DIFF_0",
+              "variant": "SemanticDiff",
+              "token_cost": 13446,
+              "latency_ms": 1.75,
+              "output_summary": "Language identification (LI) is the problem of determining the natural language that a document or part thereof is written in. Automatic LI has been extensively researched for over fifty years. Today,"
+            },
+            {
+              "op_id": "RANK_5",
+              "variant": "SimilarityRank",
+              "token_cost": 3241,
+              "latency_ms": 0.34,
+              "output_summary": "This section introduces the notation used throughout this article to describe methods. We have translated the notation in the original papers to our notation, to make it easier to see the similarities"
+            },
+            {
+              "op_id": "AGGREGATE_0",
+              "variant": "DirectGenerate",
+              "token_cost": 706,
+              "latency_ms": 10865.03,
+              "output_summary": "Language identification (LI) is a well-researched area focused on determining the natural language of a given text segment. The article provides a comprehensive overview of LI, highlighting the develo"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
