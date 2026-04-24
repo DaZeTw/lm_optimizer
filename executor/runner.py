@@ -55,7 +55,9 @@ class PlanRunner:
         node_feedbacks: list[NodeFeedback] = []
         op_counter: Counter[str] = Counter()
 
-        output = await self._execute(root, errors, token_counts, node_feedbacks, op_counter)
+        output = await self._execute(
+            root, errors, token_counts, node_feedbacks, op_counter
+        )
         return (
             ExecutionResult(
                 output=output,
@@ -79,7 +81,9 @@ class PlanRunner:
             list(
                 await asyncio.gather(
                     *[
-                        self._execute(c, errors, token_counts, node_feedbacks, op_counter)
+                        self._execute(
+                            c, errors, token_counts, node_feedbacks, op_counter
+                        )
                         for c in node.inputs
                     ]
                 )
@@ -122,7 +126,7 @@ class PlanRunner:
                 variant=node.variant,
                 token_cost=tokens,
                 latency_ms=latency_ms,
-                output_summary=output_text[:200],
+                output_summary=output_text,
             )
         )
 

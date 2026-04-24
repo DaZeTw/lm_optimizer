@@ -255,6 +255,183 @@ class _Parser:
 # ── Public API ─────────────────────────────────────────────────────
 
 
+def parse_task_strategy(text: str) -> dict:
+    """
+    Parse the LLM's three-section Task Strategy Template into a plain dict.
+
+    Expected input format (produced by task_prompts.TASK_SYSTEM_PROMPT)::
+
+        LOGICAL SKELETON
+        VERIFY(
+          AGGREGATE(
+            RANK(I({QUERY}), criterion="{RANK_CRITERION}"),
+            goal="{AGGREGATION_GOAL}"
+          ),
+          constraints="{VERIFY_CONSTRAINTS}"
+        )
+
+        PHYSICAL POLICY
+        I_1        | I        | HybridRetrieve   | {}
+        RANK_1     | RANK     | CrossEncoderRank  | top_k=5
+
+        ADAPTATION POLICY
+        mutable_slots: QUERY, RANK_CRITERION
+        immutable_slots: VERIFY_CONSTRAINTS
+        mutable_ops: RANK_1
+        immutable_ops: VERIFY_1
+        allowed_rewrites: may insert TRANSFORM if chunks are verbose
+        forbidden_rewrites: must not drop VERIFY
+
+    Returns a plain dict::
+
+        {
+            "logical_skeleton": {
+                "template": "<raw algebraic expression text with {SLOT} holes>",
+                "slots": ["QUERY", "RANK_CRITERION", ...],
+            },
+            "physical_policy": {
+                # keyed by op_id
+                "I_1":    {"op_name": "I",    "variant": "HybridRetrieve",  "params": {}},
+                "RANK_1": {"op_name": "RANK", "variant": "CrossEncoderRank","params": {"top_k": "5"}},
+                ...
+            },
+            "adaptation_policy": {
+                "mutable_slots":     ["QUERY", "RANK_CRITERION"],
+                "immutable_slots":   ["VERIFY_CONSTRAINTS"],
+                "mutable_ops":       ["RANK_1"],
+                "immutable_ops":     ["VERIFY_1"],
+                "allowed_rewrites":  ["may insert TRANSFORM if chunks are verbose"],
+                "forbidden_rewrites":["must not drop VERIFY"],
+            },
+        }
+
+    Raises:
+        ParseError: If any required section is missing or a line is malformed.
+    """
+    # ── 1. Split into the three named sections ──────────────────────
+    _SECTION_HEADERS = ("LOGICAL SKELETON", "PHYSICAL POLICY", "ADAPTATION POLICY")
+
+    # Strip markdown fences the LLM might have added
+    text = (
+        re.sub(r"```[a-z]*", "", text, flags=re.IGNORECASE).strip().strip("`").strip()
+    )
+
+    # Find header positions
+    positions: dict[str, int] = {}
+    for header in _SECTION_HEADERS:
+        idx = text.find(header)
+        if idx == -1:
+            raise ParseError(f"Missing required section header: {header!r}")
+        positions[header] = idx
+
+    # Extract raw section bodies (text between each header and the next)
+    ordered = sorted(positions.items(), key=lambda kv: kv[1])
+    section_bodies: dict[str, str] = {}
+    for i, (header, start) in enumerate(ordered):
+        body_start = start + len(header)
+        body_end = ordered[i + 1][1] if i + 1 < len(ordered) else len(text)
+        section_bodies[header] = text[body_start:body_end].strip()
+
+    # ── 2. Parse LOGICAL SKELETON ───────────────────────────────────
+    skeleton_text = section_bodies["LOGICAL SKELETON"]
+
+    # Extract {SLOT_NAME} placeholders preserving order, deduplicating
+    slot_pattern = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*)\}")
+    seen: set[str] = set()
+    slots: list[str] = []
+    for m in slot_pattern.finditer(skeleton_text):
+        name = m.group(1)
+        if name not in seen:
+            slots.append(name)
+            seen.add(name)
+
+    logical_skeleton: dict = {
+        "template": skeleton_text,
+        "slots": slots,
+    }
+
+    # ── 3. Parse PHYSICAL POLICY ────────────────────────────────────
+    # Each non-blank line: op_id | op_name | variant | params
+    physical_policy: dict[str, dict] = {}
+    for line in section_bodies["PHYSICAL POLICY"].splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        parts = [p.strip() for p in line.split("|")]
+        if len(parts) != 4:
+            raise ParseError(
+                f"PHYSICAL POLICY line must have exactly 4 pipe-separated fields, "
+                f"got {len(parts)} in: {line!r}"
+            )
+        op_id, op_name, variant, raw_params = parts
+
+        # Parse params: "{}" → empty dict; "key=val, key2=val2" → dict
+        params: dict[str, str] = {}
+        raw_params = raw_params.strip()
+        if raw_params and raw_params != "{}":
+            for pair in raw_params.split(","):
+                pair = pair.strip()
+                if "=" not in pair:
+                    raise ParseError(
+                        f"PHYSICAL POLICY param {pair!r} is not in key=value format "
+                        f"in line: {line!r}"
+                    )
+                k, v = pair.split("=", 1)
+                params[k.strip()] = v.strip()
+
+        physical_policy[op_id] = {
+            "op_name": op_name,
+            "variant": variant,
+            "params": params,
+        }
+
+    if not physical_policy:
+        raise ParseError("PHYSICAL POLICY section is empty")
+
+    # ── 4. Parse ADAPTATION POLICY ──────────────────────────────────
+    # Keys with a single list value:   mutable_slots, immutable_slots,
+    #                                  mutable_ops,   immutable_ops
+    # Keys that accumulate per line:   allowed_rewrites, forbidden_rewrites
+    _MULTI_VALUE_KEYS = {
+        "mutable_slots",
+        "immutable_slots",
+        "mutable_ops",
+        "immutable_ops",
+    }
+    _ACCUMULATE_KEYS = {"allowed_rewrites", "forbidden_rewrites"}
+
+    adaptation_policy: dict[str, list[str]] = {
+        "mutable_slots": [],
+        "immutable_slots": [],
+        "mutable_ops": [],
+        "immutable_ops": [],
+        "allowed_rewrites": [],
+        "forbidden_rewrites": [],
+    }
+
+    for line in section_bodies["ADAPTATION POLICY"].splitlines():
+        line = line.strip()
+        if not line or ":" not in line:
+            continue
+        key, _, raw_value = line.partition(":")
+        key = key.strip().lower().replace(" ", "_")
+        value = raw_value.strip()
+
+        if key in _MULTI_VALUE_KEYS:
+            # Comma-separated list; filter out empty strings
+            adaptation_policy[key] = [v.strip() for v in value.split(",") if v.strip()]
+        elif key in _ACCUMULATE_KEYS:
+            if value:
+                adaptation_policy[key].append(value)
+        # Unknown keys are silently ignored so forward-compatible TSTs don't break
+
+    return {
+        "logical_skeleton": logical_skeleton,
+        "physical_policy": physical_policy,
+        "adaptation_policy": adaptation_policy,
+    }
+
+
 def parse_expression(text: str) -> LogicalNode:
     """
     Parse an algebraic plan expression into a LogicalNode DAG.

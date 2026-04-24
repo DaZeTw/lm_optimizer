@@ -71,8 +71,21 @@ def build_user_message(
     sample_queries: list[str],
     context_window: int | None = None,
     avg_chunk_tokens: float | None = None,
+    task_strategy: dict | None = None,
 ) -> str:
-    """Format task context + sample queries + few-shot examples into a user message."""
+    """Format task context + sample queries + few-shot examples into a user message.
+
+    Args:
+        task_description: High-level description of the task.
+        sample_queries:   Representative questions the plan must handle.
+        context_window:   Model context window size in tokens (optional).
+        avg_chunk_tokens: Average retrieved chunk size in tokens (optional).
+        task_strategy:    Optional TST dict from TaskPlanner.generate() or
+                          TaskPlanner.revise().  When provided, the skeleton,
+                          physical policy, and adaptation rules are injected
+                          into the prompt so the query planner fills slots
+                          rather than designing from scratch.
+    """
     if sample_queries:
         numbered = "\n".join(f"{i + 1}. {q}" for i, q in enumerate(sample_queries))
     else:
@@ -95,11 +108,59 @@ def build_user_message(
             lines.append(f"- Avg chunk size in corpus: {avg_chunk_tokens:.0f} tokens")
         corpus_block = "\n\nCorpus context:\n" + "\n".join(lines)
 
-    job_block = (
-        "## Your job\n"
-        "Produce a single general-purpose logical plan that can handle the sample queries above "
-        "in the context of the task described. The plan should be a reusable operator DAG "
-        "covering the general reasoning pattern."
-    )
+    # Task Strategy Template — injected when task-level planning has already run.
+    # The skeleton pins the DAG shape; the query planner fills {SLOT} holes.
+    tst_block = ""
+    if task_strategy is not None:
+        tst_block = "\n\n" + _render_tst_context(task_strategy)
+        job_instruction = (
+            "Fill the {SLOT} placeholders in the Task Strategy Template skeleton "
+            "with query-specific values. Keep the operator shape, variants, and "
+            "immutable slots exactly as specified. Apply only the listed "
+            "allowed_rewrites if the query requires structural changes."
+        )
+    else:
+        job_instruction = (
+            "Produce a single general-purpose logical plan that can handle the "
+            "sample queries above in the context of the task described. The plan "
+            "should be a reusable operator DAG covering the general reasoning pattern."
+        )
 
-    return f"{task_block}\n\n{examples_block}{corpus_block}\n\n{job_block}\n\nPlan:"
+    job_block = f"## Your job\n{job_instruction}"
+
+    return f"{task_block}\n\n{examples_block}{corpus_block}{tst_block}\n\n{job_block}\n\nPlan:"
+
+
+def _render_tst_context(tst: dict) -> str:
+    """Render the relevant parts of a TST dict as a prompt context block.
+
+    Only the logical skeleton template and adaptation policy are shown —
+    the physical policy is for the physical planner, not the query-level
+    logical planner.
+    """
+    skel = tst.get("logical_skeleton", {})
+    adap = tst.get("adaptation_policy", {})
+
+    lines: list[str] = [
+        "## Task Strategy Template",
+        "",
+        "### Logical Skeleton",
+        "Your plan must follow this shape. Fill every {SLOT} listed as mutable.",
+        skel.get("template", "(no skeleton)"),
+        "",
+        "### Adaptation Rules",
+        f"Fill these slots with query-specific values : "
+        f"{', '.join(adap.get('mutable_slots', [])) or '(none)'}",
+        f"Keep these slots exactly as written above    : "
+        f"{', '.join(adap.get('immutable_slots', [])) or '(none)'}",
+    ]
+    if adap.get("allowed_rewrites"):
+        lines.append("Allowed structural rewrites:")
+        for rule in adap["allowed_rewrites"]:
+            lines.append(f"  - {rule}")
+    if adap.get("forbidden_rewrites"):
+        lines.append("Forbidden structural rewrites:")
+        for rule in adap["forbidden_rewrites"]:
+            lines.append(f"  - {rule}")
+
+    return "\n".join(lines)
