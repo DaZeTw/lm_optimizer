@@ -37,6 +37,32 @@ physical plan tree. Each node must have:
   "params"  — dict of operator parameters (preserve from logical plan; add extras if needed)
   "inputs"  — list of child nodes (same structure, recursively)
 
+## Retrieval query rule
+
+For each I node, rewrite the query as a precise evidence query
+that matches how the retrieval model scores text.
+
+Focus on:
+- WHAT exact evidence to retrieve (entities, lists, metrics, methods)
+- how it appears in documents (natural phrasing, not instructions)
+
+Guidelines:
+- use natural text (like a sentence or phrase from a paper)
+- include key entities, terms, or values from the candidate answer
+- keep it short and specific
+- add 1–2 synonyms only if needed for recall
+
+Model-aware hints:
+- BM25 → include exact keywords and surface forms
+- Dense → use natural semantic phrasing
+- CrossEncoder → ensure query clearly matches the target evidence
+
+Do NOT:
+- copy the full question
+- use instruction-style text (e.g., "find", "retrieve", "answer")
+- add unrelated terms
+- over-expand into long keyword lists
+
 Constraints:
 - Every node in the logical plan must appear exactly once.
 - Use only the listed variants — no others.

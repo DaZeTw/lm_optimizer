@@ -1,0 +1,1556 @@
+{
+  "task": "Given a scientific paper, a question, and a candidate answer, retrieve the exact evidence sentences from the paper that support the answer.",
+  "iterations": 10,
+  "tst_versions": [
+    {
+      "version": 0,
+      "logical_skeleton": {
+        "template": "RANK(\n  I({QUERY}),\n  criterion=\"{RANK_CRITERION}\"\n)",
+        "slots": [
+          "QUERY",
+          "RANK_CRITERION"
+        ],
+        "core_operators": [],
+        "optional_operators": []
+      },
+      "physical_policy": {
+        "I_1": {
+          "op_name": "I",
+          "variant": "HybridRetrieve",
+          "params": {
+            "top_k": "20"
+          },
+          "param_ranges": {}
+        },
+        "RANK_1": {
+          "op_name": "RANK",
+          "variant": "CrossEncoderRank",
+          "params": {
+            "top_k": "5"
+          },
+          "param_ranges": {}
+        }
+      },
+      "adaptation_policy": {
+        "mutable_slots": [
+          "QUERY",
+          "RANK_CRITERION"
+        ],
+        "immutable_slots": [
+          "none"
+        ],
+        "mutable_ops": [
+          "I_1",
+          "RANK_1"
+        ],
+        "immutable_ops": [
+          "none"
+        ],
+        "allowed_rewrites": [
+          "may tune retrieval top_k based on evidence breadth",
+          "may change RANK criterion to ensure exact evidence retrieval"
+        ],
+        "forbidden_rewrites": [
+          "must not add AGGREGATE because only exact text spans are required",
+          "must not add TRANSFORM unless it preserves verbatim source text"
+        ]
+      }
+    },
+    {
+      "version": 1,
+      "logical_skeleton": {
+        "template": "RANK(\n  I({QUERY}),\n  criterion=\"exact_match\"\n)",
+        "slots": [
+          "QUERY"
+        ],
+        "core_operators": [],
+        "optional_operators": []
+      },
+      "physical_policy": {
+        "I_1": {
+          "op_name": "I",
+          "variant": "HybridRetrieve",
+          "params": {
+            "top_k": "50"
+          },
+          "param_ranges": {}
+        },
+        "RANK_1": {
+          "op_name": "RANK",
+          "variant": "SimilarityRank",
+          "params": {
+            "top_k": "5"
+          },
+          "param_ranges": {}
+        }
+      },
+      "adaptation_policy": {
+        "mutable_slots": [
+          "QUERY"
+        ],
+        "immutable_slots": [
+          "none"
+        ],
+        "mutable_ops": [
+          "I_1",
+          "RANK_1"
+        ],
+        "immutable_ops": [
+          "none"
+        ],
+        "allowed_rewrites": [
+          "may tune retrieval top_k based on evidence breadth",
+          "may change RANK criterion to ensure exact evidence retrieval"
+        ],
+        "forbidden_rewrites": [
+          "must not add AGGREGATE because only exact text spans are required",
+          "must not add TRANSFORM unless it preserves verbatim source text"
+        ]
+      }
+    },
+    {
+      "version": 2,
+      "logical_skeleton": {
+        "template": "RANK(\n  I({QUERY}),\n  criterion=\"exact_match\"\n)",
+        "slots": [
+          "QUERY"
+        ],
+        "core_operators": [],
+        "optional_operators": []
+      },
+      "physical_policy": {
+        "I_1": {
+          "op_name": "I",
+          "variant": "HybridRetrieve",
+          "params": {
+            "top_k": "100"
+          },
+          "param_ranges": {}
+        },
+        "RANK_1": {
+          "op_name": "RANK",
+          "variant": "CrossEncoderRank",
+          "params": {
+            "top_k": "5"
+          },
+          "param_ranges": {}
+        }
+      },
+      "adaptation_policy": {
+        "mutable_slots": [
+          "QUERY"
+        ],
+        "immutable_slots": [
+          "none"
+        ],
+        "mutable_ops": [
+          "I_1",
+          "RANK_1"
+        ],
+        "immutable_ops": [
+          "none"
+        ],
+        "allowed_rewrites": [
+          "may tune retrieval top_k based on evidence breadth",
+          "may change RANK criterion to ensure exact evidence retrieval"
+        ],
+        "forbidden_rewrites": [
+          "must not add AGGREGATE because only exact text spans are required",
+          "must not add TRANSFORM unless it preserves verbatim source text"
+        ]
+      }
+    },
+    {
+      "version": 3,
+      "logical_skeleton": {
+        "template": "RANK(\n  I({QUERY}),\n  criterion=\"exact_match\"\n)",
+        "slots": [
+          "QUERY"
+        ],
+        "core_operators": [],
+        "optional_operators": []
+      },
+      "physical_policy": {
+        "I_1": {
+          "op_name": "I",
+          "variant": "DenseRetrieve",
+          "params": {
+            "top_k": "100"
+          },
+          "param_ranges": {}
+        },
+        "RANK_1": {
+          "op_name": "RANK",
+          "variant": "SimilarityRank",
+          "params": {
+            "top_k": "5"
+          },
+          "param_ranges": {}
+        }
+      },
+      "adaptation_policy": {
+        "mutable_slots": [
+          "QUERY"
+        ],
+        "immutable_slots": [
+          "none"
+        ],
+        "mutable_ops": [
+          "I_1",
+          "RANK_1"
+        ],
+        "immutable_ops": [
+          "none"
+        ],
+        "allowed_rewrites": [
+          "may tune retrieval top_k based on evidence breadth",
+          "may change RANK criterion to ensure exact evidence retrieval"
+        ],
+        "forbidden_rewrites": [
+          "must not add AGGREGATE because only exact text spans are required",
+          "must not add TRANSFORM unless it preserves verbatim source text"
+        ]
+      }
+    },
+    {
+      "version": 4,
+      "logical_skeleton": {
+        "template": "RANK(\n  I({QUERY}),\n  criterion=\"exact_match\"\n)",
+        "slots": [
+          "QUERY"
+        ],
+        "core_operators": [],
+        "optional_operators": []
+      },
+      "physical_policy": {
+        "I_1": {
+          "op_name": "I",
+          "variant": "HybridRetrieve",
+          "params": {
+            "top_k": "100"
+          },
+          "param_ranges": {}
+        },
+        "RANK_1": {
+          "op_name": "RANK",
+          "variant": "CrossEncoderRank",
+          "params": {
+            "top_k": "5"
+          },
+          "param_ranges": {}
+        }
+      },
+      "adaptation_policy": {
+        "mutable_slots": [
+          "QUERY"
+        ],
+        "immutable_slots": [
+          "none"
+        ],
+        "mutable_ops": [
+          "I_1",
+          "RANK_1"
+        ],
+        "immutable_ops": [
+          "none"
+        ],
+        "allowed_rewrites": [
+          "may tune retrieval top_k based on evidence breadth",
+          "may change RANK criterion to ensure exact evidence retrieval"
+        ],
+        "forbidden_rewrites": [
+          "must not add AGGREGATE because only exact text spans are required",
+          "must not add TRANSFORM unless it preserves verbatim source text"
+        ]
+      }
+    },
+    {
+      "version": 5,
+      "logical_skeleton": {
+        "template": "RANK(\n  I({QUERY}),\n  criterion=\"exact_match\"\n)",
+        "slots": [
+          "QUERY"
+        ],
+        "core_operators": [],
+        "optional_operators": []
+      },
+      "physical_policy": {
+        "I_1": {
+          "op_name": "I",
+          "variant": "DenseRetrieve",
+          "params": {
+            "top_k": "100"
+          },
+          "param_ranges": {}
+        },
+        "RANK_1": {
+          "op_name": "RANK",
+          "variant": "SimilarityRank",
+          "params": {
+            "top_k": "5"
+          },
+          "param_ranges": {}
+        }
+      },
+      "adaptation_policy": {
+        "mutable_slots": [
+          "QUERY"
+        ],
+        "immutable_slots": [
+          "none"
+        ],
+        "mutable_ops": [
+          "I_1",
+          "RANK_1"
+        ],
+        "immutable_ops": [
+          "none"
+        ],
+        "allowed_rewrites": [
+          "may tune retrieval top_k based on evidence breadth",
+          "may change RANK criterion to ensure exact evidence retrieval"
+        ],
+        "forbidden_rewrites": [
+          "must not add AGGREGATE because only exact text spans are required",
+          "must not add TRANSFORM unless it preserves verbatim source text"
+        ]
+      }
+    },
+    {
+      "version": 6,
+      "logical_skeleton": {
+        "template": "RANK(\n  I({QUERY}),\n  criterion=\"exact_match\"\n)",
+        "slots": [
+          "QUERY"
+        ],
+        "core_operators": [],
+        "optional_operators": []
+      },
+      "physical_policy": {
+        "I_1": {
+          "op_name": "I",
+          "variant": "HybridRetrieve",
+          "params": {
+            "top_k": "100"
+          },
+          "param_ranges": {}
+        },
+        "RANK_1": {
+          "op_name": "RANK",
+          "variant": "CrossEncoderRank",
+          "params": {
+            "top_k": "5"
+          },
+          "param_ranges": {}
+        }
+      },
+      "adaptation_policy": {
+        "mutable_slots": [
+          "QUERY"
+        ],
+        "immutable_slots": [
+          "none"
+        ],
+        "mutable_ops": [
+          "I_1",
+          "RANK_1"
+        ],
+        "immutable_ops": [
+          "none"
+        ],
+        "allowed_rewrites": [
+          "may tune retrieval top_k based on evidence breadth",
+          "may change RANK criterion to ensure exact evidence retrieval"
+        ],
+        "forbidden_rewrites": [
+          "must not add AGGREGATE because only exact text spans are required",
+          "must not add TRANSFORM unless it preserves verbatim source text"
+        ]
+      }
+    },
+    {
+      "version": 7,
+      "logical_skeleton": {
+        "template": "RANK(\n  I({QUERY}),\n  criterion=\"exact_match\"\n)",
+        "slots": [
+          "QUERY"
+        ],
+        "core_operators": [],
+        "optional_operators": []
+      },
+      "physical_policy": {
+        "I_1": {
+          "op_name": "I",
+          "variant": "HybridRetrieve",
+          "params": {
+            "top_k": "50"
+          },
+          "param_ranges": {}
+        },
+        "RANK_1": {
+          "op_name": "RANK",
+          "variant": "SimilarityRank",
+          "params": {
+            "top_k": "3"
+          },
+          "param_ranges": {}
+        }
+      },
+      "adaptation_policy": {
+        "mutable_slots": [
+          "QUERY"
+        ],
+        "immutable_slots": [
+          "none"
+        ],
+        "mutable_ops": [
+          "I_1",
+          "RANK_1"
+        ],
+        "immutable_ops": [
+          "none"
+        ],
+        "allowed_rewrites": [
+          "may tune retrieval top_k based on evidence breadth",
+          "may change RANK criterion to ensure exact evidence retrieval"
+        ],
+        "forbidden_rewrites": [
+          "must not add AGGREGATE because only exact text spans are required",
+          "must not add TRANSFORM unless it preserves verbatim source text"
+        ]
+      }
+    },
+    {
+      "version": 8,
+      "logical_skeleton": {
+        "template": "RANK(\n  I({QUERY}),\n  criterion=\"exact_match\"\n)",
+        "slots": [
+          "QUERY"
+        ],
+        "core_operators": [],
+        "optional_operators": []
+      },
+      "physical_policy": {
+        "I_1": {
+          "op_name": "I",
+          "variant": "BM25Retrieve",
+          "params": {
+            "top_k": "100"
+          },
+          "param_ranges": {}
+        },
+        "RANK_1": {
+          "op_name": "RANK",
+          "variant": "CrossEncoderRank",
+          "params": {
+            "top_k": "1"
+          },
+          "param_ranges": {}
+        }
+      },
+      "adaptation_policy": {
+        "mutable_slots": [
+          "QUERY"
+        ],
+        "immutable_slots": [
+          "none"
+        ],
+        "mutable_ops": [
+          "I_1",
+          "RANK_1"
+        ],
+        "immutable_ops": [
+          "none"
+        ],
+        "allowed_rewrites": [
+          "may tune retrieval top_k based on evidence breadth",
+          "may change RANK criterion to ensure exact evidence retrieval"
+        ],
+        "forbidden_rewrites": [
+          "must not add AGGREGATE because only exact text spans are required",
+          "must not add TRANSFORM unless it preserves verbatim source text"
+        ]
+      }
+    }
+  ],
+  "runs": [
+    {
+      "iteration": 8,
+      "tst_version": 8,
+      "question": "Which English domains do they evaluate on?",
+      "candidate_answer": "Conll, Weblogs, Newsgroups, Reviews, Answers",
+      "grounding_query": "Question: Which English domains do they evaluate on?\nCandidate answer: Conll, Weblogs, Newsgroups, Reviews, Answers\n",
+      "retrieved_evidence": "the main evaluation corpora, we used the Conll source domain training set, the Weblogs domain development set, the Conll source domain test set and Weblogs, Newsgroups, Reviews domain test sets. We do not evaluate our approach on the Answers domain as the unlabelled data for this domain is not large enough for our self-training. The evaluation corpus for Chemical domain is taken from the domain adaptation track of the CoNLL 2007 shared task BIBREF14 . The shared task is the second year running for the dependency parsing task. Besides the multi-lingual parsing track introduced from the previous year, the 2007 shared task also included a track on domain adaptation task. The domain adaptation track provided mainly two domains (Biomedical and Chemical), in which the biomedical domain is used as development set and the chemical domain is used as evaluation set.",
+      "gold_evidence": [
+        "FLOAT SELECTED: Table 2.3: Labelled attachment scores achieved by the MST, Malt, and Mate parsers trained on the Conll training set and tested on different domains.",
+        "We further evaluate our approach on our main evaluation corpus. The method is tested on both in-domain and out-of-domain parsing. Our DLM-based approach achieved large improvement on all five domains evaluated (Conll, Weblogs, Newsgroups, Reviews, Answers). "
+      ],
+      "accuracy": 0.5555555555555556,
+      "errors": [],
+      "logical_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "English domains they evaluate on"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "optimized_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "English domains they evaluate on"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "physical_plan": {
+        "op": "RANK",
+        "variant": "CrossEncoderRank",
+        "params": {
+          "criterion": "exact_match",
+          "top_k": 1
+        },
+        "cost": {
+          "token_cost": 0.0,
+          "latency_cost": 0.0
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "variant": "BM25Retrieve",
+            "params": {
+              "query": "English domains Conll Weblogs Newsgroups Reviews Answers",
+              "top_k": 100
+            },
+            "cost": {
+              "token_cost": 0.0,
+              "latency_cost": 0.0
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "rewrite_log": [],
+      "sample_analysis": {
+        "query": "Question: Which English domains do they evaluate on?\nCandidate answer: Conll, Weblogs, Newsgroups, Reviews, Answers\n",
+        "accuracy": 0.5555555555555556,
+        "total_tokens": 17393,
+        "total_latency_ms": 6671.242099997471,
+        "query_features": {
+          "query_type": "retrieval",
+          "complexity": "low",
+          "evidence_scope": "specific",
+          "requires_exact_match": "yes"
+        },
+        "failure_points": [
+          {
+            "op_id": "I_0",
+            "issue_type": "bad_retrieval_query",
+            "description": "The retrieval query did not accurately target the specific English domains."
+          },
+          {
+            "op_id": "RANK_0",
+            "issue_type": "noisy_evidence",
+            "description": "The ranking kept evidence that included irrelevant information and did not focus solely on the requested domains."
+          }
+        ],
+        "successful_adaptations": [],
+        "suggested_fixes": [
+          {
+            "op_id": "I_0",
+            "fix_type": "rewrite_query",
+            "detail": "Change the query to specifically ask for \"English domains evaluated\" to improve retrieval accuracy."
+          },
+          {
+            "op_id": "RANK_0",
+            "fix_type": "remove_operator",
+            "detail": "Remove or adjust the ranking criteria to ensure only relevant evidence is retained."
+          }
+        ]
+      }
+    },
+    {
+      "iteration": 8,
+      "tst_version": 8,
+      "question": "what evaluation methods are discussed?",
+      "candidate_answer": "document-level accuracy precision recall F-score",
+      "grounding_query": "Question: what evaluation methods are discussed?\nCandidate answer: document-level accuracy precision recall F-score\n",
+      "retrieved_evidence": "The goal of this test is to find out the effects of our semi-supervised methods on different labels. For an individual label, we calculate the recall, precision and the f-score. Let INLINEFORM0 be the number of the label INLINEFORM1 predicted by the parser, INLINEFORM2 be the count of label INLINEFORM3 presented in the gold data and INLINEFORM4 be the number of the label predicted correctly. The precision ( INLINEFORM5 ), recall ( INLINEFORM6 ) and the f-score ( INLINEFORM7 ) are calculated as follows: DISPLAYFORM0 DISPLAYFORM0 DISPLAYFORM0 We compute for each label, the score differences between our enhanced model and the base model. The results for the most frequent labels are visualised by the bar chart. Figure FIGREF45 is an example of the bar chart we used, the x-axis shows the names of the relevant label, the y-axis shows the accuracy changes in percentage.",
+      "gold_evidence": [
+        "Given a set of evaluation documents, each having a known correct label from a closed set of labels (often referred to as the \u201cgold-standard\u201d), and a predicted label for each document from the same set, the document-level accuracy is the proportion of documents that are correctly labeled over the entire evaluation collection. This is the most frequently reported metric and conveys the same information as the error rate, which is simply the proportion of documents that are incorrectly labeled (i.e. INLINEFORM0 ).",
+        "There are two distinct ways in which results are generally summarized per-language: (1) precision, in which documents are grouped according to their predicted language; and (2) recall, in which documents are grouped according to what language they are actually written in.",
+        "It is also common practice to report an F-score INLINEFORM0 , which is the harmonic mean of precision and recall."
+      ],
+      "accuracy": 0.3333333333333333,
+      "errors": [],
+      "logical_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "evaluation methods discussed"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "optimized_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "evaluation methods discussed"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "physical_plan": {
+        "op": "RANK",
+        "variant": "CrossEncoderRank",
+        "params": {
+          "criterion": "exact_match",
+          "top_k": 1
+        },
+        "cost": {
+          "token_cost": 0.0,
+          "latency_cost": 0.0
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "variant": "BM25Retrieve",
+            "params": {
+              "query": "document-level accuracy precision recall F-score",
+              "top_k": 100
+            },
+            "cost": {
+              "token_cost": 0.0,
+              "latency_cost": 0.0
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "rewrite_log": [],
+      "sample_analysis": {
+        "query": "Question: what evaluation methods are discussed?\nCandidate answer: document-level accuracy precision recall F-score\n",
+        "accuracy": 0.3333333333333333,
+        "total_tokens": 21533,
+        "total_latency_ms": 7398.73300000545,
+        "query_features": {
+          "query_type": "information_retrieval",
+          "complexity": "low",
+          "evidence_scope": "narrow",
+          "requires_exact_match": "yes"
+        },
+        "failure_points": [
+          {
+            "op_id": "I_0",
+            "issue_type": "bad_retrieval_query",
+            "description": "The query did not retrieve relevant evidence about evaluation methods discussed."
+          },
+          {
+            "op_id": "RANK_0",
+            "issue_type": "noisy_evidence",
+            "description": "The ranking kept evidence that is not directly related to the question."
+          }
+        ],
+        "successful_adaptations": [],
+        "suggested_fixes": [
+          {
+            "op_id": "I_0",
+            "fix_type": "rewrite_query",
+            "detail": "Change the query to specifically ask for \"evaluation methods\" to improve relevance."
+          },
+          {
+            "op_id": "RANK_0",
+            "fix_type": "remove_operator",
+            "detail": "Remove the ranking step or adjust it to filter out irrelevant evidence."
+          }
+        ]
+      }
+    },
+    {
+      "iteration": 8,
+      "tst_version": 8,
+      "question": "what are the off-the-shelf systems discussed in the paper?",
+      "candidate_answer": "Answer with content missing: (Names of many identifiers missing) TextCat, ChromeCLD, LangDetect, langid.py, whatlang, whatthelang, YALI, LDIG, Polyglot 3000, Lextek Language Identifier and Open Xerox Language Identifier.",
+      "grounding_query": "Question: what are the off-the-shelf systems discussed in the paper?\nCandidate answer: Answer with content missing: (Names of many identifiers missing) TextCat, ChromeCLD, LangDetect, langid.py, whatlang, whatthelang, YALI, LDIG, Polyglot 3000, Lextek Language Identifier and Open Xerox Language Identifier.\n",
+      "retrieved_evidence": "parsers use many similar features, the output of these parsers are more likely to agree with each other. Thus it is unclear whether the off-the-shelf parsers are suitable for co-training. In this work we evaluate co-training with a number of off-the-shelf parsers that are freely available to the research community, namely Malt parser BIBREF10 , MST parser BIBREF9 , Mate parser BIBREF12 , and Turbo parser BIBREF11 . We evaluate those parsers on agreement based co-training algorithms. The evaluation learner is retrained on the training set that is boosted by automatically annotated sentences agreed by two source learners. We investigate both normal agreement based co-training and a variant called tri-training. In a normal co-training setting the evaluation learner is used as one of the source learners, and in a tri-training scenario, the source learners are different from the evaluation learner.",
+      "gold_evidence": [
+        "TextCat is the most well-known Perl implementation of the out-of-place method, it lists models for 76 languages in its off-the-shelf configuration; the program is not actively maintained.",
+        "TextCat is the most well-known Perl implementation of the out-of-place method, it lists models for 76 languages in its off-the-shelf configuration; the program is not actively maintained. TextCat is not the only example of an off-the-shelf implementation of the out-of-place method: other implementations include libtextcat with 76 language models, JTCL with 15 languages, and mguesser with 104 models for different language-encoding pairs. The main issue addressed by later implementations is classification speed: TextCat is implemented in Perl and is not optimized for speed, whereas implementations such as libtextcat and mguesser have been specifically written to be fast and efficient. whatlang-rs uses an algorithm based on character trigrams and refers the user to the BIBREF7 article. It comes pre-trained with 83 languages.\n\nis the language identifier embedded in the Google Chrome web browser. It uses a NB classifier, and script-specific classification strategies. assumes that all the input is in UTF-8, and assigns the responsibility of encoding detection and transcoding to the user. uses Unicode information to determine the script of the input. also implements a number of pre-processing heuristics to help boost performance on its target domain (web pages), such as stripping character sequences like .jpg. The standard implementation supports 83 languages, and an extended model is also available, that supports 160 languages.\n\nis a Java library that implements a language identifier based on a NB classifier trained over character . The software comes with pre-trained models for 53 languages, using data from Wikipedia. makes use of a range of normalization heuristics to improve the performance on particular languages, including: (1) clustering of Chinese/Japanese/Korean characters to reduce sparseness; (2) removal of \u201clanguage-independent\u201d characters, and other text normalization; and (3) normalization of Arabic characters.\n\nis a Python implementation of the method described by BIBREF150 , which exploits training data for the same language across multiple different sources of text to identify sequences of characters that are strongly predictive of a given language, regardless of the source of the text. This feature set is combined with a NB classifier, and is distributed with a pre-trained model for 97 languages prepared using data from 5 different text sources. BIBREF151 provide an empirical comparison of to , and and find that it compares favorably both in terms of accuracy and classification speed. There are also implementations of the classifier component (but not the training portion) of in Java, C, and JavaScript.\n\nBIBREF153 uses a vector-space model with per-feature weighting on character sequences. One particular feature of is that it uses discriminative training in selecting features, i.e. it specifically makes use of features that are strong evidence against a particular language, which is generally not captured by NB models. Another feature of is that it uses inter-string smoothing to exploit sentence-level locality in making language predictions, under the assumption that adjacent sentences are likely to be in the same language. BIBREF153 reports that this substantially improves the accuracy of the identifier. Another distinguishing feature of is that it comes pre-trained with data for 1400 languages, which is the highest number by a large margin of any off-the-shelf system.\n\nwhatthelang is a recent language identifier written in Python, which utilizes the FastText NN-based text classification algorithm. It supports 176 languages.\n\nimplements an off-the-shelf classifier trained using Wikipedia data, covering 122 languages. Although not described as such, the actual classification algorithm used is a linear model, and is thus closely related to both NB and a cosine-based vector space model.\n\nIn addition to the above-mentioned general-purpose language identifiers, there have also been efforts to produce pre-trained language identifiers targeted specifically at Twitter messages. is a Twitter-specific tool with built-in models for 19 languages. It uses a document representation based on tries BIBREF401 . The algorithm is a LR classifier using all possible substrings of the data, which is important to maximize the available information from the relatively short Twitter messages.\n\nBIBREF152 provides a comparison of 8 off-the-shelf language identifiers applied without re-training to Twitter messages. One issue they report is that comparing the accuracy of off-the-shelf systems is difficult because of the different subset of languages supported by each system, which may also not fully cover the languages present in the target data. The authors choose to compare accuracy over the full set of languages, arguing that this best reflects the likely use-case of applying an off-the-shelf system to new data. They find that the best individual systems are , and , but that slightly higher accuracy can be attained by a simple voting-based ensemble classifier involving these three systems.\n\nIn addition to this, commercial or other closed-source language identifiers and language identifier services exist, of which we name a few. The Polyglot 3000 and Lextek Language Identifier are standalone language identifiers for Windows. Open Xerox Language Identifier is a web service with available REST and SOAP APIs."
+      ],
+      "accuracy": 0.0,
+      "errors": [],
+      "logical_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "off-the-shelf systems discussed in the paper"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "optimized_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "off-the-shelf systems discussed in the paper"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "physical_plan": {
+        "op": "RANK",
+        "variant": "CrossEncoderRank",
+        "params": {
+          "criterion": "exact_match",
+          "top_k": 1
+        },
+        "cost": {
+          "token_cost": 0.0,
+          "latency_cost": 0.0
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "variant": "BM25Retrieve",
+            "params": {
+              "query": "off-the-shelf systems like TextCat, ChromeCLD, LangDetect, langid.py, whatlang, whatthelang, YALI, LDIG, Polyglot 3000, Lextek Language Identifier, Open Xerox Language Identifier",
+              "top_k": 100
+            },
+            "cost": {
+              "token_cost": 0.0,
+              "latency_cost": 0.0
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "rewrite_log": [],
+      "sample_analysis": {
+        "query": "Question: what are the off-the-shelf systems discussed in the paper?\nCandidate answer: Answer with content missing: (Names of many identifiers missing) TextCat, ChromeCLD, LangDetect, langid.py, whatlang, whatthelang, YALI, LDIG, Polyglot 3000, Lextek Language Identifier and Open Xerox Language Identifier.\n",
+        "accuracy": 0.0,
+        "total_tokens": 14459,
+        "total_latency_ms": 7006.063999997423,
+        "query_features": {
+          "query_type": "retrieval",
+          "complexity": "low",
+          "evidence_scope": "narrow",
+          "requires_exact_match": "yes"
+        },
+        "failure_points": [
+          {
+            "op_id": "I_0",
+            "issue_type": "missing_evidence",
+            "description": "The retrieval did not find any relevant evidence regarding off-the-shelf systems."
+          },
+          {
+            "op_id": "RANK_0",
+            "issue_type": "noisy_evidence",
+            "description": "The ranking kept irrelevant evidence that did not answer the query."
+          }
+        ],
+        "successful_adaptations": [],
+        "suggested_fixes": [
+          {
+            "op_id": "I_0",
+            "fix_type": "rewrite_query",
+            "detail": "Modify the query to specifically include \"off-the-shelf systems\" to improve retrieval relevance."
+          },
+          {
+            "op_id": "RANK_0",
+            "fix_type": "remove_operator",
+            "detail": "Eliminate the ranking step if it cannot filter out irrelevant evidence effectively."
+          }
+        ]
+      }
+    },
+    {
+      "iteration": 8,
+      "tst_version": 8,
+      "question": "Which datasets are used in this work?",
+      "candidate_answer": "GENIA corpus",
+      "grounding_query": "Question: Which datasets are used in this work?\nCandidate answer: GENIA corpus\n",
+      "retrieved_evidence": "In this section, we introduce our main evaluation corpora that have been used in all of the semi-supervised approaches evaluated in this thesis. The Conll English corpus built on the Penn English Treebank 3 BIBREF36 which contains mainly Wall Street Journals but also included a small portion of Brown corpus BIBREF66 . The training set contains only Wall Street Journals, the small subset of the Brown corpus has been included in the test set. The constituency trees from Penn English Treebank are converted to dependency representation by the LTH constituent-to-dependency conversion tool, cf. BIBREF67 . A basic statistic of the corpus can be found in Table TABREF36 . For our Weblogs domain test we used the Ontonotes v5.0 corpus. The Ontonotes corpus contains various domains of text such as weblogs, broadcasts, talk shows and pivot texts.",
+      "gold_evidence": [
+        "The BioNLP 2009 Shared Task BIBREF195 was based on the GENIA corpus BIBREF196 which contains PubMed abstracts of articles on transcription factors in human blood cells."
+      ],
+      "accuracy": 0.0,
+      "errors": [],
+      "logical_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "datasets used in this work"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "optimized_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "datasets used in this work"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "physical_plan": {
+        "op": "RANK",
+        "variant": "CrossEncoderRank",
+        "params": {
+          "criterion": "exact_match",
+          "top_k": 1
+        },
+        "cost": {
+          "token_cost": 0.0,
+          "latency_cost": 0.0
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "variant": "BM25Retrieve",
+            "params": {
+              "query": "GENIA corpus",
+              "top_k": 100
+            },
+            "cost": {
+              "token_cost": 0.0,
+              "latency_cost": 0.0
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "rewrite_log": [],
+      "sample_analysis": {
+        "query": "Question: Which datasets are used in this work?\nCandidate answer: GENIA corpus\n",
+        "accuracy": 0.0,
+        "total_tokens": 7197,
+        "total_latency_ms": 5165.3484999987995,
+        "query_features": {
+          "query_type": "retrieval",
+          "complexity": "low",
+          "evidence_scope": "specific",
+          "requires_exact_match": "yes"
+        },
+        "failure_points": [
+          {
+            "op_id": "I_0",
+            "issue_type": "bad_retrieval_query",
+            "description": "The query 'datasets used in this work' did not retrieve relevant evidence about the GENIA corpus."
+          },
+          {
+            "op_id": "RANK_0",
+            "issue_type": "noisy_evidence",
+            "description": "The ranking kept irrelevant evidence that did not match the query."
+          }
+        ],
+        "successful_adaptations": [],
+        "suggested_fixes": [
+          {
+            "op_id": "I_0",
+            "fix_type": "rewrite_query",
+            "detail": "Change the query to specifically include 'GENIA corpus' to improve retrieval accuracy."
+          },
+          {
+            "op_id": "RANK_0",
+            "fix_type": "remove_operator",
+            "detail": "Remove the RANK operator or adjust it to filter out irrelevant evidence more effectively."
+          }
+        ]
+      }
+    },
+    {
+      "iteration": 8,
+      "tst_version": 8,
+      "question": "what ontologies did they use?",
+      "candidate_answer": "Wine Ontology m-piro ontology Disease Ontology",
+      "grounding_query": "Question: what ontologies did they use?\nCandidate answer: Wine Ontology m-piro ontology Disease Ontology\n",
+      "retrieved_evidence": "TABREF36 . For our Weblogs domain test we used the Ontonotes v5.0 corpus. The Ontonotes corpus contains various domains of text such as weblogs, broadcasts, talk shows and pivot texts. We used the last 20% of the weblogs portion of the Ontonotes v5.0 corpus as our target domain development set and the main test set. The selected subset allows us to build sufficient sized datasets similar to the source domain test set. More precisely, the first half of the selected corpus is used as a test set while the second half is used as the development set. Table TABREF37 shows some basic statistic of those datasets. Newsgroups, Reviews and Answers domain data are used as additional test sets for our evaluation. Those additional test domains are provided by the first workshop on syntactic analysis of non-canonical language (SANCL) shared task BIBREF15 .",
+      "gold_evidence": [
+        "We used three ontologies: (i) the Wine Ontology, one of the most commonly used examples of owl ontologies; (ii) the m-piro ontology, which describes a collection of museum exhibits, was originally developed in the m-piro project BIBREF27 , was later ported to owl, and accompanies Naturalowl BIBREF11 ; and (iii) the Disease Ontology, which describes diseases, including their symptoms, causes etc."
+      ],
+      "accuracy": 0.0,
+      "errors": [],
+      "logical_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "ontologies used"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "optimized_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "ontologies used"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "physical_plan": {
+        "op": "RANK",
+        "variant": "CrossEncoderRank",
+        "params": {
+          "criterion": "exact_match",
+          "top_k": 1
+        },
+        "cost": {
+          "token_cost": 0.0,
+          "latency_cost": 0.0
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "variant": "BM25Retrieve",
+            "params": {
+              "query": "ontologies used",
+              "top_k": 100
+            },
+            "cost": {
+              "token_cost": 0.0,
+              "latency_cost": 0.0
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "rewrite_log": [],
+      "sample_analysis": {
+        "query": "Question: what ontologies did they use?\nCandidate answer: Wine Ontology m-piro ontology Disease Ontology\n",
+        "accuracy": 0.0,
+        "total_tokens": 21629,
+        "total_latency_ms": 7654.520000000048,
+        "query_features": {
+          "query_type": "retrieval",
+          "complexity": "low",
+          "evidence_scope": "specific",
+          "requires_exact_match": "yes"
+        },
+        "failure_points": [
+          {
+            "op_id": "I_0",
+            "issue_type": "missing_evidence",
+            "description": "retrieval did not find relevant ontologies"
+          },
+          {
+            "op_id": "RANK_0",
+            "issue_type": "noisy_evidence",
+            "description": "ranking kept irrelevant evidence"
+          }
+        ],
+        "successful_adaptations": [],
+        "suggested_fixes": [
+          {
+            "op_id": "I_0",
+            "fix_type": "rewrite_query",
+            "detail": "refine query to include specific ontology names"
+          },
+          {
+            "op_id": "RANK_0",
+            "fix_type": "change_variant",
+            "detail": "switch to a ranking variant better suited for exact matches"
+          }
+        ]
+      }
+    },
+    {
+      "iteration": 8,
+      "tst_version": 8,
+      "question": "Does the paper describe experiments with real humans?",
+      "candidate_answer": "Yes",
+      "grounding_query": "Question: Does the paper describe experiments with real humans?\nCandidate answer: Yes\n",
+      "retrieved_evidence": "We use the classes instead of the probability is because our baseline parser uses the binary feature representations, classes are required to map the features into the binary feature representations. As a result, the real number features are hard to be integrated into the existing system. In the preliminary experiments, the INLINEFORM5 class is mainly filled by unusual relations that only appeared a few times in the parsed text. To avoid this we configured the DLMs to only use elements which have a minimum frequency of three, i.e. INLINEFORM6 .",
+      "gold_evidence": [
+        "Experiment 1: scene variation in modified referring expressions",
+        "We recruited 58 pairs of participants (116 participants total) over Amazon's Mechanical Turk who were each paid $1.75 for their participation."
+      ],
+      "accuracy": 0.0,
+      "errors": [],
+      "logical_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "evidence about experiments with real humans in the paper"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "optimized_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "evidence about experiments with real humans in the paper"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "physical_plan": {
+        "op": "RANK",
+        "variant": "CrossEncoderRank",
+        "params": {
+          "criterion": "exact_match",
+          "top_k": 1
+        },
+        "cost": {
+          "token_cost": 0.0,
+          "latency_cost": 0.0
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "variant": "BM25Retrieve",
+            "params": {
+              "query": "experiments with real humans",
+              "top_k": 100
+            },
+            "cost": {
+              "token_cost": 0.0,
+              "latency_cost": 0.0
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "rewrite_log": [],
+      "sample_analysis": {
+        "query": "Question: Does the paper describe experiments with real humans?\nCandidate answer: Yes\n",
+        "accuracy": 0.0,
+        "total_tokens": 21618,
+        "total_latency_ms": 7196.9046000012895,
+        "query_features": {
+          "query_type": "evidence_retrieval",
+          "complexity": "low",
+          "evidence_scope": "narrow",
+          "requires_exact_match": "yes"
+        },
+        "failure_points": [
+          {
+            "op_id": "I_0",
+            "issue_type": "missing_evidence",
+            "description": "The retrieval did not find relevant evidence about experiments with real humans."
+          },
+          {
+            "op_id": "RANK_0",
+            "issue_type": "noisy_evidence",
+            "description": "The ranking kept irrelevant evidence that did not answer the question."
+          }
+        ],
+        "successful_adaptations": [],
+        "suggested_fixes": [
+          {
+            "op_id": "I_0",
+            "fix_type": "rewrite_query",
+            "detail": "Modify the query to be more specific about the experiments with real humans."
+          },
+          {
+            "op_id": "RANK_0",
+            "fix_type": "remove_operator",
+            "detail": "Eliminate the ranking step if it cannot filter out irrelevant evidence effectively."
+          }
+        ]
+      }
+    },
+    {
+      "iteration": 8,
+      "tst_version": 8,
+      "question": "Which ontologies did they use?",
+      "candidate_answer": "We experimented with three owl ontologies: (1) the Wine Ontology, which provides information about wines, wine producers etc.; (2) the Consumer Electronics Ontology, intended to help exchange information about consumer electronics products; and (3) the Disease Ontology, which describes diseases, including their symptoms, causes etc. ",
+      "grounding_query": "Question: Which ontologies did they use?\nCandidate answer: We experimented with three owl ontologies: (1) the Wine Ontology, which provides information about wines, wine producers etc.; (2) the Consumer Electronics Ontology, intended to help exchange information about consumer electronics products; and (3) the Disease Ontology, which describes diseases, including their symptoms, causes etc. \n",
+      "retrieved_evidence": "",
+      "gold_evidence": [
+        "We experimented with three owl ontologies: (1) the Wine Ontology, which provides information about wines, wine producers etc.; (2) the Consumer Electronics Ontology, intended to help exchange information about consumer electronics products; and (3) the Disease Ontology, which describes diseases, including their symptoms, causes etc. "
+      ],
+      "accuracy": 0.0,
+      "errors": [],
+      "logical_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "ontologies used in the experiment"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "optimized_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "ontologies used in the experiment"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "physical_plan": {
+        "op": "RANK",
+        "variant": "CrossEncoderRank",
+        "params": {
+          "criterion": "exact_match",
+          "top_k": 1
+        },
+        "cost": {
+          "token_cost": 0.0,
+          "latency_cost": 0.0
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "variant": "BM25Retrieve",
+            "params": {
+              "query": "Wine Ontology, Consumer Electronics Ontology, Disease Ontology",
+              "top_k": 100
+            },
+            "cost": {
+              "token_cost": 0.0,
+              "latency_cost": 0.0
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "rewrite_log": [],
+      "sample_analysis": {
+        "query": "Question: Which ontologies did they use?\nCandidate answer: We experimented with three owl ontologies: (1) the Wine Ontology, which provides information about wines, wine producers etc.; (2) the Consumer Electronics Ontology, intended to help exchange information about consumer electronics products; and (3) the Disease Ontology, which describes diseases, including their symptoms, causes etc. \n",
+        "accuracy": 0.0,
+        "total_tokens": 0,
+        "total_latency_ms": 1.0114999968209304,
+        "query_features": {
+          "query_type": "retrieval",
+          "complexity": "low",
+          "evidence_scope": "specific",
+          "requires_exact_match": "yes"
+        },
+        "failure_points": [
+          {
+            "op_id": "I_0",
+            "issue_type": "missing_evidence",
+            "description": "no evidence retrieved for the query"
+          }
+        ],
+        "successful_adaptations": [],
+        "suggested_fixes": [
+          {
+            "op_id": "I_0",
+            "fix_type": "rewrite_query",
+            "detail": "adjust query to ensure it targets the correct ontologies used in the experiment"
+          }
+        ]
+      }
+    },
+    {
+      "iteration": 8,
+      "tst_version": 8,
+      "question": "How were the datasets annotated?",
+      "candidate_answer": "1. Each annotator must assign an integer score between 0 and 6 (inclusive) indicating how semantically similar the two words in a given pair are. A score of 6 indicates very high similarity (i.e., perfect synonymy), while zero indicates no similarity. 2. Each annotator must score the entire set of 1,888 pairs in the dataset.  able to use external sources (e.g. dictionaries, thesauri, WordNet) if required not able to communicate with each other during the annotation process",
+      "grounding_query": "Question: How were the datasets annotated?\nCandidate answer: 1. Each annotator must assign an integer score between 0 and 6 (inclusive) indicating how semantically similar the two words in a given pair are. A score of 6 indicates very high similarity (i.e., perfect synonymy), while zero indicates no similarity. 2. Each annotator must score the entire set of 1,888 pairs in the dataset.  able to use external sources (e.g. dictionaries, thesauri, WordNet) if required not able to communicate with each other during the annotation process\n",
+      "retrieved_evidence": "the same (2.5%) for both unknown and known words. Individual Label Accuracy. Figure FIGREF85 shows the comparison of accuracy changes between our adjusted parse score-based approach and the Delta-based approach. Two approaches show similar patterns on the individual labels, both of them show no effect on labels such as P (punctuations), CONJ (conjunct) and PRD (predicative complement). They both gained more than 0.5% f-score on ROOT (root of the sentence), COORD (coordination), some modifiers (PMOD, AMOD) and unclassified relations (DEP). In addition to the common improvements between two methods, the Delta method also gains a 0.9% improvement on VC (Verb chain), and the parse score method achieved 0.5% improvement on SBJ (subject). Figure TABREF86 shows the confusion matrix of your self-training methods compared with the baseline. Unknown Words Accuracy. For unlabelled improvements, both methods showed a large gap between known words and unknown words.",
+      "gold_evidence": [
+        "Across all languages, 145 human annotators were asked to score all 1,888 pairs (in their given language). We finally collect at least ten valid annotations for each word pair in each language. All annotators were required to abide by the following instructions:\n\n1. Each annotator must assign an integer score between 0 and 6 (inclusive) indicating how semantically similar the two words in a given pair are. A score of 6 indicates very high similarity (i.e., perfect synonymy), while zero indicates no similarity.\n\n2. Each annotator must score the entire set of 1,888 pairs in the dataset. The pairs must not be shared between different annotators.\n\n3. Annotators are able to break the workload over a period of approximately 2-3 weeks, and are able to use external sources (e.g. dictionaries, thesauri, WordNet) if required.\n\n4. Annotators are kept anonymous, and are not able to communicate with each other during the annotation process."
+      ],
+      "accuracy": 0.0,
+      "errors": [],
+      "logical_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "evidence about how the datasets were annotated"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "optimized_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "evidence about how the datasets were annotated"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "physical_plan": {
+        "op": "RANK",
+        "variant": "CrossEncoderRank",
+        "params": {
+          "criterion": "exact_match",
+          "top_k": 1
+        },
+        "cost": {
+          "token_cost": 0.0,
+          "latency_cost": 0.0
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "variant": "BM25Retrieve",
+            "params": {
+              "query": "integer score between 0 and 6 indicating semantic similarity of word pairs, scoring 1,888 pairs, using external sources like dictionaries and WordNet",
+              "top_k": 100
+            },
+            "cost": {
+              "token_cost": 0.0,
+              "latency_cost": 0.0
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "rewrite_log": [],
+      "sample_analysis": {
+        "query": "Question: How were the datasets annotated?\nCandidate answer: 1. Each annotator must assign an integer score between 0 and 6 (inclusive) indicating how semantically similar the two words in a given pair are. A score of 6 indicates very high similarity (i.e., perfect synonymy), while zero indicates no similarity. 2. Each annotator must score the entire set of 1,888 pairs in the dataset.  able to use external sources (e.g. dictionaries, thesauri, WordNet) if required not able to communicate with each other during the annotation process\n",
+        "accuracy": 0.0,
+        "total_tokens": 22126,
+        "total_latency_ms": 8202.905199996167,
+        "query_features": {
+          "query_type": "evidence_retrieval",
+          "complexity": "medium",
+          "evidence_scope": "specific",
+          "requires_exact_match": "yes"
+        },
+        "failure_points": [
+          {
+            "op_id": "I_0",
+            "issue_type": "missing_evidence",
+            "description": "The retrieval did not find relevant evidence about how the datasets were annotated."
+          },
+          {
+            "op_id": "RANK_0",
+            "issue_type": "noisy_evidence",
+            "description": "The ranking kept irrelevant evidence that does not pertain to the annotation process."
+          }
+        ],
+        "successful_adaptations": [],
+        "suggested_fixes": [
+          {
+            "op_id": "I_0",
+            "fix_type": "rewrite_query",
+            "detail": "Adjust the query to focus specifically on the annotation process of datasets."
+          },
+          {
+            "op_id": "RANK_0",
+            "fix_type": "remove_operator",
+            "detail": "Eliminate the ranking step or adjust it to prioritize more relevant evidence."
+          }
+        ]
+      }
+    },
+    {
+      "iteration": 8,
+      "tst_version": 8,
+      "question": "What are the 12 languages covered?",
+      "candidate_answer": "Chinese Mandarin, Welsh, English, Estonian, Finnish, French, Hebrew, Polish, Russian, Spanish, Kiswahili, Yue Chinese",
+      "grounding_query": "Question: What are the 12 languages covered?\nCandidate answer: Chinese Mandarin, Welsh, English, Estonian, Finnish, French, Hebrew, Polish, Russian, Spanish, Kiswahili, Yue Chinese\n",
+      "retrieved_evidence": "We demonstrated the effectiveness of our confidence-based self-training for English dependency parsing in the last question, cf. Section SECREF168 . To assess the multi-lingual capacity of our confidence-based self-training, we evaluated it on nine languages (Arabic, Basque, French, German, Hebrew, Hungarian, Korean, Polish, Swedish) corpora. We evaluated on a unified setting for all the languages, the results show our method is able to achieve statistically significant improvements on five languages (Basque, German, Hungarian, Korean and Swedish). Our self-training approach achieved the largest labelled and unlabelled accuracy gain of 2.14% and 1.79% on Korean. The average improvements achieved by our method on five languages are 0.87% (LAS) and 0.78% (UAS). We further analyse the result of a negative effect (French) introduced by our method to assess the reason why self-training did not work.",
+      "gold_evidence": [
+        "Table TABREF10 summarizes key information about the languages currently included in Multi-SimLex.",
+        "FLOAT SELECTED: Table 1: The list of 12 languages in the Multi-SimLex multilingual suite along with their corresponding language family (IE = Indo-European), broad morphological type, and their ISO 639-3 code. The number of speakers is based on the total count of L1 and L2 speakers, according to ethnologue.com."
+      ],
+      "accuracy": 0.0,
+      "errors": [],
+      "logical_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "12 languages covered"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "optimized_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "12 languages covered"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "physical_plan": {
+        "op": "RANK",
+        "variant": "CrossEncoderRank",
+        "params": {
+          "criterion": "exact_match",
+          "top_k": 1
+        },
+        "cost": {
+          "token_cost": 0.0,
+          "latency_cost": 0.0
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "variant": "BM25Retrieve",
+            "params": {
+              "query": "Chinese Mandarin, Welsh, English, Estonian, Finnish, French, Hebrew, Polish, Russian, Spanish, Kiswahili, Yue Chinese",
+              "top_k": 100
+            },
+            "cost": {
+              "token_cost": 0.0,
+              "latency_cost": 0.0
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "rewrite_log": [],
+      "sample_analysis": {
+        "query": "Question: What are the 12 languages covered?\nCandidate answer: Chinese Mandarin, Welsh, English, Estonian, Finnish, French, Hebrew, Polish, Russian, Spanish, Kiswahili, Yue Chinese\n",
+        "accuracy": 0.0,
+        "total_tokens": 12365,
+        "total_latency_ms": 6244.7216999971715,
+        "query_features": {
+          "query_type": "retrieval",
+          "complexity": "low",
+          "evidence_scope": "broad",
+          "requires_exact_match": "yes"
+        },
+        "failure_points": [
+          {
+            "op_id": "I_0",
+            "issue_type": "missing_evidence",
+            "description": "retrieval did not find relevant evidence about the 12 languages covered"
+          },
+          {
+            "op_id": "RANK_0",
+            "issue_type": "noisy_evidence",
+            "description": "ranking kept irrelevant evidence that does not answer the question"
+          }
+        ],
+        "successful_adaptations": [],
+        "suggested_fixes": [
+          {
+            "op_id": "I_0",
+            "fix_type": "rewrite_query",
+            "detail": "adjust query to specifically target evidence about the 12 languages covered"
+          },
+          {
+            "op_id": "RANK_0",
+            "fix_type": "remove_operator",
+            "detail": "eliminate ranking step to prevent irrelevant evidence from being retained"
+          }
+        ]
+      }
+    },
+    {
+      "iteration": 8,
+      "tst_version": 8,
+      "question": "Do they report results only on English data?",
+      "candidate_answer": "Yes",
+      "grounding_query": "Question: Do they report results only on English data?\nCandidate answer: Yes\n",
+      "retrieved_evidence": "size corpora. We start with 10 million sentences and increase the size in steps until all the unlabelled data (30 million for English and 20 million for Chinese) are used. We compare our results with the best result achieved by the DLMs extracted from 5 million annotations in Figure FIGREF133 . The results on English data suggest that the DLMs generated from larger corpora do not gain additional improvement when compared to the one that used 5 million sentences. The Chinese results show a moderate additional gain of 0.04% when compared to the previous best result. The effects indicate that 5 million sentences might already be enough for generating reasonably good DLMs. Extracting DLMs from High Quality Data. To evaluate the influence of the quality of the input corpus for building the DLMs, we experiment in addition with DLMs extracted from high-quality corpora.",
+      "gold_evidence": [
+        "In a cooperation with researchers from the German Institute for International Educational Research we identified the following current controversial topics in education in English-speaking countries: (1) homeschooling, (2) public versus private schools, (3) redshirting \u2014 intentionally delaying the entry of an age-eligible child into kindergarten, allowing their child more time to mature emotionally and physically BIBREF51 , (4) prayer in schools \u2014 whether prayer in schools should be allowed and taken as a part of education or banned completely, (5) single-sex education \u2014 single-sex classes (males and females separate) versus mixed-sex classes (\u201cco-ed\u201d), and (6) mainstreaming \u2014 including children with special needs into regular classes."
+      ],
+      "accuracy": 0.0,
+      "errors": [],
+      "logical_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "evidence about whether results are reported only on English data"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "optimized_plan": {
+        "op": "RANK",
+        "params": {
+          "criterion": "exact_match"
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "params": {
+              "query": "evidence about whether results are reported only on English data"
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "physical_plan": {
+        "op": "RANK",
+        "variant": "CrossEncoderRank",
+        "params": {
+          "criterion": "exact_match",
+          "top_k": 1
+        },
+        "cost": {
+          "token_cost": 0.0,
+          "latency_cost": 0.0
+        },
+        "inputs": [
+          {
+            "op": "I",
+            "variant": "BM25Retrieve",
+            "params": {
+              "query": "results reported only on English data",
+              "top_k": 100
+            },
+            "cost": {
+              "token_cost": 0.0,
+              "latency_cost": 0.0
+            },
+            "inputs": []
+          }
+        ]
+      },
+      "rewrite_log": [],
+      "sample_analysis": {
+        "query": "Question: Do they report results only on English data?\nCandidate answer: Yes\n",
+        "accuracy": 0.0,
+        "total_tokens": 22174,
+        "total_latency_ms": 7297.399300001416,
+        "query_features": {
+          "query_type": "evidence_retrieval",
+          "complexity": "low",
+          "evidence_scope": "specific",
+          "requires_exact_match": "yes"
+        },
+        "failure_points": [
+          {
+            "op_id": "I_0",
+            "issue_type": "missing_evidence",
+            "description": "retrieval did not find relevant evidence about reporting results only on English data"
+          },
+          {
+            "op_id": "RANK_0",
+            "issue_type": "noisy_evidence",
+            "description": "ranking kept irrelevant evidence that does not address the query"
+          }
+        ],
+        "successful_adaptations": [],
+        "suggested_fixes": [
+          {
+            "op_id": "I_0",
+            "fix_type": "rewrite_query",
+            "detail": "adjust query to focus on evidence specifically discussing results reported only on English data"
+          },
+          {
+            "op_id": "RANK_0",
+            "fix_type": "remove_operator",
+            "detail": "eliminate ranking of irrelevant evidence that does not pertain to the query context"
+          }
+        ]
+      }
+    }
+  ],
+  "iteration": 8,
+  "round": 9
+}

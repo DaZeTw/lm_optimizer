@@ -97,8 +97,20 @@ class CostVector:
 
 @dataclass(frozen=True)
 class PhysicalNode:
-    variant: str  # e.g. "DenseRetrieve", "LLMSummarize"
+    variant: str
     logical_ref: LogicalNode
     inputs: tuple[PhysicalNode, ...]
     params: dict[str, Any]
     cost: CostVector = field(default_factory=CostVector)
+
+    def to_dict(self) -> dict:
+        return {
+            "op": self.logical_ref.op.value,
+            "variant": self.variant,
+            "params": dict(self.params),
+            "cost": {
+                "token_cost": self.cost.token_cost,
+                "latency_cost": self.cost.latency_cost,
+            },
+            "inputs": [i.to_dict() for i in self.inputs],
+        }

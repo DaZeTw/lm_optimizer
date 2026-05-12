@@ -95,12 +95,11 @@ class PlanRunner:
         # ── 2. Look up variant and execute (with timing) ───────────
         fn = REGISTRY.get(node.variant)
         if fn is None:
-            errors.append(f"Unknown variant: {node.variant!r}")
-            return EvidenceSet(chunks=[]).append_trace(f"MISSING:{node.variant}")
+            raise ValueError(f"Unknown variant: {node.variant!r}")
 
         start = time.monotonic()
         try:
-            params = dict(node.params)
+            params = {**node.logical_ref.params, **node.params}
             if self.catalog is not None:
                 params.setdefault("catalog", self.catalog)
             result = await fn(input_results, params, self.corpus, self.llm)

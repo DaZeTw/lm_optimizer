@@ -8,14 +8,14 @@ from ir.ops import Op
 # The first entry is the default / cheapest option.
 CANDIDATE_VARIANTS: dict[Op, list[str]] = {
     Op.I: ["BM25Retrieve", "DenseRetrieve", "HybridRetrieve"],
-    Op.TRANSFORM: ["IdentityTransform", "ExtractiveCompress", "LLMSummarize"],
-    Op.COMPOSE: ["ConcatCompose", "KeyMatchCompose", "LLMCompose"],
+    Op.TRANSFORM: ["LLMSummarize"],
+    # Op.COMPOSE: ["ConcatCompose", "KeyMatchCompose", "LLMCompose"],
     Op.RANK: ["SimilarityRank", "CrossEncoderRank"],
-    Op.UNION: ["SimpleUnion"],
-    Op.DIFF: ["ExactDiff", "SemanticDiff"],
+    # Op.UNION: ["SimpleUnion"],
+    # Op.DIFF: ["ExactDiff", "SemanticDiff"],
     Op.AGGREGATE: ["DirectGenerate", "HierarchicalGenerate"],
-    Op.VERIFY: ["CitationVerify", "NliVerify"],
-    Op.DECOMPOSE: ["IdentityTransform"],
+    # Op.VERIFY: ["CitationVerify", "NliVerify"],
+    # Op.DECOMPOSE: [],
 }
 
 VARIANT_DESCRIPTIONS: dict[str, dict[str, str]] = {
@@ -32,16 +32,6 @@ VARIANT_DESCRIPTIONS: dict[str, dict[str, str]] = {
     "HybridRetrieve": {
         "description": "Combination of lexical and dense retrieval.",
         "use_when": "Both exact keyword matching and semantic matching are important.",
-        "cost": "medium",
-    },
-    "IdentityTransform": {
-        "description": "Pass evidence through without modification.",
-        "use_when": "The evidence is already short, clean, or directly usable.",
-        "cost": "low",
-    },
-    "ExtractiveCompress": {
-        "description": "Keep only the most relevant spans from the evidence.",
-        "use_when": "The evidence is long but contains localized relevant information.",
         "cost": "medium",
     },
     "LLMSummarize": {

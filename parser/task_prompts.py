@@ -22,7 +22,8 @@ returns a plain dict  {"logical_skeleton": ..., "physical_policy": ...,
 
 from __future__ import annotations
 
-from planner.variant_candidates import CANDIDATE_VARIANTS
+from planner.variant_candidates import CANDIDATE_VARIANTS, VARIANT_DESCRIPTIONS
+from parser.operator_candidates import LOGICAL_OPERATOR_DESCRIPTIONS
 
 # ---------------------------------------------------------------------------
 # Variant catalog — built at import time from variant_candidates.py so the
@@ -32,15 +33,42 @@ from planner.variant_candidates import CANDIDATE_VARIANTS
 
 def _build_variant_catalog() -> str:
     lines: list[str] = []
+
     for op, variants in CANDIDATE_VARIANTS.items():
-        default = variants[0]
-        rest = ", ".join(variants[1:]) if len(variants) > 1 else "—"
-        lines.append(f"  {op.value:<12} default={default!r:<28} alternatives: {rest}")
+        lines.append(f"\n{op.value}")
+        for i, variant in enumerate(variants):
+            meta = VARIANT_DESCRIPTIONS.get(variant, {})
+            default_tag = " default" if i == 0 else ""
+            description = meta.get("description", "No description provided.")
+            use_when = meta.get("use_when", "No usage guidance provided.")
+            cost = meta.get("cost", "unknown")
+
+            lines.append(
+                f"  - {variant}{default_tag}\n"
+                f"    description: {description}\n"
+                f"    use_when: {use_when}\n"
+                f"    cost: {cost}"
+            )
+
     return "\n".join(lines)
 
 
 _VARIANT_CATALOG = _build_variant_catalog()
 
+def _build_logical_catalog() -> str:
+    lines: list[str] = []
+
+    for op, meta in LOGICAL_OPERATOR_DESCRIPTIONS.items():
+        lines.append(f"\n{op.value}")
+        lines.append(f"  description: {meta['description']}")
+        lines.append(f"  inputs: {meta['inputs']}")
+        lines.append(f"  outputs: {meta['outputs']}")
+        lines.append(f"  use_when: {meta['use_when']}")
+
+    return "\n".join(lines)
+
+
+_LOGICAL_CATALOG = _build_logical_catalog()
 
 # ---------------------------------------------------------------------------
 # Few-shot examples
@@ -51,66 +79,105 @@ _FEW_SHOT_EXAMPLES: list[dict] = [
         "task": "Single-document question answering over scientific papers",
         "tst": """\
 LOGICAL SKELETON
-VERIFY(
-  AGGREGATE(
-    RANK(I({QUERY}), criterion="{RANK_CRITERION}"),
-    goal="{AGGREGATION_GOAL}"
-  ),
-  constraints="{VERIFY_CONSTRAINTS}"
+AGGREGATE(
+  RANK(I({QUERY}), criterion="{RANK_CRITERION}"),
+  goal="{AGGREGATION_GOAL}"
 )
 
 PHYSICAL POLICY
-I_1        | I        | HybridRetrieve    | {}
-RANK_1     | RANK     | CrossEncoderRank  | top_k=5
-AGGREGATE_1| AGGREGATE| DirectGenerate    | {}
-VERIFY_1   | VERIFY   | CitationVerify    | {}
+I_1         | I         | HybridRetrieve    | top_k=10
+RANK_1      | RANK      | CrossEncoderRank  | top_k=5
+AGGREGATE_1 | AGGREGATE | DirectGenerate    | {}
 
 ADAPTATION POLICY
 mutable_slots: QUERY, RANK_CRITERION, AGGREGATION_GOAL
-immutable_slots: VERIFY_CONSTRAINTS
-mutable_ops: RANK_1
-immutable_ops: VERIFY_1
-allowed_rewrites: may insert TRANSFORM after I_1 if retrieved chunks are verbose
-forbidden_rewrites: must not drop VERIFY""",
+immutable_slots: none
+mutable_ops: I_1, RANK_1, AGGREGATE_1
+immutable_ops: none
+allowed_rewrites: may tune retrieval variant and top_k based on corpus size
+allowed_rewrites: may add TRANSFORM before AGGREGATE when the final answer requires structured fields or compact summaries
+forbidden_rewrites: must not remove I_1 when external evidence is required
+forbidden_rewrites: must not use AGGREGATE when the task asks for exact copied evidence""",
     },
+
     {
-        "task": "Multi-document comparative analysis across 10 papers",
+        "task": "Exact evidence retrieval from a scientific paper",
         "tst": """\
 LOGICAL SKELETON
-VERIFY(
-  AGGREGATE(
-    COMPOSE(
-      TRANSFORM(I({QUERY_A}), schema="{SCHEMA}"),
-      TRANSFORM(I({QUERY_B}), schema="{SCHEMA}"),
-      condition="{COMPOSE_CONDITION}"
-    ),
-    goal="{AGGREGATION_GOAL}"
-  ),
-  constraints="{VERIFY_CONSTRAINTS}"
+RANK(
+  I({QUERY}),
+  criterion="{RANK_CRITERION}"
 )
 
 PHYSICAL POLICY
-I_1        | I        | DenseRetrieve       | {}
-I_2        | I        | DenseRetrieve       | {}
-TRANSFORM_1| TRANSFORM| ExtractiveCompress  | schema=metrics list
-TRANSFORM_2| TRANSFORM| ExtractiveCompress  | schema=metrics list
-COMPOSE_1  | COMPOSE  | LLMCompose          | {}
-AGGREGATE_1| AGGREGATE| HierarchicalGenerate| {}
-VERIFY_1   | VERIFY   | NliVerify           | {}
+I_1    | I    | HybridRetrieve    | top_k=20
+RANK_1 | RANK | CrossEncoderRank  | top_k=5
 
 ADAPTATION POLICY
-mutable_slots: QUERY_A, QUERY_B, SCHEMA, COMPOSE_CONDITION, AGGREGATION_GOAL
-immutable_slots: VERIFY_CONSTRAINTS
-mutable_ops: TRANSFORM_1, TRANSFORM_2
-immutable_ops: COMPOSE_1, VERIFY_1
-allowed_rewrites: may expand COMPOSE to UNION of more I() branches for >2 documents
-allowed_rewrites: may add RANK before AGGREGATE if evidence set is large
-forbidden_rewrites: must not drop VERIFY
-forbidden_rewrites: must not replace COMPOSE with bare UNION""",
+mutable_slots: QUERY, RANK_CRITERION
+immutable_slots: none
+mutable_ops: I_1, RANK_1
+immutable_ops: none
+allowed_rewrites: may tune retrieval top_k when evidence is too broad or too narrow
+allowed_rewrites: may change RANK criterion to sentence-level support when exact evidence is required
+forbidden_rewrites: must not add AGGREGATE because exact evidence must not be paraphrased
+forbidden_rewrites: must not add TRANSFORM unless the transform preserves verbatim source text""",
+    },
+
+    {
+        "task": "Structured information extraction from retrieved context",
+        "tst": """\
+LOGICAL SKELETON
+TRANSFORM(
+  RANK(I({QUERY}), criterion="{RANK_CRITERION}"),
+  schema="{EXTRACTION_SCHEMA}"
+)
+
+PHYSICAL POLICY
+I_1          | I         | HybridRetrieve    | top_k=10
+RANK_1       | RANK      | CrossEncoderRank  | top_k=5
+TRANSFORM_1  | TRANSFORM | StructuredExtract | schema={EXTRACTION_SCHEMA}
+
+ADAPTATION POLICY
+mutable_slots: QUERY, RANK_CRITERION, EXTRACTION_SCHEMA
+immutable_slots: none
+mutable_ops: I_1, RANK_1, TRANSFORM_1
+immutable_ops: none
+allowed_rewrites: may tune retrieval and ranking top_k based on context size
+allowed_rewrites: may use LLMSummarize instead of StructuredExtract when the requested output is a short natural-language summary
+allowed_rewrites: may add AGGREGATE after TRANSFORM only when extracted fields need narrative explanation
+forbidden_rewrites: must not replace terminal TRANSFORM with AGGREGATE when the task asks for structured extraction""",
+    },
+
+    {
+        "task": "Multi-paper comparison using a single retrieval path",
+        "tst": """\
+LOGICAL SKELETON
+AGGREGATE(
+  TRANSFORM(
+    RANK(I({QUERY}), criterion="{RANK_CRITERION}"),
+    schema="{COMPARISON_SCHEMA}"
+  ),
+  goal="{AGGREGATION_GOAL}"
+)
+
+PHYSICAL POLICY
+I_1          | I         | HybridRetrieve        | top_k=20
+RANK_1       | RANK      | CrossEncoderRank      | top_k=10
+TRANSFORM_1  | TRANSFORM | StructuredExtract     | schema={COMPARISON_SCHEMA}
+AGGREGATE_1  | AGGREGATE | HierarchicalGenerate  | {}
+
+ADAPTATION POLICY
+mutable_slots: QUERY, RANK_CRITERION, COMPARISON_SCHEMA, AGGREGATION_GOAL
+immutable_slots: none
+mutable_ops: I_1, RANK_1, TRANSFORM_1, AGGREGATE_1
+immutable_ops: none
+allowed_rewrites: may use DirectGenerate instead of HierarchicalGenerate when evidence is short
+allowed_rewrites: may skip TRANSFORM when the comparison can be directly synthesized from ranked evidence
+forbidden_rewrites: must not use AGGREGATE without retrieved evidence
+forbidden_rewrites: must not use this template when explicit pairwise source alignment is required""",
     },
 ]
-
-
 # ---------------------------------------------------------------------------
 # System prompt
 # ---------------------------------------------------------------------------
@@ -119,32 +186,79 @@ TASK_SYSTEM_PROMPT = f"""\
 You are a task-level query planner for a long-context reasoning system.
 
 Your job: given a task description, evaluation criteria, and sample queries,
-produce a Task Strategy Template (TST) — a reusable strategy that guides all
-query-level planning for this task family.
+produce a Task Strategy Template (TST) — a reusable strategy for this task.
+
+## CORE RULE
+The logical skeleton must represent the GENERAL REASONING STRUCTURE of the task,
+not the number of queries or documents.
+
+It should capture:
+- what information to retrieve
+- how to process or extract it
+- how to connect evidence (if needed)
+- how to produce the final answer
+
+Adaptation should be MINIMAL and LOCAL.
+
+The query-level planner is allowed to:
+- fill slots (queries, schema, goals, criteria)
+- tune parameters (e.g., top_k)
+- switch variants within the same operator
+- insert lightweight steps (e.g., TRANSFORM after I, RANK before AGGREGATE)
+
+The query-level planner must NOT:
+- change the overall reasoning structure
+- remove core operators (e.g., COMPOSE, VERIFY)
+- expand the plan into many parallel I(...) branches
+- replace structured reasoning (COMPOSE) with flat merging (UNION)
 
 ## Logical operators (same set used by the query-level planner)
-- I("query")                              — retrieve relevant evidence
-- TRANSFORM(child, schema="...")          — compress / extract evidence
-- COMPOSE(left, right, condition="...")   — join two evidence sets semantically
-- UNION(child1, child2, ...)              — merge multiple evidence sets
-- DIFF(base, subtract)                    — remove redundant / conflicting evidence
-- RANK(child, criterion="...")            — sort evidence by relevance
-- AGGREGATE(child, goal="...")            — synthesise the final answer
-- VERIFY(child, constraints="...")        — check grounding and correctness
-- DECOMPOSE("query")                      — split into independent sub-tasks (sparingly)
+{_LOGICAL_CATALOG}
 
 ## Physical variants available per operator
-(first entry = default / cheapest; use only these — no others)
 {_VARIANT_CATALOG}
 
-## Output format
+## Reasoning Instructions
+
+You should think step-by-step and reason freely to design the best Task Strategy Template.
+
+You are encouraged to:
+- explore different possible logical structures
+- compare alternative operator compositions
+- justify why certain operators are used (or not used)
+- refine the structure before finalizing
+
+Your reasoning should consider:
+- the type of task (retrieval QA, multi-hop, comparison, decomposition, etc.)
+- the minimal operator structure needed
+- trade-offs between simplicity, accuracy, and cost
+- reusability across different queries
+
+You MUST write out your full reasoning before giving the final answer.
+
+## Final Output Requirement
+
+After your reasoning, you MUST output the final Task Strategy Template
+in a clearly separated section using the exact delimiter:
+
+=== FINAL TST ===
+
+Only the content AFTER this delimiter will be used by the system.
+Do NOT include any explanation after the delimiter.
+
+## Output format (for the FINAL TST only)
+
+The final TST must appear AFTER the delimiter "=== FINAL TST ===".
+
 Output exactly three sections, separated by blank lines, with the exact headers shown.
 No markdown fences. No explanation. Nothing else.
 
 LOGICAL SKELETON
 <algebraic expression using the operators above, with {{SLOT_NAME}} placeholders>
-<every leaf must be I({{SLOT_NAME}})>
-<must end with AGGREGATE(...) or VERIFY(AGGREGATE(...), ...)>
+<every evidence leaf should be I({{SLOT_NAME}}) unless using DECOMPOSE({{QUERY}})>
+<do not create one I(...) branch per sample query>
+<use a small reusable skeleton with 1-3 main evidence paths>
+<include TRANSFORM or COMPOSE when the task requires extraction, comparison, linking, or synthesis>
 
 PHYSICAL POLICY
 <one line per operator node in the skeleton>
@@ -160,7 +274,6 @@ immutable_ops: <comma-separated op_ids that must stay exactly as specified>
 allowed_rewrites: <one structural rewrite rule — repeat key for multiple rules>
 forbidden_rewrites: <one prohibited rewrite rule — repeat key for multiple rules>
 """
-
 
 # ---------------------------------------------------------------------------
 # User message builders

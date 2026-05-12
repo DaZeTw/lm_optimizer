@@ -60,10 +60,14 @@ def _parse_node(data: dict) -> PhysicalNode:
         raise PlanParseError(f"Unknown op '{op_str}'. Valid ops: {[o.value for o in Op]}")
 
     candidates = CANDIDATE_VARIANTS.get(op, [])
-    variant = str(data.get("variant", ""))
-    if not variant or variant not in candidates:
-        # Fall back to the first registered candidate.
-        variant = candidates[0] if candidates else op_str
+    variant = data.get("variant")
+    if not isinstance(variant, str) or not variant:
+        raise PlanParseError(f"{op.value} node is missing required 'variant' field")
+    if variant not in candidates:
+        raise PlanParseError(
+            f"Unknown variant '{variant}' for op '{op.value}'. "
+            f"Valid variants: {candidates}"
+        )
 
     params = dict(data.get("params") or {})
     inputs = tuple(_parse_node(child) for child in (data.get("inputs") or []))

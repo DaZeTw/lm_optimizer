@@ -164,15 +164,19 @@ class LmOptimizerPipeline:
         self,
         task_description: str,
         evaluation_criteria: str,
-        samples: list[
-            tuple[str, str, list[str]]
-        ],  # (query, candidate_answer, gold_evidence)
+        samples: list[tuple[str, str, list[str]]],
         iterations: int = 1,
         log_path: Path | None = None,
+        node_feedbacks_path: Path | None = None,
     ) -> PipelineResult:
         return self._run_async(
             self._run_with_samples_async(
-                task_description, evaluation_criteria, samples, iterations, log_path
+                task_description,
+                evaluation_criteria,
+                samples,
+                iterations,
+                log_path,
+                node_feedbacks_path,
             )
         )
 
@@ -185,6 +189,7 @@ class LmOptimizerPipeline:
         samples: list[tuple[str, str, list[str]]],
         iterations: int = 1,
         log_path: Path | None = None,
+        node_feedbacks_path: Path | None = None,
     ) -> PipelineResult:
 
         sample_queries = [q for q, _, _ in samples]
@@ -201,6 +206,7 @@ class LmOptimizerPipeline:
         feedbacks: list[Feedback] = []
         executions: list[ExecutionResult] = []
         sample_plans: list[SamplePlan] = []
+        node_feedback_entries: list[dict] = []
 
         for iteration in range(iterations):
             feedbacks = []
@@ -210,27 +216,30 @@ class LmOptimizerPipeline:
             # ── Query-level planning + execution (per sample) ─────
             # Each query independently fills the TST skeleton slots,
             # then gets its own optimized logical and physical plan.
-            for query, candidate_answer, gold_evidence in samples:
+            for question, candidate_answer, gold_evidence in samples:
+                grounding_query = (
+                    f"Question: {question}\n" f"Candidate answer: {candidate_answer}\n"
+                )
 
                 # Step A: query-level logical plan
-                logical, optimized, rewrites = self._build_logical(query, tst)
+                logical, optimized, rewrites = self._build_logical(grounding_query, tst)
 
                 # Step B: query-level physical plan
-                physical = self._build_physical(query, optimized, tst)
+                physical = self._build_physical(grounding_query, logical, tst)
 
                 # Step C: execute
                 execution, node_feedbacks = await self.runner.run(physical)
                 executions.append(execution)
 
-                # Step D: judge
+                # Step D: judge evidence retrieval
                 feedback = await self._judge_evidence(
                     execution.answer, gold_evidence, node_feedbacks
                 )
                 feedbacks.append(feedback)
 
-                # Step E: per-sample analysis (Reviser Step 1)
+                # Step E: per-sample analysis
                 sample_fb = self._analyze_sample(
-                    query=query,
+                    query=grounding_query,
                     logical=optimized,
                     physical=physical,
                     execution=execution,
@@ -238,15 +247,15 @@ class LmOptimizerPipeline:
                     tst=tst,
                 )
 
-                # Step F: store (Reviser Step 2)
                 store.add(
-                    iteration=iteration, tst_version=tst_version_idx, sample=sample_fb
+                    iteration=iteration,
+                    tst_version=tst_version_idx,
+                    sample=sample_fb,
                 )
 
-                # Collect per-sample plans for PipelineResult and log
                 sample_plans.append(
                     SamplePlan(
-                        query=query,
+                        query=grounding_query,
                         logical=logical,
                         optimized=optimized,
                         physical=physical,
@@ -258,16 +267,38 @@ class LmOptimizerPipeline:
                     {
                         "iteration": iteration,
                         "tst_version": tst_version_idx,
-                        "query": query,
+                        "question": question,
                         "candidate_answer": candidate_answer,
-                        "answer": execution.answer,
+                        "grounding_query": grounding_query,
+                        "retrieved_evidence": execution.answer,
                         "gold_evidence": gold_evidence,
                         "accuracy": feedback.accuracy,
                         "errors": execution.errors,
                         "logical_plan": logical.to_dict(),
                         "optimized_plan": optimized.to_dict(),
+                        "physical_plan": physical.to_dict(),
                         "rewrite_log": rewrites,
                         "sample_analysis": sample_fb,
+                    }
+                )
+
+                node_feedback_entries.append(
+                    {
+                        "iteration": iteration,
+                        "tst_version": tst_version_idx,
+                        "question": question,
+                        "candidate_answer": candidate_answer,
+                        "grounding_query": grounding_query,
+                        "node_feedbacks": [
+                            {
+                                "op_id": nf.op_id,
+                                "variant": nf.variant,
+                                "token_cost": nf.token_cost,
+                                "latency_ms": round(nf.latency_ms, 2),
+                                "output_summary": nf.output_summary,
+                            }
+                            for nf in node_feedbacks
+                        ],
                     }
                 )
 
@@ -276,7 +307,12 @@ class LmOptimizerPipeline:
                 pattern_summary = aggregate_feedback(
                     [r["sample"] for r in store.by_iteration(iteration)]
                 )
-                new_tst = self._revise_tst(tst, pattern_summary)
+                new_tst = self._revise_tst(
+                    prev_tst=tst,
+                    pattern_summary=pattern_summary,
+                    task_description=task_description,
+                    evaluation_metrics=evaluation_criteria,
+                )
                 if new_tst is not tst:
                     tst = new_tst
                     tst_version_idx += 1
@@ -290,6 +326,9 @@ class LmOptimizerPipeline:
                 tst_versions=tst_versions,
                 log_entries=log_entries,
             )
+
+        if node_feedbacks_path is not None:
+            self._write_node_feedbacks(node_feedbacks_path, node_feedback_entries)
 
         return PipelineResult(
             task_description=task_description,
@@ -378,9 +417,20 @@ class LmOptimizerPipeline:
             "suggested_fixes": [],
         }
 
-    def _revise_tst(self, prev_tst: dict, pattern_summary: dict) -> dict:
+    def _revise_tst(
+        self,
+        prev_tst: dict,
+        pattern_summary: dict,
+        task_description: str,
+        evaluation_metrics: str,
+    ) -> dict:
         if self.tst_revisor is not None:
-            return self.tst_revisor.revise(prev_tst, pattern_summary)
+            return self.tst_revisor.revise(
+                prev_tst=prev_tst,
+                pattern_summary=pattern_summary,
+                task_description=task_description,
+                evaluation_metrics=evaluation_metrics,
+            )
         return prev_tst
 
     # ── internals ─────────────────────────────────────────────────
@@ -438,72 +488,122 @@ class LmOptimizerPipeline:
     ) -> None:
         log_path = Path(log_path)
         log_path.parent.mkdir(parents=True, exist_ok=True)
-        log_path.write_text(
-            json.dumps(
+        entries_by_iteration: dict[int, list[dict]] = {}
+        for entry in log_entries:
+            entries_by_iteration.setdefault(int(entry["iteration"]), []).append(entry)
+
+        for iteration, entries in sorted(entries_by_iteration.items()):
+            round_path = log_path.parent / f"round{iteration + 1}_shared_plan.json"
+            max_tst_version = max(int(entry["tst_version"]) for entry in entries)
+            round_path.write_text(
+                json.dumps(
+                    self._log_payload(
+                        task_description=task_description,
+                        iterations=iterations,
+                        tst_versions=tst_versions[: max_tst_version + 1],
+                        log_entries=entries,
+                        iteration=iteration,
+                    ),
+                    indent=2,
+                    default=str,
+                ),
+                encoding="utf-8",
+            )
+
+    def _log_payload(
+        self,
+        task_description: str,
+        iterations: int,
+        tst_versions: list[dict],
+        log_entries: list[dict],
+        iteration: int | None = None,
+    ) -> dict:
+        payload = {
+            "task": task_description,
+            "iterations": iterations,
+            # ── TST evolution ──────────────────────────────
+            # One entry per TST version (initial + each revision).
+            # Each entry contains the full TST detail so the log
+            # is self-contained for offline analysis.
+            "tst_versions": [
                 {
-                    "task": task_description,
-                    "iterations": iterations,
-                    # ── TST evolution ──────────────────────────────
-                    # One entry per TST version (initial + each revision).
-                    # Each entry contains the full TST detail so the log
-                    # is self-contained for offline analysis.
-                    "tst_versions": [
-                        {
-                            "version": idx,
-                            "logical_skeleton": {
-                                "template": v.get("logical_skeleton", {}).get(
-                                    "template", ""
-                                ),
-                                "slots": v.get("logical_skeleton", {}).get("slots", []),
-                                "core_operators": v.get("logical_skeleton", {}).get(
-                                    "core_operators", []
-                                ),
-                                "optional_operators": v.get("logical_skeleton", {}).get(
-                                    "optional_operators", []
-                                ),
-                            },
-                            "physical_policy": {
-                                op_id: {
-                                    "op_name": node.get("op_name", ""),
-                                    "variant": node.get("variant", ""),
-                                    "params": node.get("params", {}),
-                                    "param_ranges": node.get("param_ranges", {}),
-                                }
-                                for op_id, node in v.get("physical_policy", {}).items()
-                            },
-                            "adaptation_policy": {
-                                "mutable_slots": v.get("adaptation_policy", {}).get(
-                                    "mutable_slots", []
-                                ),
-                                "immutable_slots": v.get("adaptation_policy", {}).get(
-                                    "immutable_slots", []
-                                ),
-                                "mutable_ops": v.get("adaptation_policy", {}).get(
-                                    "mutable_ops", []
-                                ),
-                                "immutable_ops": v.get("adaptation_policy", {}).get(
-                                    "immutable_ops", []
-                                ),
-                                "allowed_rewrites": v.get("adaptation_policy", {}).get(
-                                    "allowed_rewrites", []
-                                ),
-                                "forbidden_rewrites": v.get(
-                                    "adaptation_policy", {}
-                                ).get("forbidden_rewrites", []),
-                            },
+                    "version": idx,
+                    "logical_skeleton": {
+                        "template": v.get("logical_skeleton", {}).get("template", ""),
+                        "slots": v.get("logical_skeleton", {}).get("slots", []),
+                        "core_operators": v.get("logical_skeleton", {}).get(
+                            "core_operators", []
+                        ),
+                        "optional_operators": v.get("logical_skeleton", {}).get(
+                            "optional_operators", []
+                        ),
+                    },
+                    "physical_policy": {
+                        op_id: {
+                            "op_name": node.get("op_name", ""),
+                            "variant": node.get("variant", ""),
+                            "params": node.get("params", {}),
+                            "param_ranges": node.get("param_ranges", {}),
                         }
-                        for idx, v in enumerate(tst_versions)
-                    ],
-                    # ── Per-sample, per-iteration runs ─────────────
-                    # Each entry already contains logical_plan, optimized_plan,
-                    # rewrite_log, and sample_analysis from the loop above.
-                    "runs": log_entries,
-                },
-                indent=2,
-                default=str,
-            ),
-            encoding="utf-8",
-        )
+                        for op_id, node in v.get("physical_policy", {}).items()
+                    },
+                    "adaptation_policy": {
+                        "mutable_slots": v.get("adaptation_policy", {}).get(
+                            "mutable_slots", []
+                        ),
+                        "immutable_slots": v.get("adaptation_policy", {}).get(
+                            "immutable_slots", []
+                        ),
+                        "mutable_ops": v.get("adaptation_policy", {}).get(
+                            "mutable_ops", []
+                        ),
+                        "immutable_ops": v.get("adaptation_policy", {}).get(
+                            "immutable_ops", []
+                        ),
+                        "allowed_rewrites": v.get("adaptation_policy", {}).get(
+                            "allowed_rewrites", []
+                        ),
+                        "forbidden_rewrites": v.get("adaptation_policy", {}).get(
+                            "forbidden_rewrites", []
+                        ),
+                    },
+                }
+                for idx, v in enumerate(tst_versions)
+            ],
+            # ── Per-sample runs for this round ─────────────
+            # Each entry already contains logical_plan, optimized_plan,
+            # rewrite_log, and sample_analysis from the loop above.
+            "runs": log_entries,
+        }
+        if iteration is not None:
+            payload["iteration"] = iteration
+            payload["round"] = iteration + 1
+        return payload
+
+    def _write_node_feedbacks(
+        self,
+        path: Path,
+        log_entries: list[dict],
+    ) -> None:
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        entries_by_iteration: dict[int, list[dict]] = {}
+        for entry in log_entries:
+            entries_by_iteration.setdefault(int(entry["iteration"]), []).append(entry)
+
+        for iteration, entries in sorted(entries_by_iteration.items()):
+            records = [
+                {
+                    "iteration": entry["iteration"],
+                    "question": entry["question"],
+                    "node_feedbacks": entry["node_feedbacks"],
+                }
+                for entry in entries
+            ]
+            round_path = path.parent / f"round{iteration + 1}_node_feedbacks.json"
+            round_path.write_text(
+                json.dumps(records, indent=2, default=str), encoding="utf-8"
+            )
 
     @staticmethod
     def _run_async(coro):

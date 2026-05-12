@@ -40,7 +40,7 @@ class TSTRevisor:
     def __init__(
         self,
         client,
-        model: str = "gpt-4o-mini",
+        model: str = "gpt-5.4",
         temperature: float = 0.0,
         max_retries: int = 3,
     ):
@@ -53,17 +53,20 @@ class TSTRevisor:
         self,
         prev_tst: dict,
         pattern_summary: dict,
+        task_description: str,
+        evaluation_metrics: str,
     ) -> dict:
         """Produce a revised TST, or return the previous one unchanged if no
         repeated patterns warrant a revision.
 
         Args:
-            prev_tst:        Current TST dict (from TaskPlanner.generate() or
-                             a previous TSTRevisor.revise() call).
+            prev_tst: Current TST dict from TaskPlanner.generate() or previous revision.
             pattern_summary: PatternSummary dict from aggregator.aggregate_feedback().
+            task_description: Original task description used to create the TST.
+            evaluation_metrics: Evaluation criteria or metrics for judging task success.
 
         Returns:
-            Revised TST dict (same plain-dict schema as the input).
+            Revised TST dict, same plain-dict schema as the input.
         """
         # Step 5 conservatism gate: skip revision if nothing repeated enough
         if not pattern_summary.get("failure_patterns") and not pattern_summary.get(
@@ -72,6 +75,8 @@ class TSTRevisor:
             return prev_tst
 
         user_msg = build_tst_revision_user_message(
+            task_description=task_description,
+            evaluation_metrics=evaluation_metrics,
             tst_text=_tst_dict_to_text(prev_tst),
             num_samples=pattern_summary.get("num_samples", 0),
             failure_patterns=render_failure_patterns(pattern_summary),
@@ -84,21 +89,20 @@ class TSTRevisor:
             {"role": "system", "content": TST_REVISION_SYSTEM_PROMPT},
             {"role": "user", "content": user_msg},
         ]
-        last_err: Exception | None = None
 
         for _ in range(self.max_retries):
             raw = self.client.complete(messages, self.model, self.temperature)
-            # Strip markdown fences the model might add
+
             cleaned = (
                 re.sub(r"```[a-z]*", "", raw, flags=re.IGNORECASE)
                 .strip()
                 .strip("`")
                 .strip()
             )
+
             try:
                 return parse_task_strategy(cleaned)
             except ParseError as exc:
-                last_err = exc
                 messages.append({"role": "assistant", "content": raw})
                 messages.append(
                     {
@@ -111,5 +115,4 @@ class TSTRevisor:
                     }
                 )
 
-        # Fallback: return the previous TST unchanged rather than crashing
         return prev_tst

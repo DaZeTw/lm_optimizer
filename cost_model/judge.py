@@ -25,13 +25,16 @@ Accuracy score (0.0–1.0):"""
 _EVIDENCE_SYSTEM_PROMPT = """\
 You are an impartial evidence coverage evaluator.
 
-Given a list of gold grounding evidence passages and a predicted retrieval result,
+Given a list of gold grounding evidence passages and a retrieved text,
 rate how well the retrieved text covers the gold evidence.
 
-Respond with ONLY a single float between 0.0 and 1.0:
-  1.0 — all gold evidence passages are covered by the retrieved text
-  0.5 — some gold evidence passages are present or partially covered
-  0.0 — none of the gold evidence is present in the retrieved text
+Respond with ONLY a single integer between 1 and 10:
+
+10 — all gold evidence passages are fully covered  
+7–9 — most evidence is covered with minor gaps  
+4–6 — partial coverage  
+2–3 — very little coverage  
+1 — none of the gold evidence is present  
 
 Output only the number. No explanation.
 """
@@ -43,7 +46,7 @@ Gold evidence passages:
 Retrieved text:
 {result}
 
-Coverage score (0.0–1.0):"""
+Coverage score (1–10):"""
 
 
 class AccuracyJudge:
@@ -87,6 +90,7 @@ class AccuracyJudge:
 def _parse_score(text: str) -> float:
     try:
         value = float(text.strip().split()[0])
-        return max(0.0, min(1.0, value))
+        value = max(1.0, min(10.0, value))
+        return (value - 1) / 9  # normalize to 0–1
     except (ValueError, IndexError):
         return 0.0
