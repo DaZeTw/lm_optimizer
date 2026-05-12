@@ -55,7 +55,9 @@ class PlanRunner:
         node_feedbacks: list[NodeFeedback] = []
         op_counter: Counter[str] = Counter()
 
-        output = await self._execute(root, errors, token_counts, node_feedbacks, op_counter)
+        output = await self._execute(
+            root, errors, token_counts, node_feedbacks, op_counter
+        )
         return (
             ExecutionResult(
                 output=output,
@@ -79,7 +81,9 @@ class PlanRunner:
             list(
                 await asyncio.gather(
                     *[
-                        self._execute(c, errors, token_counts, node_feedbacks, op_counter)
+                        self._execute(
+                            c, errors, token_counts, node_feedbacks, op_counter
+                        )
                         for c in node.inputs
                     ]
                 )
@@ -91,12 +95,11 @@ class PlanRunner:
         # ── 2. Look up variant and execute (with timing) ───────────
         fn = REGISTRY.get(node.variant)
         if fn is None:
-            errors.append(f"Unknown variant: {node.variant!r}")
-            return EvidenceSet(chunks=[]).append_trace(f"MISSING:{node.variant}")
+            raise ValueError(f"Unknown variant: {node.variant!r}")
 
         start = time.monotonic()
         try:
-            params = dict(node.params)
+            params = {**node.logical_ref.params, **node.params}
             if self.catalog is not None:
                 params.setdefault("catalog", self.catalog)
             result = await fn(input_results, params, self.corpus, self.llm)
@@ -122,7 +125,7 @@ class PlanRunner:
                 variant=node.variant,
                 token_cost=tokens,
                 latency_ms=latency_ms,
-                output_summary=output_text[:200],
+                output_summary=output_text,
             )
         )
 

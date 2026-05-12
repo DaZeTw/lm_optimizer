@@ -93,7 +93,7 @@ class CostAwarePlanner:
         if op == Op.TRANSFORM:
             schema = str(logical_node.params.get("schema", ""))
             if not schema.strip():
-                return ["IdentityTransform"]
+                return ["LLMSummarize"]
 
         if op == Op.COMPOSE:
             condition = str(logical_node.params.get("condition", ""))
