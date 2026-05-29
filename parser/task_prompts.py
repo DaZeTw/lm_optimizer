@@ -1,59 +1,24 @@
 """System prompt and user message builders for task-level planning.
 
 Task-level planning runs once per task family and produces a Task Strategy
-Template (TST) as structured text with three labelled sections:
+Template (TST) as structured text with two labelled sections:
 
     LOGICAL SKELETON
         The fixed operator DAG shape, written as an algebraic expression with
         {SLOT_NAME} placeholders where query-specific values will be filled in.
-
-    PHYSICAL POLICY
-        One line per operator node:  op_id | op_name | variant | params
-        Variants must come from the catalog embedded in the system prompt.
 
     ADAPTATION POLICY
         Labelled sub-fields (mutable_slots, immutable_slots, mutable_ops,
         immutable_ops, allowed_rewrites, forbidden_rewrites), one value per line.
 
 The LLM output is parsed by ``expr_parser.parse_task_strategy()``, which
-returns a plain dict  {"logical_skeleton": ..., "physical_policy": ...,
-"adaptation_policy": ...}  with no dataclasses involved.
+returns a plain dict  {"logical_skeleton": ..., "adaptation_policy": ...}
+with no dataclasses involved.
 """
 
 from __future__ import annotations
 
-from planner.variant_candidates import CANDIDATE_VARIANTS, VARIANT_DESCRIPTIONS
 from parser.operator_candidates import LOGICAL_OPERATOR_DESCRIPTIONS
-
-# ---------------------------------------------------------------------------
-# Variant catalog — built at import time from variant_candidates.py so the
-# LLM sees exactly what physical variants exist and what the defaults are.
-# ---------------------------------------------------------------------------
-
-
-def _build_variant_catalog() -> str:
-    lines: list[str] = []
-
-    for op, variants in CANDIDATE_VARIANTS.items():
-        lines.append(f"\n{op.value}")
-        for i, variant in enumerate(variants):
-            meta = VARIANT_DESCRIPTIONS.get(variant, {})
-            default_tag = " default" if i == 0 else ""
-            description = meta.get("description", "No description provided.")
-            use_when = meta.get("use_when", "No usage guidance provided.")
-            cost = meta.get("cost", "unknown")
-
-            lines.append(
-                f"  - {variant}{default_tag}\n"
-                f"    description: {description}\n"
-                f"    use_when: {use_when}\n"
-                f"    cost: {cost}"
-            )
-
-    return "\n".join(lines)
-
-
-_VARIANT_CATALOG = _build_variant_catalog()
 
 def _build_logical_catalog() -> str:
     lines: list[str] = []
@@ -76,106 +41,63 @@ _LOGICAL_CATALOG = _build_logical_catalog()
 
 _FEW_SHOT_EXAMPLES: list[dict] = [
     {
-        "task": "Single-document question answering over scientific papers",
-        "tst": """\
-LOGICAL SKELETON
-AGGREGATE(
-  RANK(I({QUERY}), criterion="{RANK_CRITERION}"),
-  goal="{AGGREGATION_GOAL}"
-)
-
-PHYSICAL POLICY
-I_1         | I         | HybridRetrieve    | top_k=10
-RANK_1      | RANK      | CrossEncoderRank  | top_k=5
-AGGREGATE_1 | AGGREGATE | DirectGenerate    | {}
-
-ADAPTATION POLICY
-mutable_slots: QUERY, RANK_CRITERION, AGGREGATION_GOAL
-immutable_slots: none
-mutable_ops: I_1, RANK_1, AGGREGATE_1
-immutable_ops: none
-allowed_rewrites: may tune retrieval variant and top_k based on corpus size
-allowed_rewrites: may add TRANSFORM before AGGREGATE when the final answer requires structured fields or compact summaries
-forbidden_rewrites: must not remove I_1 when external evidence is required
-forbidden_rewrites: must not use AGGREGATE when the task asks for exact copied evidence""",
-    },
-
-    {
-        "task": "Exact evidence retrieval from a scientific paper",
-        "tst": """\
-LOGICAL SKELETON
-RANK(
-  I({QUERY}),
-  criterion="{RANK_CRITERION}"
-)
-
-PHYSICAL POLICY
-I_1    | I    | HybridRetrieve    | top_k=20
-RANK_1 | RANK | CrossEncoderRank  | top_k=5
-
-ADAPTATION POLICY
-mutable_slots: QUERY, RANK_CRITERION
-immutable_slots: none
-mutable_ops: I_1, RANK_1
-immutable_ops: none
-allowed_rewrites: may tune retrieval top_k when evidence is too broad or too narrow
-allowed_rewrites: may change RANK criterion to sentence-level support when exact evidence is required
-forbidden_rewrites: must not add AGGREGATE because exact evidence must not be paraphrased
-forbidden_rewrites: must not add TRANSFORM unless the transform preserves verbatim source text""",
-    },
-
-    {
-        "task": "Structured information extraction from retrieved context",
-        "tst": """\
-LOGICAL SKELETON
-TRANSFORM(
-  RANK(I({QUERY}), criterion="{RANK_CRITERION}"),
-  schema="{EXTRACTION_SCHEMA}"
-)
-
-PHYSICAL POLICY
-I_1          | I         | HybridRetrieve    | top_k=10
-RANK_1       | RANK      | CrossEncoderRank  | top_k=5
-TRANSFORM_1  | TRANSFORM | StructuredExtract | schema={EXTRACTION_SCHEMA}
-
-ADAPTATION POLICY
-mutable_slots: QUERY, RANK_CRITERION, EXTRACTION_SCHEMA
-immutable_slots: none
-mutable_ops: I_1, RANK_1, TRANSFORM_1
-immutable_ops: none
-allowed_rewrites: may tune retrieval and ranking top_k based on context size
-allowed_rewrites: may use LLMSummarize instead of StructuredExtract when the requested output is a short natural-language summary
-allowed_rewrites: may add AGGREGATE after TRANSFORM only when extracted fields need narrative explanation
-forbidden_rewrites: must not replace terminal TRANSFORM with AGGREGATE when the task asks for structured extraction""",
-    },
-
-    {
-        "task": "Multi-paper comparison using a single retrieval path",
+        "task": "Concise answer generation from retrieved scientific context",
         "tst": """\
 LOGICAL SKELETON
 AGGREGATE(
   TRANSFORM(
-    RANK(I({QUERY}), criterion="{RANK_CRITERION}"),
-    schema="{COMPARISON_SCHEMA}"
+    RANK(
+      I({QUERY}),
+      criterion="{RANK_CRITERION}"
+    ),
+    schema="{EVIDENCE_NOTES_SCHEMA}"
   ),
-  goal="{AGGREGATION_GOAL}"
+  goal="{ANSWER_GOAL}"
 )
 
-PHYSICAL POLICY
-I_1          | I         | HybridRetrieve        | top_k=20
-RANK_1       | RANK      | CrossEncoderRank      | top_k=10
-TRANSFORM_1  | TRANSFORM | StructuredExtract     | schema={COMPARISON_SCHEMA}
-AGGREGATE_1  | AGGREGATE | HierarchicalGenerate  | {}
-
 ADAPTATION POLICY
-mutable_slots: QUERY, RANK_CRITERION, COMPARISON_SCHEMA, AGGREGATION_GOAL
+mutable_slots: QUERY, RANK_CRITERION, EVIDENCE_NOTES_SCHEMA, ANSWER_GOAL
 immutable_slots: none
 mutable_ops: I_1, RANK_1, TRANSFORM_1, AGGREGATE_1
 immutable_ops: none
-allowed_rewrites: may use DirectGenerate instead of HierarchicalGenerate when evidence is short
-allowed_rewrites: may skip TRANSFORM when the comparison can be directly synthesized from ranked evidence
-forbidden_rewrites: must not use AGGREGATE without retrieved evidence
-forbidden_rewrites: must not use this template when explicit pairwise source alignment is required""",
+allowed_rewrites: may specialize QUERY using entities, methods, datasets, metrics, and section cues from the current question
+allowed_rewrites: may specialize RANK_CRITERION to prioritize chunks likely to contain the needed evidence
+allowed_rewrites: may specialize EVIDENCE_NOTES_SCHEMA to extract only the information needed before answer generation
+allowed_rewrites: may remove RANK when retrieval already returns a narrow and low-noise context
+forbidden_rewrites: must not remove I_1 when document evidence is required
+forbidden_rewrites: must not use RANK as a substitute for extracting information from chunks
+forbidden_rewrites: must not use AGGREGATE to answer directly from raw chunks when intermediate extraction is required
+forbidden_rewrites: must not invent claims not supported by transformed evidence notes""",
+    },
+
+    {
+        "task": "Compare methods described in a scientific paper",
+        "tst": """\
+LOGICAL SKELETON
+AGGREGATE(
+  TRANSFORM(
+    RANK(
+      I({QUERY}),
+      criterion="{RANK_CRITERION}"
+    ),
+    schema="{METHOD_COMPARISON_SCHEMA}"
+  ),
+  goal="{COMPARISON_GOAL}"
+)
+
+ADAPTATION POLICY
+mutable_slots: QUERY, RANK_CRITERION, METHOD_COMPARISON_SCHEMA, COMPARISON_GOAL
+immutable_slots: none
+mutable_ops: I_1, RANK_1, TRANSFORM_1, AGGREGATE_1
+immutable_ops: none
+allowed_rewrites: may specialize QUERY using method names, baselines, datasets, metrics, and comparison cues from the current question
+allowed_rewrites: may specialize RANK_CRITERION to prioritize chunks that mention both compared methods or their evaluation results
+allowed_rewrites: may specialize METHOD_COMPARISON_SCHEMA with fields such as method_name, input, output, assumption, metric, result, limitation, and difference
+allowed_rewrites: may remove AGGREGATE when the extracted comparison table is already the requested final output
+forbidden_rewrites: must not remove I_1 when paper evidence is required
+forbidden_rewrites: must not use RANK as a substitute for extracting comparison fields from chunks
+forbidden_rewrites: must not skip TRANSFORM when the task requires explicit method attributes or comparison fields
+forbidden_rewrites: must not compare methods using unsupported details outside the retrieved evidence""",
     },
 ]
 # ---------------------------------------------------------------------------
@@ -198,25 +120,25 @@ It should capture:
 - how to connect evidence (if needed)
 - how to produce the final answer
 
-Adaptation should be MINIMAL and LOCAL.
+The TST should contain a stable task-level skeleton plus an explicit adaptation
+budget. The skeleton is the default reasoning route; the adaptation policy
+defines how the query-level planner may expand, specialize, or simplify it for
+the current query and evaluation criteria.
 
 The query-level planner is allowed to:
 - fill slots (queries, schema, goals, criteria)
-- tune parameters (e.g., top_k)
-- switch variants within the same operator
-- insert lightweight steps (e.g., TRANSFORM after I, RANK before AGGREGATE)
+- expand the skeleton with operators allowed by the adaptation policy
+- specialize retrieval, ranking, extraction, verification, and generation goals
+- simplify the skeleton when the current query needs fewer reasoning steps
 
 The query-level planner must NOT:
-- change the overall reasoning structure
-- remove core operators (e.g., COMPOSE, VERIFY)
+- ignore the adaptation policy
+- remove core operators unless an allowed rewrite permits it
 - expand the plan into many parallel I(...) branches
 - replace structured reasoning (COMPOSE) with flat merging (UNION)
 
 ## Logical operators (same set used by the query-level planner)
 {_LOGICAL_CATALOG}
-
-## Physical variants available per operator
-{_VARIANT_CATALOG}
 
 ## Reasoning Instructions
 
@@ -231,6 +153,7 @@ You are encouraged to:
 Your reasoning should consider:
 - the type of task (retrieval QA, multi-hop, comparison, decomposition, etc.)
 - the minimal operator structure needed
+- where the query-level planner needs flexibility
 - trade-offs between simplicity, accuracy, and cost
 - reusability across different queries
 
@@ -250,7 +173,7 @@ Do NOT include any explanation after the delimiter.
 
 The final TST must appear AFTER the delimiter "=== FINAL TST ===".
 
-Output exactly three sections, separated by blank lines, with the exact headers shown.
+Output exactly two sections, separated by blank lines, with the exact headers shown.
 No markdown fences. No explanation. Nothing else.
 
 LOGICAL SKELETON
@@ -260,19 +183,13 @@ LOGICAL SKELETON
 <use a small reusable skeleton with 1-3 main evidence paths>
 <include TRANSFORM or COMPOSE when the task requires extraction, comparison, linking, or synthesis>
 
-PHYSICAL POLICY
-<one line per operator node in the skeleton>
-<format per line: op_id | op_name | variant | params>
-<use {{}} for empty params; use key=value pairs for non-empty params>
-<variant must come from the catalog above>
-
 ADAPTATION POLICY
 mutable_slots: <comma-separated slot names the query planner MUST fill per query>
 immutable_slots: <comma-separated slot names locked to their TST value>
-mutable_ops: <comma-separated op_ids whose variant/params the query planner may tune>
-immutable_ops: <comma-separated op_ids that must stay exactly as specified>
-allowed_rewrites: <one structural rewrite rule — repeat key for multiple rules>
-forbidden_rewrites: <one prohibited rewrite rule — repeat key for multiple rules>
+mutable_ops: <comma-separated logical op_ids the query planner may expand, specialize, remove, or preserve according to allowed_rewrites>
+immutable_ops: <comma-separated logical op_ids that should stay structurally stable unless experience later proves otherwise>
+allowed_rewrites: <one query-level adaptation or expansion rule — repeat key for multiple rules>
+forbidden_rewrites: <one prohibited rewrite or safety boundary — repeat key for multiple rules>
 """
 
 # ---------------------------------------------------------------------------
@@ -321,7 +238,7 @@ def build_task_user_message(
     parts.append(
         "## Your Job\n"
         "Infer the common reasoning structure across the sample queries and the task.\n"
-        "Output a Task Strategy Template using the exact three-section format."
+        "Output a Task Strategy Template using the exact two-section format."
     )
 
     return "\n\n".join(parts)
@@ -364,7 +281,7 @@ def build_task_revise_message(
         "## Your Job\n"
         "Revise the Task Strategy Template to improve accuracy and/or reduce cost.\n"
         "Keep changes minimal — only adjust what the feedback shows is wrong.\n"
-        "Output ONLY the revised TST in the exact three-section format."
+        "Output ONLY the revised TST in the exact two-section format."
     )
 
     return "\n\n".join(parts)

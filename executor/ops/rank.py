@@ -8,7 +8,7 @@ from ir.evidence import Chunk, EvidenceSet
 
 @register("SimilarityRank")
 async def similarity_rank(
-    inputs: list[EvidenceSet], params: dict, corpus, llm
+    inputs: list[EvidenceSet], params: dict, corpus, llm, context
 ) -> EvidenceSet:
     """
     Re-score chunks by cosine similarity to the query, keep top-k.
@@ -71,7 +71,7 @@ async def similarity_rank(
 
 @register("CrossEncoderRank")
 async def cross_encoder_rank(
-    inputs: list[EvidenceSet], params: dict, corpus, llm
+    inputs: list[EvidenceSet], params: dict, corpus, llm, context
 ) -> EvidenceSet:
     """
     Rank using a cross-encoder for precise query-chunk relevance.
@@ -121,7 +121,7 @@ async def cross_encoder_rank(
         ).append_trace("CrossEncoderRank")
 
     except ImportError:
-        return await similarity_rank(inputs, params, corpus, llm)
+        return await similarity_rank(inputs, params, corpus, llm, context)
 
 
 def _fallback_cosine(a: list[float], b: list[float]) -> float:

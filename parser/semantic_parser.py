@@ -10,7 +10,7 @@ SemanticParser   (query-level)
 
 TaskPlanner      (task-level)
     Runs once per task family.  Calls the LLM with task_prompts, parses the
-    three-section TST text via expr_parser.parse_task_strategy(), and returns
+    two-section TST text via expr_parser.parse_task_strategy(), and returns
     a plain dict.  Supports cold-start generation and feedback-driven revision.
 """
 
@@ -92,8 +92,10 @@ class SemanticParser:
     def parse(
         self,
         task_description: str,
-        sample_queries: list[str],
+        sample_queries: list[str] | None = None,
         task_strategy: dict | None = None,
+        evaluation_criteria: str = "",
+        query: str | None = None,
     ) -> LogicalNode:
         """
         Translate a task description and sample queries into a LogicalNode DAG.
@@ -128,8 +130,10 @@ class SemanticParser:
             {
                 "role": "user",
                 "content": build_user_message(
-                    task_description,
-                    sample_queries,
+                    task_description=task_description,
+                    sample_queries=sample_queries,
+                    evaluation_criteria=evaluation_criteria,
+                    current_query=query,
                     context_window=context_window,
                     avg_chunk_tokens=avg_chunk_tokens,
                     task_strategy=task_strategy,
@@ -196,13 +200,13 @@ class TaskPlanner:
     """
     Task-level planner: generates and revises Task Strategy Templates (TSTs).
 
-    A TST is a plain dict with three keys — logical_skeleton, physical_policy,
-    adaptation_policy — parsed from the LLM's three-section text output by
+    A TST is a plain dict with two keys — logical_skeleton and
+    adaptation_policy — parsed from the LLM's two-section text output by
     expr_parser.parse_task_strategy().  No dataclasses are used.
 
     Workflow:
         1. generate() — cold start: send task description + criteria to the LLM,
-           parse the three-section TST text, return the dict.
+           parse the two-section TST text, return the dict.
         2. revise()   — warm start: send the previous TST text + execution
            feedback to the LLM, parse the revised TST, return the new dict.
 
@@ -241,8 +245,7 @@ class TaskPlanner:
             prior_heuristics:    Known-good planning rules to keep.
 
         Returns:
-            TST as a plain dict with keys logical_skeleton, physical_policy,
-            adaptation_policy.
+            TST as a plain dict with keys logical_skeleton and adaptation_policy.
 
         Raises:
             TaskParseError: If the LLM fails to produce a valid TST after
@@ -257,7 +260,11 @@ class TaskPlanner:
             context_window=context_window,
             avg_chunk_tokens=avg_chunk_tokens,
         )
-        return self._call_and_parse(user_msg)
+        return self._call_and_parse(
+            user_msg=user_msg,
+            task_description=task_description,
+            evaluation_criteria=evaluation_criteria,
+        )
 
     def revise(
         self,
@@ -289,7 +296,7 @@ class TaskPlanner:
         feedback_blocks = "\n\n".join(
             _format_feedback_block(i, fb) for i, fb in enumerate(feedbacks)
         )
-        # Reconstruct the raw three-section text from the previous TST dict
+        # Reconstruct the raw two-section text from the previous TST dict
         # so the revise prompt shows exactly what the model produced last time.
         prev_tst_text = _tst_dict_to_text(prev_tst)
         user_msg = build_task_revise_message(
@@ -302,7 +309,11 @@ class TaskPlanner:
             context_window=context_window,
             avg_chunk_tokens=avg_chunk_tokens,
         )
-        return self._call_and_parse(user_msg)
+        return self._call_and_parse(
+            user_msg=user_msg,
+            task_description=task_description,
+            evaluation_criteria=evaluation_criteria,
+        )
 
     # ── Internals ────────────────────────────────────────────────
 
@@ -311,7 +322,12 @@ class TaskPlanner:
             return 128_000, 180.0
         return self.catalog.context_window(), self.catalog.avg_chunk_tokens()
 
-    def _call_and_parse(self, user_msg: str) -> dict:
+    def _call_and_parse(
+        self,
+        user_msg: str,
+        task_description: str,
+        evaluation_criteria: str,
+    ) -> dict:
         messages: list[dict] = [
             {"role": "system", "content": TASK_SYSTEM_PROMPT},
             {"role": "user", "content": user_msg},
@@ -331,11 +347,12 @@ class TaskPlanner:
                         "content": (
                             f"That output has an error: {e}\n\n"
                             "Output ONLY the corrected Task Strategy Template "
-                            "in the exact three-section format. "
+                            "in the exact two-section format. "
                             "No markdown fences, no explanation."
                         ),
                     }
                 )
+                continue
 
         raise TaskParseError(
             f"TaskPlanner failed after {self.max_retries} attempts. "
@@ -347,25 +364,15 @@ class TaskPlanner:
 
 
 def _tst_dict_to_text(tst: dict) -> str:
-    """Re-render a parsed TST dict back into the three-section text format.
+    """Re-render a parsed TST dict back into the two-section text format.
 
     Used by TaskPlanner.revise() so the revision prompt shows the model's
     own prior output rather than a JSON blob it didn't produce.
     """
     skel = tst.get("logical_skeleton", {})
-    phys = tst.get("physical_policy", {})
     adap = tst.get("adaptation_policy", {})
 
     lines: list[str] = ["LOGICAL SKELETON", skel.get("template", ""), ""]
-
-    lines.append("PHYSICAL POLICY")
-    for op_id, node in phys.items():
-        raw_params = node.get("params", {})
-        params_str = (
-            ", ".join(f"{k}={v}" for k, v in raw_params.items()) if raw_params else "{}"
-        )
-        lines.append(f"{op_id} | {node['op_name']} | {node['variant']} | {params_str}")
-    lines.append("")
 
     lines.append("ADAPTATION POLICY")
     for key in ("mutable_slots", "immutable_slots", "mutable_ops", "immutable_ops"):

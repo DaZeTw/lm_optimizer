@@ -109,7 +109,7 @@ class TSTRevisor:
                         "role": "user",
                         "content": (
                             f"That output has an error: {exc}\n\n"
-                            "Output ONLY the corrected TST in the exact three-section format. "
+                            "Output ONLY the corrected TST in the exact two-section format. "
                             "No markdown, no explanation."
                         ),
                     }

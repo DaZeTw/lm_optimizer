@@ -13,6 +13,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 
 from catalog.catalog import SystemCatalog
+from executor.context import ExecutionContext
 from executor.registry import REGISTRY
 from ir.evidence import EvidenceSet
 from ir.feedback import NodeFeedback
@@ -45,7 +46,7 @@ class PlanRunner:
     def __init__(self, corpus, llm, catalog: SystemCatalog | None = None):
         self.corpus = corpus
         self.llm = llm
-        self.catalog = catalog
+        self.context = ExecutionContext(catalog=catalog)
 
     async def run(
         self, root: PhysicalNode
@@ -99,10 +100,13 @@ class PlanRunner:
 
         start = time.monotonic()
         try:
-            params = {**node.logical_ref.params, **node.params}
-            if self.catalog is not None:
-                params.setdefault("catalog", self.catalog)
-            result = await fn(input_results, params, self.corpus, self.llm)
+            result = await fn(
+                input_results,
+                dict(node.params),
+                self.corpus,
+                self.llm,
+                self.context,
+            )
         except Exception as exc:
             errors.append(f"{node.variant} failed: {exc}")
             result = EvidenceSet(chunks=[]).append_trace(f"ERROR:{node.variant}")

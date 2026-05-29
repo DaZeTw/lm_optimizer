@@ -98,8 +98,16 @@ def _normalize(sample: dict) -> dict:
         "accuracy": float(sample.get("accuracy", 0.0)),
         "total_tokens": int(sample.get("total_tokens", 0)),
         "total_latency_ms": float(sample.get("total_latency_ms", 0.0)),
-        "query_features": dict(sample.get("query_features", {})),
-        "failure_points": list(sample.get("failure_points", [])),
+        "plan_feedback": dict(
+            sample.get(
+                "plan_feedback",
+                {
+                    "supports_task": True,
+                    "main_structural_gap": "none",
+                    "reason": "",
+                },
+            )
+        ),
+        "physical_feedback": list(sample.get("physical_feedback", [])),
         "successful_adaptations": list(sample.get("successful_adaptations", [])),
-        "suggested_fixes": list(sample.get("suggested_fixes", [])),
     }

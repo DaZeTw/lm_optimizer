@@ -3,12 +3,12 @@
 Execution model
 ---------------
 Task-level   (once per run, revised between iterations)
-    TaskPlanner.generate()   → TST dict  (logical skeleton + physical policy + adaptation policy)
+    TaskPlanner.generate()   → TST dict  (logical skeleton + adaptation policy)
 
 Query-level  (once per sample per iteration)
     SemanticParser.parse(query, tst)       → LogicalNode  (fills TST skeleton slots for this query)
     OptimizerEngine.run(logical)           → optimized LogicalNode
-    LLMPhysicalPlanner.plan(query, ...)    → PhysicalNode (honours TST physical policy)
+    LLMPhysicalPlanner.plan(query, ...)    → PhysicalNode (chooses variants from catalog)
     PlanRunner.run(physical)               → ExecutionResult
 
 Revision     (once per iteration boundary, when iterations > 1)
@@ -81,8 +81,9 @@ class LmOptimizerPipeline:
     Wires TaskPlanner, SemanticParser, optimizer, LLMPhysicalPlanner,
     PlanRunner, AccuracyJudge, and the Reviser loop.
 
-    Each sample gets its own query-level logical and physical plan derived
-    from the current TST skeleton and policies.  The TST is revised between
+    Each sample gets its own query-level logical plan derived from the current
+    TST skeleton and policies, plus a physical plan chosen from the variant
+    catalog.  The TST is revised between
     iterations based on aggregated feedback across all samples.
 
     Usage::
@@ -222,10 +223,20 @@ class LmOptimizerPipeline:
                 )
 
                 # Step A: query-level logical plan
-                logical, optimized, rewrites = self._build_logical(grounding_query, tst)
+                logical, optimized, rewrites = self._build_logical(
+                    task_description=task_description,
+                    evaluation_criteria=evaluation_criteria,
+                    grounding_query=grounding_query,
+                    tst=tst,
+                )
 
                 # Step B: query-level physical plan
-                physical = self._build_physical(grounding_query, logical, tst)
+                physical = self._build_physical(
+                    task_description=task_description,
+                    evaluation_criteria=evaluation_criteria,
+                    grounding_query=grounding_query,
+                    optimized=optimized,
+                )
 
                 # Step C: execute
                 execution, node_feedbacks = await self.runner.run(physical)
@@ -357,13 +368,17 @@ class LmOptimizerPipeline:
 
     def _build_logical(
         self,
-        query: str,
+        task_description: str,
+        evaluation_criteria: str,
+        grounding_query: str,
         tst: dict,
     ) -> tuple[LogicalNode, LogicalNode, list[RewriteEntry]]:
         """Query-level: fill TST skeleton slots for one query, then optimise."""
         logical = self.parser.parse(
-            task_description=query,
-            sample_queries=[query],
+            task_description=task_description,
+            evaluation_criteria=evaluation_criteria,
+            query=grounding_query,
+            sample_queries=[grounding_query],
             task_strategy=tst,
         )
         optimized, rewrites = self.optimizer.run(logical)
@@ -371,22 +386,25 @@ class LmOptimizerPipeline:
 
     def _build_physical(
         self,
-        query: str,
+        task_description: str,
+        evaluation_criteria: str,
+        grounding_query: str,
         optimized: LogicalNode,
-        tst: dict,
     ) -> PhysicalNode:
-        """Query-level: assign physical variants under TST policy for one query."""
-        if self.planner is not None:
-            return self.planner.plan(
-                query=query,
-                logical=optimized,
-                physical_policy=tst.get("physical_policy", {}),
-                corpus_stats=self._corpus_stats(),
-                adaptation_policy=tst.get("adaptation_policy", {}),
+        """Query-level: assign physical variants for one query."""
+        if self.planner is None:
+            raise RuntimeError(
+                "Physical planning is required but no LLMPhysicalPlanner is configured. "
+                "Provide planning_client when constructing LmOptimizerPipeline, or inject "
+                "a planner that returns a validated executable PhysicalNode."
             )
-        from planner.plan_parser import parse_physical_plan
-
-        return parse_physical_plan(optimized.to_dict())
+        return self.planner.plan(
+            task_description=task_description,
+            evaluation_criteria=evaluation_criteria,
+            query=grounding_query,
+            logical=optimized,
+            corpus_stats=self._corpus_stats(),
+        )
 
     def _analyze_sample(
         self,
@@ -411,10 +429,13 @@ class LmOptimizerPipeline:
             "accuracy": feedback.accuracy,
             "total_tokens": sum(i.token_cost for i in feedback.items),
             "total_latency_ms": sum(i.latency_ms for i in feedback.items),
-            "query_features": {},
-            "failure_points": [],
+            "plan_feedback": {
+                "supports_task": True,
+                "main_structural_gap": "none",
+                "reason": "No sample analyzer configured.",
+            },
+            "physical_feedback": [],
             "successful_adaptations": [],
-            "suggested_fixes": [],
         }
 
     def _revise_tst(
@@ -537,15 +558,6 @@ class LmOptimizerPipeline:
                         "optional_operators": v.get("logical_skeleton", {}).get(
                             "optional_operators", []
                         ),
-                    },
-                    "physical_policy": {
-                        op_id: {
-                            "op_name": node.get("op_name", ""),
-                            "variant": node.get("variant", ""),
-                            "params": node.get("params", {}),
-                            "param_ranges": node.get("param_ranges", {}),
-                        }
-                        for op_id, node in v.get("physical_policy", {}).items()
                     },
                     "adaptation_policy": {
                         "mutable_slots": v.get("adaptation_policy", {}).get(

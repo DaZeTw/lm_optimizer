@@ -3,56 +3,17 @@
 Step 1 — Sample analysis
     Input : execution record for one sample (query, logical/physical plan,
             node-level trace, metrics)
-    Output: structured SampleFeedback text (parsed by sample_analyzer.py)
+    Output: structured SampleFeedback JSON (parsed by sample_analyzer.py)
 
 Steps 4-6 — TST revision
     Input : previous TST text + PatternSummary (aggregated across samples)
-    Output: revised TST in the same three-section format used by task_prompts.py
+    Output: revised TST in the same two-section format used by task_prompts.py
             (parsed by expr_parser.parse_task_strategy)
 """
 
 from __future__ import annotations
 
-from planner.variant_candidates import CANDIDATE_VARIANTS, VARIANT_DESCRIPTIONS
 from parser.operator_candidates import LOGICAL_OPERATOR_DESCRIPTIONS
-
-def _build_variant_catalog() -> str:
-    """Build variant catalog text for LLM prompts.
-
-    Includes:
-    - valid variants for each logical operator
-    - default variant
-    - description
-    - use case
-    - cost level
-    """
-
-    lines: list[str] = []
-
-    for op, variants in CANDIDATE_VARIANTS.items():
-        lines.append(f"{op.value}:")
-
-        for idx, variant in enumerate(variants):
-            meta = VARIANT_DESCRIPTIONS.get(variant, {})
-
-            default_tag = " [default]" if idx == 0 else ""
-            description = meta.get("description", "No description provided.")
-            use_when = meta.get("use_when", "No usage guidance provided.")
-            cost = meta.get("cost", "unknown")
-
-            lines.append(
-                f"  - {variant}{default_tag}\n"
-                f"    description: {description}\n"
-                f"    use_when: {use_when}\n"
-                f"    cost: {cost}"
-            )
-
-        lines.append("")
-
-    return "\n".join(lines).strip()
-
-
-_VARIANT_CATALOG = _build_variant_catalog()
 
 def _build_logical_catalog() -> str:
     lines: list[str] = []
@@ -75,58 +36,49 @@ SAMPLE_ANALYSIS_SYSTEM_PROMPT = """\
 You are a query-plan auditor for an evidence retrieval system.
 
 Given one execution record, analyze whether the plan retrieved the correct
-source evidence and identify the exact operator responsible for each issue.
+source evidence and whether the logical strategy supports the task.
 
 Focus on:
 - evidence match against gold evidence
-- retrieval query quality
-- physical variant / parameter choices
+- whether the logical structure can verify exact evidence support
+- whether the plan is missing extraction, verification, composition, or ranking
 - whether later operators add noise or paraphrase evidence
+- physical operator issues only as debugging details
 
 ## Analysis order
-1. Check I nodes first: did retrieval find the right evidence?
-2. Check RANK nodes: did ranking keep the most relevant evidence?
-3. Check TRANSFORM nodes: did extraction preserve exact evidence?
-4. Check AGGREGATE nodes: did it return exact evidence or paraphrase/explain?
-5. Check VERIFY nodes: did it correctly filter unsupported evidence?
-
-## Failure attribution rule
-- bad_retrieval_query belongs to I nodes
-- missing_evidence usually belongs to I nodes
-- noisy_evidence belongs to I nodes if retrieval is noisy, or RANK nodes if ranking kept bad evidence
-- wrong_variant / bad_params belong to the node using the wrong setting
-- missing_transform belongs to the parent node that needed evidence extraction before generation
-- over_generation belongs to AGGREGATE nodes
-- hallucination belongs to AGGREGATE or VERIFY nodes
-- slow belongs to the node with high latency in the trace
+1. Decide whether the logical plan supports the task.
+2. Identify the main structural gap, if any.
+3. Explain the plan-level reason in one concise sentence.
+4. Optionally list physical operator problems for debugging only.
 
 ## Output format
-Output exactly four sections with the headers shown. No markdown. No explanation.
+Output ONLY valid JSON. No markdown. No explanation.
 
-QUERY FEATURES
-<one label per line: key: value>
-<labels: query_type, complexity, evidence_scope, requires_exact_match>
+{
+  "sample_analysis": {
+    "query": "<query>",
+    "accuracy": <number>,
+    "total_tokens": <integer>,
+    "total_latency_ms": <number>,
+    "plan_feedback": {
+      "supports_task": <true|false>,
+      "main_structural_gap": "<short phrase, or 'none'>",
+      "reason": "<one concise sentence>"
+    },
+    "physical_feedback": [
+      {
+        "op_id": "<op id>",
+        "variant": "<physical variant>",
+        "issue_type": "<short snake_case issue>",
+        "description": "<what went wrong>",
+        "suggested_change": "<debugging suggestion>"
+      }
+    ],
+    "successful_adaptations": []
+  }
+}
 
-FAILURE POINTS
-<one line per failure: op_id | issue_type | description>
-<issue_type:
-  bad_retrieval_query | missing_evidence | noisy_evidence |
-  wrong_variant | bad_params | missing_transform |
-  over_generation | hallucination | slow>
-<focus on root cause, not symptoms>
-<use "(none)" if no failures>
-
-SUCCESSFUL ADAPTATIONS
-<one line per success: op_id | what_worked>
-<focus on decisions that improved evidence quality>
-<use "(none)" if none>
-
-SUGGESTED FIXES
-<one line per fix: op_id | fix_type | detail>
-<fix_type:
-  rewrite_query | tune_param | change_variant |
-  add_operator | remove_operator | change_schema>
-<fixes must target the same operator responsible for the failure>
+Use an empty list for physical_feedback when there are no operator-level issues.
 """
 
 _SAMPLE_ANALYSIS_USER_TEMPLATE = """\
@@ -148,7 +100,8 @@ _SAMPLE_ANALYSIS_USER_TEMPLATE = """\
 - Total latency (ms) : {total_latency_ms:.1f}
 - Errors : {errors}
 
-Analyse this execution focusing on evidence quality and plan effectiveness.
+Analyse this execution focusing on plan-level task support. Include physical
+feedback only for debugging; TST revision will ignore it.
 """
 
 
@@ -182,54 +135,61 @@ TST_REVISION_SYSTEM_PROMPT = f"""\
 You are a task-strategy optimizer for a long-context reasoning system.
 
 Given the current Task Strategy Template (TST), available logical operators,
-available physical variants, task context, and aggregated feedback from execution samples,
-revise the TST based on repeated evidence from feedback.
+task context, and aggregated plan-level feedback from execution samples,
+revise the TST based on repeated structural evidence from feedback.
+
+Treat revision as knowledge after experience: look back at what happened during
+execution, then encode the lesson into the adaptation policy so future
+query-level planning knows when to expand, specialize, simplify, or preserve
+the skeleton.
 
 ## Logical operators available
 {_LOGICAL_CATALOG}
 
-## Physical variants available
-Use ONLY these variants when revising the physical policy.
-
-{_VARIANT_CATALOG}
-
 ## Revision priorities
-1. Fix repeated structural failures in the logical skeleton.
-2. Fix repeated physical failures by changing variants or parameters.
-3. Fix adaptation failures by making the policy more flexible or more restrictive.
+1. Update adaptation rules from execution experience when the skeleton is broadly right.
+2. Fix repeated structural failures in the logical skeleton only when the reusable structure itself is wrong.
+3. Preserve the smallest structure that directly supports the task.
+4. Preserve useful successful adaptations as explicit allowed_rewrites or slot guidance.
+
+## Learned adaptation policy rules
+- If results show a query needed an extra operator, add an allowed_rewrites rule that names when to add it.
+- If results show a query should avoid an operator, add a forbidden_rewrites or allowed simplification rule.
+- If repeated failures come from vague query/ranking/extraction goals, update mutable_slots and allowed_rewrites so future queries specialize those goals.
+- If successful adaptations recur, preserve them as learned adaptation knowledge.
+- If the skeleton is broadly correct but too rigid, revise ADAPTATION POLICY before changing LOGICAL SKELETON.
 
 ## Structural revision rules
-- If the same operator repeatedly causes failure, change the skeleton instead of only changing variants.
+- If the same operator repeatedly causes failure, change the skeleton instead of treating it as an operator-level symptom.
 - If AGGREGATE repeatedly causes over_generation, replace it with terminal TRANSFORM when the task requires exact extraction.
-- If RANK repeatedly keeps noisy evidence, reduce top_k, change ranking criterion, or make RANK optional/removable.
+- If RANK repeatedly keeps noisy evidence, change the ranking criterion or make RANK optional/removable.
 - If I repeatedly misses evidence, improve query slots/adaptation rules before changing downstream operators.
 - If feedback recommends the same structural fix across samples, apply it even if it changes the original skeleton.
 - Prefer the smallest structural change that directly addresses repeated failure.
+- Prefer adaptation-policy changes when they can teach the query-level planner how to handle the next similar query.
 
 ## Conservatism rules
 - Do NOT change parts of the TST that have no corresponding feedback pattern.
-- Do NOT invent operators or variants outside the lists above.
+- Do NOT invent operators outside the list above.
 - Do NOT add VERIFY unless feedback shows grounding, schema, or consistency failures.
 - Preserve working adaptations listed in the summary.
 - If a pattern appears in fewer than half the samples, treat it as weak evidence and prefer adaptation-policy changes over skeleton changes.
+- Ignore physical feedback and physical plan variants when revising the TST.
 
 ## Output format
-Output exactly three sections — the same format as the original TST.
+Output exactly two sections — the same format as the original TST.
 No markdown. No explanation. Nothing else.
 
 LOGICAL SKELETON
 <algebraic expression with {{SLOT}} placeholders>
-
-PHYSICAL POLICY
-<one line per node: op_id | op_name | variant | params>
 
 ADAPTATION POLICY
 mutable_slots: <comma-separated>
 immutable_slots: <comma-separated>
 mutable_ops: <comma-separated>
 immutable_ops: <comma-separated>
-allowed_rewrites: <one per line, repeat key>
-forbidden_rewrites: <one per line, repeat key>
+allowed_rewrites: <one learned adaptation or expansion rule per line, repeat key>
+forbidden_rewrites: <one learned safety boundary per line, repeat key>
 """
 
 _TST_REVISION_USER_TEMPLATE = """\
@@ -250,10 +210,16 @@ _TST_REVISION_USER_TEMPLATE = """\
 ### Repeated successful adaptations
 {success_patterns}
 
-### Cost / latency patterns
+### Cost / latency summary
 {cost_patterns}
 
-Revise the TST following the system prompt priorities and conservatism rules.
+### Recommendation
+{recommendation}
+
+Revise the TST following the system prompt priorities, conservatism rules, and
+knowledge-after-experience guidance. Update adaptation rules when experience
+shows how future query-level plans should expand, specialize, simplify, or
+preserve the skeleton.
 Output only the revised TST.
 """
 

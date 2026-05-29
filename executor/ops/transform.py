@@ -8,7 +8,7 @@ from ir.evidence import Chunk, EvidenceSet
 
 @register("LLMSummarize")
 async def llm_summarize(
-    inputs: list[EvidenceSet], params: dict, corpus, llm
+    inputs: list[EvidenceSet], params: dict, corpus, llm, context
 ) -> EvidenceSet:
     """
     Summarize/extract evidence into a schema via one LLM call.
@@ -20,7 +20,7 @@ async def llm_summarize(
     ev = inputs[0] if inputs else EvidenceSet(chunks=[])
     schema = params.get("schema", "key information")
     query = params.get("query", ev.query_ref)
-    catalog = params.get("catalog")
+    catalog = context.catalog
 
     if not ev.chunks:
         return ev.append_trace("LLMSummarize")

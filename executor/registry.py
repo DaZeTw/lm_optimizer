@@ -8,7 +8,7 @@ Usage:
     from executor.registry import register, REGISTRY
 
     @register("MyVariant")
-    async def my_variant(inputs, params, corpus, llm):
+    async def my_variant(inputs, params, corpus, llm, context):
         ...
 """
 
@@ -16,14 +16,16 @@ from __future__ import annotations
 
 from typing import Awaitable, Callable
 
+from executor.context import ExecutionContext
 from ir.evidence import EvidenceSet
 
 # inputs: resolved child EvidenceSets
 # params: node.params dict from the PhysicalNode
 # corpus: Corpus instance (injected by runner)
 # llm:    LLM instance (injected by runner)
+# context: runtime-only resources (catalog, caches, etc.)
 VariantFn = Callable[
-    [list[EvidenceSet], dict, object, object],
+    [list[EvidenceSet], dict, object, object, ExecutionContext],
     Awaitable[EvidenceSet],
 ]
 
