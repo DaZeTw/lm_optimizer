@@ -8,7 +8,7 @@ from ir.evidence import EvidenceSet
 
 @register("BM25Retrieve")
 async def bm25_retrieve(
-    inputs: list[EvidenceSet], params: dict, corpus, llm
+    inputs: list[EvidenceSet], params: dict, corpus, llm, context
 ) -> EvidenceSet:
     """Sparse keyword retrieval. Fast, no embeddings needed."""
     query = params.get("query", "")
@@ -21,7 +21,7 @@ async def bm25_retrieve(
 
 @register("DenseRetrieve")
 async def dense_retrieve(
-    inputs: list[EvidenceSet], params: dict, corpus, llm
+    inputs: list[EvidenceSet], params: dict, corpus, llm, context
 ) -> EvidenceSet:
     """
     Embedding-based dense retrieval.
@@ -40,7 +40,7 @@ async def dense_retrieve(
 
 @register("HybridRetrieve")
 async def hybrid_retrieve(
-    inputs: list[EvidenceSet], params: dict, corpus, llm
+    inputs: list[EvidenceSet], params: dict, corpus, llm, context
 ) -> EvidenceSet:
     """
     RRF fusion of BM25 + dense retrieval (recommended default).

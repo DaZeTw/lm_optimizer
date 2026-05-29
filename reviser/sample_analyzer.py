@@ -1,7 +1,7 @@
 """Step 1: per-sample execution analysis.
 
 SampleAnalyzer calls the LLM once per execution record and parses the
-four-section report into a plain SampleFeedback dict.  No dataclasses.
+JSON report into a plain SampleFeedback dict.  No dataclasses.
 
 SampleFeedback schema
 ---------------------
@@ -10,22 +10,23 @@ SampleFeedback schema
     "accuracy":       float,
     "total_tokens":   int,
     "total_latency_ms": float,
-    "query_features": {           # from QUERY FEATURES section
-        "query_type":         str,
-        "complexity":         str,
-        "evidence_scope":     str,
-        "comparison_required": str,
+    "plan_feedback": {
+        "supports_task":       bool,
+        "main_structural_gap": str,
+        "reason":              str,
     },
-    "failure_points": [           # from FAILURE POINTS section
-        {"op_id": str, "issue_type": str, "description": str},
+    "physical_feedback": [
+        {
+            "op_id": str,
+            "variant": str,
+            "issue_type": str,
+            "description": str,
+            "suggested_change": str,
+        },
         ...
     ],
-    "successful_adaptations": [   # from SUCCESSFUL ADAPTATIONS section
+    "successful_adaptations": [
         {"op_id": str, "what_worked": str},
-        ...
-    ],
-    "suggested_fixes": [          # from SUGGESTED FIXES section
-        {"op_id": str, "fix_type": str, "detail": str},
         ...
     ],
 }
@@ -33,6 +34,7 @@ SampleFeedback schema
 
 from __future__ import annotations
 
+import json
 import re
 
 from executor.runner import ExecutionResult
@@ -44,6 +46,14 @@ from .prompts import (
     SAMPLE_ANALYSIS_SYSTEM_PROMPT,
     build_sample_analysis_user_message,
 )
+
+
+def _as_bool(value) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"true", "yes", "1"}
+    return bool(value)
 
 # ── Text renderers (execution record → prompt-ready strings) ──────
 
@@ -101,32 +111,7 @@ def _render_node_trace(feedback: Feedback) -> str:
     return "\n".join(lines) if lines else "  (none)"
 
 
-# ── Parser for the four-section LLM output ────────────────────────
-
-_SECTION_HEADERS = (
-    "QUERY FEATURES",
-    "FAILURE POINTS",
-    "SUCCESSFUL ADAPTATIONS",
-    "SUGGESTED FIXES",
-)
-
-
-def _split_sections(text: str) -> dict[str, str]:
-    """Split the LLM output into named section bodies."""
-    positions: dict[str, int] = {}
-    for header in _SECTION_HEADERS:
-        idx = text.find(header)
-        if idx == -1:
-            raise ValueError(f"Missing section: {header!r}")
-        positions[header] = idx
-
-    ordered = sorted(positions.items(), key=lambda kv: kv[1])
-    bodies: dict[str, str] = {}
-    for i, (header, start) in enumerate(ordered):
-        body_start = start + len(header)
-        body_end = ordered[i + 1][1] if i + 1 < len(ordered) else len(text)
-        bodies[header] = text[body_start:body_end].strip()
-    return bodies
+# ── Parser for the JSON LLM output ────────────────────────────────
 
 
 def _parse_sample_feedback(
@@ -136,76 +121,66 @@ def _parse_sample_feedback(
     total_tokens: int,
     total_latency_ms: float,
 ) -> dict:
-    """Parse the LLM's four-section report into a SampleFeedback dict."""
+    """Parse the LLM's JSON report into a SampleFeedback dict."""
     # Strip markdown fences
     raw = re.sub(r"```[a-z]*", "", raw, flags=re.IGNORECASE).strip().strip("`").strip()
 
-    bodies = _split_sections(raw)
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid JSON: {exc}") from exc
 
-    # QUERY FEATURES — key: value lines
-    query_features: dict[str, str] = {}
-    for line in bodies["QUERY FEATURES"].splitlines():
-        line = line.strip()
-        if ":" in line:
-            k, _, v = line.partition(":")
-            query_features[k.strip().lower().replace(" ", "_")] = v.strip()
+    if not isinstance(data, dict):
+        raise ValueError("Sample analysis must be a JSON object")
 
-    # FAILURE POINTS — op_id | issue_type | description
-    failure_points: list[dict] = []
-    for line in bodies["FAILURE POINTS"].splitlines():
-        line = line.strip()
-        if not line or line == "(none)":
+    sample = data.get("sample_analysis", data)
+    if not isinstance(sample, dict):
+        raise ValueError("'sample_analysis' must be a JSON object")
+
+    plan_feedback = sample.get("plan_feedback")
+    if not isinstance(plan_feedback, dict):
+        raise ValueError("Missing object field: plan_feedback")
+
+    normalized_plan_feedback = {
+        "supports_task": _as_bool(plan_feedback.get("supports_task", False)),
+        "main_structural_gap": str(
+            plan_feedback.get("main_structural_gap", "unspecified")
+        ),
+        "reason": str(plan_feedback.get("reason", "")),
+    }
+
+    physical_feedback = sample.get("physical_feedback", [])
+    if not isinstance(physical_feedback, list):
+        raise ValueError("'physical_feedback' must be a list")
+
+    normalized_physical_feedback: list[dict] = []
+    for item in physical_feedback:
+        if not isinstance(item, dict):
             continue
-        parts = [p.strip() for p in line.split("|")]
-        if len(parts) == 3:
-            failure_points.append(
-                {
-                    "op_id": parts[0],
-                    "issue_type": parts[1],
-                    "description": parts[2],
-                }
-            )
+        normalized_physical_feedback.append(
+            {
+                "op_id": str(item.get("op_id", "")),
+                "variant": str(item.get("variant", "")),
+                "issue_type": str(item.get("issue_type", "")),
+                "description": str(item.get("description", "")),
+                "suggested_change": str(item.get("suggested_change", "")),
+            }
+        )
 
-    # SUCCESSFUL ADAPTATIONS — op_id | what_worked
-    successful_adaptations: list[dict] = []
-    for line in bodies["SUCCESSFUL ADAPTATIONS"].splitlines():
-        line = line.strip()
-        if not line or line == "(none)":
-            continue
-        parts = [p.strip() for p in line.split("|")]
-        if len(parts) == 2:
-            successful_adaptations.append(
-                {
-                    "op_id": parts[0],
-                    "what_worked": parts[1],
-                }
-            )
-
-    # SUGGESTED FIXES — op_id | fix_type | detail
-    suggested_fixes: list[dict] = []
-    for line in bodies["SUGGESTED FIXES"].splitlines():
-        line = line.strip()
-        if not line or line == "(none)":
-            continue
-        parts = [p.strip() for p in line.split("|")]
-        if len(parts) == 3:
-            suggested_fixes.append(
-                {
-                    "op_id": parts[0],
-                    "fix_type": parts[1],
-                    "detail": parts[2],
-                }
-            )
+    successful_adaptations = sample.get("successful_adaptations", [])
+    if not isinstance(successful_adaptations, list):
+        raise ValueError("'successful_adaptations' must be a list")
 
     return {
-        "query": query,
-        "accuracy": accuracy,
-        "total_tokens": total_tokens,
-        "total_latency_ms": total_latency_ms,
-        "query_features": query_features,
-        "failure_points": failure_points,
-        "successful_adaptations": successful_adaptations,
-        "suggested_fixes": suggested_fixes,
+        "query": str(sample.get("query", query)),
+        "accuracy": float(sample.get("accuracy", accuracy)),
+        "total_tokens": int(sample.get("total_tokens", total_tokens)),
+        "total_latency_ms": float(sample.get("total_latency_ms", total_latency_ms)),
+        "plan_feedback": normalized_plan_feedback,
+        "physical_feedback": normalized_physical_feedback,
+        "successful_adaptations": [
+            item for item in successful_adaptations if isinstance(item, dict)
+        ],
     }
 
 
@@ -299,7 +274,7 @@ class SampleAnalyzer:
                         "role": "user",
                         "content": (
                             f"That output has an error: {exc}\n\n"
-                            "Output ONLY the corrected four-section report. "
+                            "Output ONLY the corrected JSON report. "
                             "No markdown, no explanation."
                         ),
                     }
@@ -311,9 +286,12 @@ class SampleAnalyzer:
             "accuracy": feedback.accuracy,
             "total_tokens": total_tokens,
             "total_latency_ms": total_latency_ms,
-            "query_features": {},
-            "failure_points": [],
+            "plan_feedback": {
+                "supports_task": False,
+                "main_structural_gap": "analysis_parse_error",
+                "reason": str(last_err),
+            },
+            "physical_feedback": [],
             "successful_adaptations": [],
-            "suggested_fixes": [],
             "_parse_error": str(last_err),
         }

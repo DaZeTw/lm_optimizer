@@ -10,7 +10,7 @@ from executor.registry import register
 
 @register("SimpleUnion")
 async def simple_union(
-    inputs: list[EvidenceSet], params: dict, corpus, llm
+    inputs: list[EvidenceSet], params: dict, corpus, llm, context
 ) -> EvidenceSet:
     """Concatenate all inputs. No dedup — use when DIFF follows."""
     if not inputs:
@@ -26,7 +26,7 @@ async def simple_union(
 
 @register("ExactDiff")
 async def exact_diff(
-    inputs: list[EvidenceSet], params: dict, corpus, llm
+    inputs: list[EvidenceSet], params: dict, corpus, llm, context
 ) -> EvidenceSet:
     """
     Remove chunks from inputs[0] whose text hash matches any chunk
@@ -66,7 +66,7 @@ async def exact_diff(
 
 @register("SemanticDiff")
 async def semantic_diff(
-    inputs: list[EvidenceSet], params: dict, corpus, llm
+    inputs: list[EvidenceSet], params: dict, corpus, llm, context
 ) -> EvidenceSet:
     """
     Remove near-duplicate chunks using cosine similarity.

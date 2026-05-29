@@ -66,7 +66,7 @@ def load_samples(path: Path = DATA_PATH, n: int | None = None) -> list[QasperSam
                 paper_id=rec["paper_id"],
                 question=rec["question"],
                 answer=rec["answer"],
-                grounding_evidence=rec.get("highlighted_evidence", []),
+                grounding_evidence=rec.get("grounding_evidence", []),
                 corpus=_build_corpus(rec, embedder),
             )
         )

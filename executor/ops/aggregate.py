@@ -10,7 +10,7 @@ _DEFAULT_CONTEXT_WINDOW = 128_000
 
 @register("DirectGenerate")
 async def direct_generate(
-    inputs: list[EvidenceSet], params: dict, corpus, llm
+    inputs: list[EvidenceSet], params: dict, corpus, llm, context
 ) -> EvidenceSet:
     """
     Single LLM call with all ranked evidence in context.
@@ -61,7 +61,7 @@ async def direct_generate(
 
 @register("HierarchicalGenerate")
 async def hierarchical_generate(
-    inputs: list[EvidenceSet], params: dict, corpus, llm
+    inputs: list[EvidenceSet], params: dict, corpus, llm, context
 ) -> EvidenceSet:
     """
     Map-reduce generation for large evidence sets.

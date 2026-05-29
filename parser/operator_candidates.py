@@ -17,14 +17,16 @@ LOGICAL_OPERATOR_DESCRIPTIONS: dict[Op, dict[str, str]] = {
 
     Op.RANK: {
         "description": (
-            "Select, order, and truncate evidence according to a usefulness criterion."
+            "Score, order, filter, and truncate candidate evidence chunks according to a "
+            "relevance criterion."
         ),
-        "inputs": "Evidence set",
-        "outputs": "Ranked or filtered evidence set",
+        "inputs": "Candidate evidence chunks",
+        "outputs": "A filtered and ordered set of candidate evidence chunks",
         "use_when": (
-            "Use when the system must keep only the most relevant, exact, recent, central, "
-            "or candidate-supporting evidence before downstream processing. "
-            "For exact-evidence tasks, RANK should handle sentence-level selection or candidate-support scoring."
+            "Use when retrieved evidence contains noisy, broad, redundant, or competing chunks. "
+            "RANK only prioritizes candidate chunks for downstream processing. "
+            "It should not be used as the final step when the task requires extraction, "
+            "transformation, verification, synthesis, or final answer construction."
         ),
     },
 
@@ -75,14 +77,17 @@ LOGICAL_OPERATOR_DESCRIPTIONS: dict[Op, dict[str, str]] = {
 
     Op.AGGREGATE: {
         "description": (
-            "Synthesize evidence into a final generated answer."
+            "Combine selected evidence into the final task output according to the task objective."
         ),
-        "inputs": "Evidence set",
-        "outputs": "Generated final answer",
+        "inputs": "Evidence set or selected evidence candidates",
+        "outputs": "Final task output",
         "use_when": (
-            "Use when the task asks for explanation, summary, comparison, conclusion, "
-            "or narrative answer generation. "
-            "Do not use AGGREGATE for tasks that require preserving raw evidence exactly."
+            "Use when the task requires a final decision, synthesis, comparison, consolidation, "
+            "or output assembly from one or more pieces of evidence. "
+            "AGGREGATE may be generative for summary or explanation tasks, but for exact-evidence "
+            "tasks it must only assemble and return already-selected verbatim source spans. "
+            "It must not introduce unsupported content, paraphrase raw evidence, or change the wording "
+            "when the task requires exact text preservation."
         ),
     },
 

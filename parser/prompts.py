@@ -33,13 +33,15 @@ Do NOT output JSON. Do NOT explain. Output ONLY the expression.
 ## TASK STRATEGY USAGE RULE
 
 When a Task Strategy Template is provided, use it as the default plan prior,
-not as a hard constraint.
+not as a fixed template or hard constraint.
 
 The query-level planner should:
 - fill task strategy slots with query-specific operator goals
-- preserve the skeleton when it fits the query
+- preserve the skeleton when it already satisfies the current query and evaluation criteria
+- adapt or expand the skeleton when exact evidence, verification, extraction, comparison, or decomposition is required
+- add, remove, or reorder lightweight operators when allowed by the adaptation policy
 - override the skeleton when the query requires a different reasoning structure
-- respect forbidden rewrites unless the query cannot be solved otherwise
+- treat forbidden rewrites as strong safety boundaries unless overriding is necessary to satisfy the current query and evaluation criteria
 - choose the terminal operator based on the user task, not by defaulting to synthesis
 
 Each operator should be driven by its goal, not just the raw query.
@@ -51,6 +53,7 @@ Each operator should be driven by its goal, not just the raw query.
 3. Use DECOMPOSE only when the query has clearly distinct independent sub-tasks.
 4. Prefer the naive correct plan — do NOT pre-optimize.
 5. Avoid adding operators that do not change the reasoning need.
+6. When evaluation asks for exact source spans, prefer retrieval/ranking/extraction/verification over free-form aggregation.
 """
 
 FEW_SHOT_EXAMPLES = [
@@ -116,7 +119,9 @@ FEW_SHOT_EXAMPLES = [
 
 def build_user_message(
     task_description: str,
-    sample_queries: list[str],
+    sample_queries: list[str] | None,
+    evaluation_criteria: str = "",
+    current_query: str | None = None,
     context_window: int | None = None,
     avg_chunk_tokens: float | None = None,
     task_strategy: dict | None = None,
@@ -126,20 +131,24 @@ def build_user_message(
     Args:
         task_description: High-level description of the task.
         sample_queries:   Representative questions the plan must handle.
+        evaluation_criteria: How outputs are judged.
+        current_query:    Query/grounding request to plan now.
         context_window:   Model context window size in tokens (optional).
         avg_chunk_tokens: Average retrieved chunk size in tokens (optional).
         task_strategy:    Optional TST dict from TaskPlanner.generate() or
-                          TaskPlanner.revise().  When provided, the skeleton,
-                          physical policy, and adaptation rules are injected
-                          into the prompt so the query planner fills slots
-                          rather than designing from scratch.
+                          TaskPlanner.revise().  When provided, the skeleton
+                          and adaptation rules are injected into the prompt so
+                          the query planner fills slots rather than designing
+                          from scratch.
     """
     if sample_queries:
         numbered = "\n".join(f"{i + 1}. {q}" for i, q in enumerate(sample_queries))
     else:
         numbered = "(none provided)"
     task_block = (
-        f"## Task context\n{task_description}\n\n"
+        f"## Task description\n{task_description}\n\n"
+        f"## Evaluation criteria\n{evaluation_criteria or '(none provided)'}\n\n"
+        f"## Current query\n{current_query or task_description}\n\n"
         f"## Representative sample queries\n"
         f"These are example questions this plan must handle:\n{numbered}"
     )
@@ -162,10 +171,12 @@ def build_user_message(
     if task_strategy is not None:
         tst_block = "\n\n" + _render_tst_context(task_strategy)
         job_instruction = (
-            "Use the Task Strategy Template as a default reasoning prior, not a hard template. "
+            "Use the Task Strategy Template as a default reasoning prior, not a fixed template. "
             "Fill slots with query-specific operator goals. Preserve the skeleton when it fits, "
-            "but override the shape if the query clearly requires a different reasoning structure. "
-            "Follow forbidden rewrites unless overriding is necessary to answer correctly."
+            "but adapt or expand the shape when the current query or evaluation criteria require "
+            "exact evidence, verification, extraction, comparison, or decomposition. "
+            "Follow forbidden rewrites unless overriding is necessary to satisfy the current query "
+            "and evaluation criteria."
         )
     else:
         job_instruction = (
@@ -182,9 +193,7 @@ def build_user_message(
 def _render_tst_context(tst: dict) -> str:
     """Render the relevant parts of a TST dict as a prompt context block.
 
-    Only the logical skeleton template and adaptation policy are shown —
-    the physical policy is for the physical planner, not the query-level
-    logical planner.
+    Only the logical skeleton template and adaptation policy are shown.
     """
     skel = tst.get("logical_skeleton", {})
     adap = tst.get("adaptation_policy", {})
@@ -193,7 +202,7 @@ def _render_tst_context(tst: dict) -> str:
         "## Task Strategy Template",
         "",
         "### Logical Skeleton",
-        "Use this skeleton as the default reasoning prior. Fill slots with query-specific operator goals. You may override the shape only if the query requires a different reasoning structure.",
+        "Use this skeleton as the default reasoning prior. Fill slots with query-specific operator goals. You may expand, simplify, or reshape it when the current query and evaluation criteria require a different reasoning structure.",
         skel.get("template", "(no skeleton)"),
         "",
         "### Adaptation Rules",
@@ -203,7 +212,7 @@ def _render_tst_context(tst: dict) -> str:
         f"{', '.join(adap.get('immutable_slots', [])) or '(none)'}",
     ]
     if adap.get("allowed_rewrites"):
-        lines.append("Allowed structural rewrites:")
+        lines.append("Allowed adaptations and expansions:")
         for rule in adap["allowed_rewrites"]:
             lines.append(f"  - {rule}")
     if adap.get("forbidden_rewrites"):

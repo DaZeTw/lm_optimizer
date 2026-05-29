@@ -257,7 +257,7 @@ class _Parser:
 
 def parse_task_strategy(text: str) -> dict:
     """
-    Parse the LLM's three-section Task Strategy Template into a plain dict.
+    Parse the LLM's two-section Task Strategy Template into a plain dict.
 
     Expected input format (produced by task_prompts.TASK_SYSTEM_PROMPT)::
 
@@ -269,10 +269,6 @@ def parse_task_strategy(text: str) -> dict:
           ),
           constraints="{VERIFY_CONSTRAINTS}"
         )
-
-        PHYSICAL POLICY
-        I_1        | I        | HybridRetrieve   | {}
-        RANK_1     | RANK     | CrossEncoderRank  | top_k=5
 
         ADAPTATION POLICY
         mutable_slots: QUERY, RANK_CRITERION
@@ -289,12 +285,6 @@ def parse_task_strategy(text: str) -> dict:
                 "template": "<raw algebraic expression text with {SLOT} holes>",
                 "slots": ["QUERY", "RANK_CRITERION", ...],
             },
-            "physical_policy": {
-                # keyed by op_id
-                "I_1":    {"op_name": "I",    "variant": "HybridRetrieve",  "params": {}},
-                "RANK_1": {"op_name": "RANK", "variant": "CrossEncoderRank","params": {"top_k": "5"}},
-                ...
-            },
             "adaptation_policy": {
                 "mutable_slots":     ["QUERY", "RANK_CRITERION"],
                 "immutable_slots":   ["VERIFY_CONSTRAINTS"],
@@ -308,13 +298,15 @@ def parse_task_strategy(text: str) -> dict:
     Raises:
         ParseError: If any required section is missing or a line is malformed.
     """
-    # ── 1. Split into the three named sections ──────────────────────
-    _SECTION_HEADERS = ("LOGICAL SKELETON", "PHYSICAL POLICY", "ADAPTATION POLICY")
+    # ── 1. Split into the named sections ────────────────────────────
+    _SECTION_HEADERS = ("LOGICAL SKELETON", "ADAPTATION POLICY")
 
     # Strip markdown fences the LLM might have added
     text = (
         re.sub(r"```[a-z]*", "", text, flags=re.IGNORECASE).strip().strip("`").strip()
     )
+    if "PHYSICAL POLICY" in text:
+        raise ParseError("PHYSICAL POLICY is no longer part of the TST format")
 
     # Find header positions
     positions: dict[str, int] = {}
@@ -350,45 +342,7 @@ def parse_task_strategy(text: str) -> dict:
         "slots": slots,
     }
 
-    # ── 3. Parse PHYSICAL POLICY ────────────────────────────────────
-    # Each non-blank line: op_id | op_name | variant | params
-    physical_policy: dict[str, dict] = {}
-    for line in section_bodies["PHYSICAL POLICY"].splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        parts = [p.strip() for p in line.split("|")]
-        if len(parts) != 4:
-            raise ParseError(
-                f"PHYSICAL POLICY line must have exactly 4 pipe-separated fields, "
-                f"got {len(parts)} in: {line!r}"
-            )
-        op_id, op_name, variant, raw_params = parts
-
-        # Parse params: "{}" → empty dict; "key=val, key2=val2" → dict
-        params: dict[str, str] = {}
-        raw_params = raw_params.strip()
-        if raw_params and raw_params != "{}":
-            for pair in raw_params.split(","):
-                pair = pair.strip()
-                if "=" not in pair:
-                    raise ParseError(
-                        f"PHYSICAL POLICY param {pair!r} is not in key=value format "
-                        f"in line: {line!r}"
-                    )
-                k, v = pair.split("=", 1)
-                params[k.strip()] = v.strip()
-
-        physical_policy[op_id] = {
-            "op_name": op_name,
-            "variant": variant,
-            "params": params,
-        }
-
-    if not physical_policy:
-        raise ParseError("PHYSICAL POLICY section is empty")
-
-    # ── 4. Parse ADAPTATION POLICY ──────────────────────────────────
+    # ── 3. Parse ADAPTATION POLICY ──────────────────────────────────
     # Keys with a single list value:   mutable_slots, immutable_slots,
     #                                  mutable_ops,   immutable_ops
     # Keys that accumulate per line:   allowed_rewrites, forbidden_rewrites
@@ -427,7 +381,6 @@ def parse_task_strategy(text: str) -> dict:
 
     return {
         "logical_skeleton": logical_skeleton,
-        "physical_policy": physical_policy,
         "adaptation_policy": adaptation_policy,
     }
 

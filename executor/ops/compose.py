@@ -10,7 +10,7 @@ from executor.registry import register
 
 @register("ConcatCompose")
 async def concat_compose(
-    inputs: list[EvidenceSet], params: dict, corpus, llm
+    inputs: list[EvidenceSet], params: dict, corpus, llm, context
 ) -> EvidenceSet:
     """Concatenate both evidence sets. No reasoning — downstream AGGREGATE handles synthesis."""
     if len(inputs) < 2:
@@ -27,7 +27,7 @@ async def concat_compose(
 
 @register("LLMCompose")
 async def llm_compose(
-    inputs: list[EvidenceSet], params: dict, corpus, llm
+    inputs: list[EvidenceSet], params: dict, corpus, llm, context
 ) -> EvidenceSet:
     """
     Synthesize connections between two evidence sets via one LLM call.
@@ -82,7 +82,7 @@ async def llm_compose(
 
 @register("KeyMatchCompose")
 async def key_match_compose(
-    inputs: list[EvidenceSet], params: dict, corpus, llm
+    inputs: list[EvidenceSet], params: dict, corpus, llm, context
 ) -> EvidenceSet:
     """
     Align chunks that share significant keywords. Deterministic — no LLM.

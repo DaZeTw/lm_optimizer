@@ -1,7 +1,7 @@
 """Step 3: aggregate SampleFeedback dicts into a PatternSummary.
 
-Pure Python — no LLM call.  Groups failure points, successful adaptations,
-and cost patterns across all samples in a batch and counts occurrences.
+Pure Python — no LLM call.  Groups plan-level structural feedback,
+successful adaptations, and coarse cost patterns across all samples in a batch.
 Only patterns that appear in at least `min_frequency` fraction of samples
 are promoted to the summary (conservatism rule from Step 5).
 
@@ -15,8 +15,8 @@ PatternSummary schema
 
     "failure_patterns": [
         {
-            "op_id":       str,
-            "issue_type":  str,
+            "op_id":       str,   # always "PLAN" for plan-level feedback
+            "issue_type":  str,   # main_structural_gap
             "description": str,   # most common description for this (op_id, issue_type)
             "count":       int,
             "frequency":   float, # count / num_samples
@@ -147,18 +147,18 @@ def render_cost_patterns(summary: dict) -> str:
 
 
 def _aggregate_failures(samples: list[dict], n: int, min_freq: float) -> list[dict]:
-    # Count (op_id, issue_type) pairs; keep most common description per pair
+    # Count repeated plan-level structural gaps; keep the most common reason.
     counts: Counter = Counter()
     descriptions: defaultdict[tuple, Counter] = defaultdict(Counter)
 
     for s in samples:
-        seen_this_sample: set[tuple] = set()
-        for fp in s.get("failure_points", []):
-            key = (fp["op_id"], fp["issue_type"])
-            if key not in seen_this_sample:
-                counts[key] += 1
-                seen_this_sample.add(key)
-            descriptions[key][fp["description"]] += 1
+        pf = s.get("plan_feedback", {})
+        if pf.get("supports_task", True):
+            continue
+        issue_type = str(pf.get("main_structural_gap", "structural_gap"))
+        key = ("PLAN", issue_type)
+        counts[key] += 1
+        descriptions[key][str(pf.get("reason", ""))] += 1
 
     results = []
     for (op_id, issue_type), count in counts.most_common():
@@ -214,49 +214,40 @@ def _aggregate_costs(
     high_token_threshold: int,
     high_latency_threshold_ms: float,
 ) -> list[dict]:
-    """Flag per-node cost issues that appear consistently across samples."""
-    # Collect per-node metrics from node-level feedback items embedded in samples.
-    # SampleFeedback doesn't carry raw node items — we work from suggested_fixes
-    # with fix_type=="tune_param" as a proxy for cost issues flagged by the LLM.
-    op_token_counts: defaultdict[str, list[float]] = defaultdict(list)
-    op_latency_counts: defaultdict[str, list[float]] = defaultdict(list)
-    high_token_hits: Counter = Counter()
-    high_latency_hits: Counter = Counter()
-
-    for s in samples:
-        # Use suggested_fixes as signal: "tune_param" on a node that had a cost issue
-        for fix in s.get("suggested_fixes", []):
-            if fix["fix_type"] == "tune_param" and "token" in fix["detail"].lower():
-                high_token_hits[fix["op_id"]] += 1
-            if fix["fix_type"] == "tune_param" and "latency" in fix["detail"].lower():
-                high_latency_hits[fix["op_id"]] += 1
+    """Flag batch-level cost issues without using physical feedback."""
+    token_freq = (
+        sum(1 for s in samples if s.get("total_tokens", 0) >= high_token_threshold) / n
+    )
+    latency_freq = (
+        sum(
+            1
+            for s in samples
+            if s.get("total_latency_ms", 0.0) >= high_latency_threshold_ms
+        )
+        / n
+    )
 
     results = []
-    all_op_ids = set(high_token_hits) | set(high_latency_hits)
-    for op_id in all_op_ids:
-        token_freq = high_token_hits.get(op_id, 0) / n
-        latency_freq = high_latency_hits.get(op_id, 0) / n
-
-        if token_freq >= min_freq:
-            results.append(
-                {
-                    "op_id": op_id,
-                    "issue": "high_token_cost",
-                    "avg_tokens": None,
-                    "avg_latency_ms": None,
-                    "frequency": round(token_freq, 3),
-                }
-            )
-        if latency_freq >= min_freq:
-            results.append(
-                {
-                    "op_id": op_id,
-                    "issue": "high_latency",
-                    "avg_tokens": None,
-                    "avg_latency_ms": None,
-                    "frequency": round(latency_freq, 3),
-                }
-            )
+    if token_freq >= min_freq:
+        results.append(
+            {
+                "op_id": "TOTAL",
+                "issue": "high_token_cost",
+                "avg_tokens": None,
+                "avg_latency_ms": None,
+                "frequency": round(token_freq, 3),
+            }
+        )
+    if latency_freq >= min_freq:
+        results.append(
+            {
+                "op_id": "TOTAL",
+                "issue": "high_latency",
+                "avg_tokens": None,
+                "avg_latency_ms": None,
+                "frequency": round(latency_freq, 3),
+            }
+        )
 
     return sorted(results, key=lambda x: x["frequency"], reverse=True)
 
@@ -282,7 +273,7 @@ def _build_recommendation(
         top = failure_patterns[0]
         parts.append(
             f"Most common failure: {top['op_id']} / {top['issue_type']} "
-            f"({top['frequency']:.0%} of samples) — consider changing variant or params."
+            f"({top['frequency']:.0%} of samples) — revise the logical skeleton or adaptation rules."
         )
 
     if success_patterns:
@@ -296,7 +287,7 @@ def _build_recommendation(
         top = cost_patterns[0]
         parts.append(
             f"Cost issue: {top['op_id']} shows {top['issue']} "
-            f"in {top['frequency']:.0%} of samples — tune params or downgrade variant."
+            f"in {top['frequency']:.0%} of samples — prefer simpler logical structure if accuracy allows."
         )
 
     return (

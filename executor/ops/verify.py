@@ -10,7 +10,7 @@ from executor.registry import register
 
 @register("CitationVerify")
 async def citation_verify(
-    inputs: list[EvidenceSet], params: dict, corpus, llm
+    inputs: list[EvidenceSet], params: dict, corpus, llm, context
 ) -> EvidenceSet:
     """
     Verify answer claims against evidence using keyword overlap.
@@ -71,7 +71,7 @@ async def citation_verify(
 
 @register("NliVerify")
 async def nli_verify(
-    inputs: list[EvidenceSet], params: dict, corpus, llm
+    inputs: list[EvidenceSet], params: dict, corpus, llm, context
 ) -> EvidenceSet:
     """
     Verify using a local NLI model (entailment check).
@@ -103,7 +103,7 @@ async def nli_verify(
         ev_texts = [c.text for c in evidence_es.chunks]
 
         if not ev_texts or not sentences:
-            return await citation_verify(inputs, params, corpus, llm)
+            return await citation_verify(inputs, params, corpus, llm, context)
 
         entailed, flags = 0, []
         for sent in sentences:
@@ -141,7 +141,7 @@ async def nli_verify(
         ).append_trace("NliVerify")
 
     except (ImportError, Exception):
-        return await citation_verify(inputs, params, corpus, llm)
+        return await citation_verify(inputs, params, corpus, llm, context)
 
 
 _COMMON = {
